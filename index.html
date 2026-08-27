@@ -219,10 +219,10 @@ input,select,textarea{font-family:inherit;color:var(--ink);font-size:1rem}
 /* 全屏专注模式（对齐 xixitime 效果：纯黑底 + 巨号数字 + 隐藏全部控件） */
 body.cd-fs{background:#000 !important;color:#e2e8f0}
 body.cd-fs .bg-scene,body.cd-fs .bg-scene *{display:none !important}
-body.cd-fs .sidebar,body.cd-fs .rail,body.cd-fs .fab,body.cd-fs .menu-toggle,body.cd-fs .side-mask,body.cd-fs .mascot-card,body.cd-fs .cd-ctrl,body.cd-fs .cd-modes,body.cd-fs .cd-info,body.cd-fs .cd-sec-title,body.cd-fs .cd-grid,body.cd-fs .cd-row,body.cd-fs .cd-refresh{display:none !important}
+body.cd-fs .sidebar,body.cd-fs .rail,body.cd-fs .fab,body.cd-fs .menu-toggle,body.cd-fs .side-mask,body.cd-fs .mascot-card,body.cd-fs .cd-ctrl,body.cd-fs .cd-modes,body.cd-fs .cd-info,body.cd-fs .cd-sec-title,body.cd-fs .cd-grid,body.cd-fs .cd-row,body.cd-fs .cd-refresh,body.cd-fs #cdExamSection,body.cd-fs #cdDailySection{display:none !important}
 body.cd-fs .main{margin-left:0;max-width:none;padding:0;display:flex;align-items:center;justify-content:center;background:transparent}
 body.cd-fs #main{width:100%}
-body.cd-fs .page{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:transparent}
+body.cd-fs .page.active{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:transparent}
 body.cd-fs .cd-wrap{justify-content:center;background:transparent !important;border:none;box-shadow:none;padding:0;width:100%}
 body.cd-fs .cd-circle{width:auto;height:auto;border:none;background:transparent;box-shadow:none;animation:none}
 body.cd-fs .cd-time{font-size:min(42vw,38vh);line-height:1;letter-spacing:0;white-space:nowrap;color:#e2e8f0}
@@ -792,6 +792,10 @@ function load(){
   }
   S.today = S.today || {selDate:'', calMonth:null};
   S.profile = Object.assign(d.profile, S.profile);
+  // 品牌迁移：旧本地数据里遗留的"米菲"标题一律替换为"dada 工作台"
+  if(S.profile && S.profile.title && String(S.profile.title).indexOf('米菲')>-1){
+    S.profile.title = 'dada 工作台';
+  }
   S.settings = Object.assign(d.settings, S.settings);
   S.class = Object.assign(d.class, S.class);
   S.learn = Object.assign({checks:{},read:{},notes:{}}, S.learn||{});
