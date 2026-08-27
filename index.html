@@ -218,6 +218,7 @@ input,select,textarea{font-family:inherit;color:var(--ink);font-size:1rem}
 .cd-info .dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--ink-l);margin:0 6px;vertical-align:middle}
 /* 全屏专注模式（对齐 xixitime 效果：纯黑底 + 巨号数字 + 隐藏全部控件） */
 body.cd-fs{background:#000 !important;color:#e2e8f0}
+body.cd-fs .bg-scene,body.cd-fs .bg-scene *{display:none !important}
 body.cd-fs .sidebar,body.cd-fs .rail,body.cd-fs .fab,body.cd-fs .menu-toggle,body.cd-fs .side-mask,body.cd-fs .mascot-card,body.cd-fs .cd-ctrl,body.cd-fs .cd-modes,body.cd-fs .cd-info,body.cd-fs .cd-sec-title,body.cd-fs .cd-grid,body.cd-fs .cd-row,body.cd-fs .cd-refresh{display:none !important}
 body.cd-fs .main{margin-left:0;max-width:none;padding:0;display:flex;align-items:center;justify-content:center;background:transparent}
 body.cd-fs #main{width:100%}
@@ -1251,14 +1252,14 @@ function renderCountdown(box){
       <div id="cdDailySection" style="display:none">
         <div class="cd-sec-title">快捷预设</div>
         <div class="cd-grid" id="cdPresetGrid">
-          <button class="cd-preset" data-sec="60">1<small>分</small></button>
-          <button class="cd-preset" data-sec="180">3<small>分</small></button>
-          <button class="cd-preset" data-sec="300">5<small>分</small></button>
-          <button class="cd-preset" data-sec="420">7<small>分</small></button>
-          <button class="cd-preset" data-sec="600">10<small>分</small></button>
-          <button class="cd-preset" data-sec="900">15<small>分</small></button>
-          <button class="cd-preset" data-sec="1500"><span class="cd-tomato">🍅</span>25<small>分</small></button>
-          <button class="cd-preset" data-sec="1800">30<small>分</small></button>
+          <button class="cd-preset" data-sec="60" onclick="cdSetTime(60)">1<small>分</small></button>
+          <button class="cd-preset" data-sec="180" onclick="cdSetTime(180)">3<small>分</small></button>
+          <button class="cd-preset" data-sec="300" onclick="cdSetTime(300)">5<small>分</small></button>
+          <button class="cd-preset" data-sec="420" onclick="cdSetTime(420)">7<small>分</small></button>
+          <button class="cd-preset" data-sec="600" onclick="cdSetTime(600)">10<small>分</small></button>
+          <button class="cd-preset" data-sec="900" onclick="cdSetTime(900)">15<small>分</small></button>
+          <button class="cd-preset" data-sec="1500" onclick="cdSetTime(1500)"><span class="cd-tomato">🍅</span>25<small>分</small></button>
+          <button class="cd-preset" data-sec="1800" onclick="cdSetTime(1800)">30<small>分</small></button>
         </div>
         <div style="text-align:center;font-size:11px;color:var(--ink-l);margin:6px 0">—— 或 ——</div>
         <div class="cd-row">
