@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#FFD3E0">
-<title>dada · 个人效率工作台</title>
+<title>米菲 · 个人效率工作台</title>
 <style>
 /* ============ 基础变量 ============ */
 :root{
@@ -126,7 +126,7 @@ input,select,textarea{font-family:inherit;color:var(--ink);font-size:1rem}
   .rail .qlink button:active{transform:translateY(2px)}
 }
 
-/* ============ 顶部吉祥物卡（dada家族素材图 + 文字 + 贴纸）============ */
+/* ============ 顶部吉祥物卡（米菲家族素材图 + 文字 + 贴纸）============ */
 .mascot-card{
   position:relative;display:flex;align-items:stretch;
   min-height:170px;border:3.5px solid var(--ink);border-radius:24px;overflow:hidden;
@@ -216,27 +216,18 @@ input,select,textarea{font-family:inherit;color:var(--ink);font-size:1rem}
 .cd-ctrl{display:flex;gap:12px;justify-content:center;margin-top:14px}
 .cd-info{text-align:center;margin-top:14px;font-size:11px;color:var(--ink-l);line-height:1.8}
 .cd-info .dot{display:inline-block;width:4px;height:4px;border-radius:50%;background:var(--ink-l);margin:0 6px;vertical-align:middle}
-/* 全屏专注模式（对齐 xixitime 效果：纯黑底 + 巨号数字 + 隐藏全部控件） */
-body.cd-fs{background:#000 !important;color:#e2e8f0}
-body.cd-fs .sidebar,body.cd-fs .rail,body.cd-fs .fab,body.cd-fs .menu-toggle,body.cd-fs .side-mask,body.cd-fs .mascot-card,body.cd-fs .cd-ctrl,body.cd-fs .cd-modes,body.cd-fs .cd-info,body.cd-fs .cd-sec-title,body.cd-fs .cd-grid,body.cd-fs .cd-row,body.cd-fs .cd-refresh{display:none !important}
-body.cd-fs .main{margin-left:0;max-width:none;padding:0;display:flex;align-items:center;justify-content:center;background:transparent}
+/* 全屏专注模式 */
+body.cd-fs .sidebar,body.cd-fs .rail,body.cd-fs .fab,body.cd-fs .menu-toggle,body.cd-fs .side-mask{display:none !important}
+body.cd-fs .main{margin-left:0;max-width:none;padding:0;display:flex;align-items:center;justify-content:center}
 body.cd-fs #main{width:100%}
-body.cd-fs .page{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;background:transparent}
-body.cd-fs .cd-wrap{justify-content:center;background:transparent !important;border:none;box-shadow:none;padding:0;width:100%}
+body.cd-fs .page{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column}
+body.cd-fs .mascot-card,body.cd-fs .cd-ctrl,body.cd-fs .cd-modes,body.cd-fs .cd-info,body.cd-fs .cd-sec-title,body.cd-fs .cd-grid,body.cd-fs .cd-row,body.cd-fs .cd-refresh{display:none !important}
+body.cd-fs .cd-wrap{justify-content:center}
 body.cd-fs .cd-circle{width:auto;height:auto;border:none;background:transparent;box-shadow:none;animation:none}
-body.cd-fs .cd-time{font-size:min(42vw,38vh);line-height:1;letter-spacing:0;white-space:nowrap;color:#e2e8f0}
-body.cd-fs .cd-time.has-hours{font-size:min(28vw,30vh)}
-body.cd-fs .cd-circle.warning .cd-time{color:#f59e0b}
-body.cd-fs .cd-circle.danger .cd-time{color:#ef4444}
-body.cd-fs .cd-label{font-size:min(5vw,5vh,36px);color:rgba(255,255,255,.6);margin-top:12px;letter-spacing:.05em}
-body.cd-fs .cd-fs-exit{
-  display:block;position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-  padding:10px 24px;border:1px solid rgba(255,255,255,.15);border-radius:8px;
-  background:rgba(255,255,255,.06);color:rgba(255,255,255,.25);
-  font-size:14px;cursor:pointer;font-family:inherit;transition:all .3s;letter-spacing:.05em;z-index:99;
-}
-body.cd-fs .cd-fs-exit:hover{color:rgba(255,255,255,.6);border-color:rgba(255,255,255,.3)}
-.cd-fs-exit{display:none}
+body.cd-fs .cd-time{font-size:min(38vw,34vh);color:#fff}
+body.cd-fs .cd-time.has-hours{font-size:min(26vw,26vh)}
+body.cd-fs .cd-label{font-size:min(4.5vw,4vh,34px);color:rgba(255,255,255,.6);margin-top:10px}
+body.cd-fs body{background:#000}
 
 /* 值日表格已完成行 */
 tr.row-done td{opacity:.5;text-decoration:line-through}
@@ -729,7 +720,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;min-width:480px}
       <span class="cam">📷</span>
     </div>
     <div>
-      <div class="t brand-name" id="brandTitle" onclick="editBrandName()" title="点击编辑名字">dada 工作台 <span class="pen">✏️</span></div>
+      <div class="t brand-name" id="brandTitle" onclick="editBrandName()" title="点击编辑名字">米菲工作台 <span class="pen">✏️</span></div>
       <div class="s" id="brandSub">老师的小助手</div>
     </div>
   </div>
@@ -847,7 +838,7 @@ function showBanner(text){
   document.getElementById('bannerText').textContent = text;
   b.classList.add('show');
   if(window.Notification && Notification.permission==='granted'){
-    try{ new Notification('dada 工作台 💗', {body:text, icon:IMG_MASCOT}); }catch(_){}
+    try{ new Notification('米菲工作台 💗', {body:text, icon:IMG_MASCOT}); }catch(_){}
   }
 }
 function closeBanner(){ document.getElementById('banner').classList.remove('show'); }
@@ -872,7 +863,7 @@ function defaultState(){
     schedule_fixed: {},  // {YYYY-MM-DD: [{id,time,title,duration,note,done}]}
     reminders:    {},    // {YYYY-MM-DD: [{id,time,title,done,alerted}]}
     profile: {
-      title: 'dada 工作台',
+      title: '米菲工作台',
       sub: '老师的小助手',
       avatar: '',
       homeCover: '',
@@ -964,7 +955,7 @@ function renderPages(){
           <p>${meta.s}</p>
         </div>
         ${stickers}
-        ${id==='home' ? `<div class="cover-edit"><button type="button" title="更换首页封面" onclick="pickCover(event)">🖼️ 换封面</button>${S.profile.homeCover?`<button type="button" class="ghost" title="恢复默认dada封面" onclick="resetCover(event)">恢复</button>`:''}</div>` : ''}
+        ${id==='home' ? `<div class="cover-edit"><button type="button" title="更换首页封面" onclick="pickCover(event)">🖼️ 换封面</button>${S.profile.homeCover?`<button type="button" class="ghost" title="恢复默认米菲封面" onclick="resetCover(event)">恢复</button>`:''}</div>` : ''}
       </div>
       <div id="body-${id}"></div>
     </section>`;
@@ -972,7 +963,7 @@ function renderPages(){
   m.innerHTML = html;
 }
 
-/* 每页的图片裁切位置（dada家族素材图，按区域展示不同家庭成员）*/
+/* 每页的图片裁切位置（米菲家族素材图，按区域展示不同家庭成员）*/
 const CARD_IMG_POS = {
   today:     'center 40%',   // 中央家庭主图
   research:  'center 38%',   // 偏中
@@ -1225,7 +1216,6 @@ function renderCountdown(box){
         <div class="cd-time" id="cdTimer">00:00</div>
         <div class="cd-label" id="cdLabel">准备开始</div>
       </div>
-      <button class="cd-fs-exit" id="cdFsExit" onclick="document.exitFullscreen && document.exitFullscreen()">退出全屏</button>
       <div id="cdExamSection">
         <div class="cd-sec-title">📌 点选结束时间</div>
         <div class="cd-grid" id="cdTimepointGrid"></div>
@@ -1661,7 +1651,7 @@ window.delTodo = function(type, date, id){
 };
 
 /* ============== 2. 教研助手 · 每日共读 ============== */
-/* 精选文章库：每天按日期自动轮换推送一篇，配dada批注，支持打卡 */
+/* 精选文章库：每天按日期自动轮换推送一篇，配米菲批注，支持打卡 */
 const LEARN_LIB = [
   {id:'a1', cat:'语文', title:'学习任务群视域下小学语文大单元教学的实践探析', src:'语文报社·名师讲堂', mins:8,
    paras:[
@@ -2000,7 +1990,7 @@ function renderDigest(art){
   for(let i=0;i<n;i++){
     if(art.paras[i]) html += '<p>'+escapeHtml(art.paras[i])+'</p>';
     if(art.notes[i]){
-      html += '<div class="annot"><div class="who">'+bunnyHeadSVG('#FFC2D4',15)+' dada批注 · '+escapeHtml(art.notes[i].t)+'</div><div>'+escapeHtml(art.notes[i].d)+'</div></div>';
+      html += '<div class="annot"><div class="who">'+bunnyHeadSVG('#FFC2D4',15)+' 米菲批注 · '+escapeHtml(art.notes[i].t)+'</div><div>'+escapeHtml(art.notes[i].d)+'</div></div>';
     }
   }
   return html;
@@ -2346,10 +2336,10 @@ function applyProfile(){
   const img = document.getElementById('brandImg');
   if(img) img.src = S.profile.avatar || IMG_MASCOT;
   const t = document.getElementById('brandTitle');
-  if(t) t.innerHTML = escapeHtml(S.profile.title||'dada 工作台') + ' <span class="pen">✏️</span>';
+  if(t) t.innerHTML = escapeHtml(S.profile.title||'米菲工作台') + ' <span class="pen">✏️</span>';
   const s = document.getElementById('brandSub');
   if(s) s.textContent = S.profile.sub||'老师的小助手';
-  document.title = (S.profile.title||'dada 工作台') + ' · 个人效率工作台';
+  document.title = (S.profile.title||'米菲工作台') + ' · 个人效率工作台';
 }
 
 /* ============== 皮肤切换 ============== */
@@ -2481,7 +2471,7 @@ window.onAvatarPicked = function(ev){
   ev.target.value = '';
 };
 window.resetAvatar = function(){
-  S.profile.avatar = ''; save(); applyProfile(); toast('已恢复默认dada头像');
+  S.profile.avatar = ''; save(); applyProfile(); toast('已恢复默认米菲头像');
 };
 window.pickCover = function(ev){
   ev.stopPropagation();
@@ -2511,14 +2501,14 @@ window.onCoverPicked = function(ev){
 };
 window.resetCover = function(ev){
   if(ev) ev.stopPropagation();
-  S.profile.homeCover = ''; save(); renderPages(); switchPage(S.activePage); applyProfile(); toast('已恢复默认dada封面');
+  S.profile.homeCover = ''; save(); renderPages(); switchPage(S.activePage); applyProfile(); toast('已恢复默认米菲封面');
 };
 window.editBrandName = function(){
   showModal({
     title: '✏️ 编辑名字',
     bodyHtml: `
       <label class="lbl">工作台名字</label>
-      <input class="inp" id="pfTitle" value="${escapeHtml(S.profile.title)}" maxlength="20" placeholder="比如：dada 工作台">
+      <input class="inp" id="pfTitle" value="${escapeHtml(S.profile.title)}" maxlength="20" placeholder="比如：米菲工作台">
       <label class="lbl">副标题（一句话介绍）</label>
       <input class="inp" id="pfSub" value="${escapeHtml(S.profile.sub)}" maxlength="30" placeholder="比如：老师的小助手">
       <div style="margin-top:16px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">
@@ -2529,7 +2519,7 @@ window.editBrandName = function(){
   });
 };
 window.saveProfile = function(){
-  S.profile.title = (document.getElementById('pfTitle').value||'').trim() || 'dada 工作台';
+  S.profile.title = (document.getElementById('pfTitle').value||'').trim() || '米菲工作台';
   S.profile.sub = (document.getElementById('pfSub').value||'').trim() || '老师的小助手';
   save(); applyProfile(); closeModal(); toast('✅ 已保存');
 };
@@ -4416,7 +4406,7 @@ window.exportData = function(){
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'dada 工作台_备份_'+ymdhms().replace(/[: ]/g,'-')+'.json';
+  a.download = '米菲工作台_备份_'+ymdhms().replace(/[: ]/g,'-')+'.json';
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
