@@ -1,0 +1,5758 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英语互动课堂 · 外研版（新版）</title>
+<style>
+/* ================= 基础变量（马卡龙 · 大屏课堂版） ================= */
+:root{
+  --pink:#FFC2D4; --pink-l:#FFE3EC; --pink-d:#F79CB8;
+  --blue:#B8E0F6; --blue-l:#E4F4FD; --blue-d:#6FB8E0;
+  --mint:#C9EEDC; --mint-l:#E6F8EF; --mint-d:#6FC79A;
+  --lav:#DCD0F2; --lav-l:#F0E9FB; --lav-d:#B08CE0;
+  --cream:#FFF0C4; --cream-l:#FFF8DF; --cream-d:#F2C94C;
+  --peach:#FFDCC2; --peach-d:#F5A980;
+  --ink:#4A3A50; --ink-2:#6E5C74; --ink-3:#9C8BA2;
+  --white:#FFFDFD;
+  --ok:#2FA96B; --ok-l:#DFF5E8; --no:#E8617A; --no-l:#FFE4E9;
+  --radius:24px; --radius-s:16px;
+  --shadow:0 6px 0 rgba(190,120,150,.16), 0 12px 26px rgba(190,120,150,.14);
+  --shadow-s:0 4px 0 rgba(190,120,150,.14), 0 8px 18px rgba(190,120,150,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{font-size:clamp(15px,0.78vw + 8px,24px)}
+body{
+  font-family:'ZCOOL KuaiLe','Yuanti SC','YouYuan','幼圆','PingFang SC','Microsoft YaHei',sans-serif;
+  color:var(--ink); background:#EAF6FF; min-height:100vh; overflow-x:hidden;
+  user-select:none;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit;font-size:1rem}
+input,textarea,select{font-family:inherit;color:var(--ink);font-size:1rem}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:var(--pink);border-radius:8px}
+::-webkit-scrollbar-track{background:transparent}
+
+/* ================= 卡通背景 ================= */
+.bg-scene{position:fixed;inset:0;z-index:-2;background:linear-gradient(180deg,#D9F0FF 0%,#FFF2F6 58%,#E6F8EC 100%);overflow:hidden}
+.bg-scene .grass{position:absolute;bottom:-8vh;left:-5vw;width:110vw;height:20vh;background:var(--mint);border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.75}
+.bg-scene .grass::after{content:'';position:absolute;bottom:0;left:26%;width:80vw;height:16vh;background:#B4E6CB;border-radius:50% 50% 0 0/100% 100% 0 0;opacity:.7}
+.cloud{position:absolute;background:#fff;border-radius:50%;opacity:.9;animation:drift 70s linear infinite}
+.cloud::before,.cloud::after{content:'';position:absolute;background:#fff;border-radius:50%}
+.cloud.c1{width:120px;height:44px;top:7%;left:-160px;animation-duration:90s}
+.cloud.c1::before{width:66px;height:66px;top:-32px;left:16px}
+.cloud.c1::after{width:48px;height:48px;top:-22px;left:62px}
+.cloud.c2{width:90px;height:34px;top:19%;left:-140px;animation-duration:64s}
+.cloud.c2::before{width:52px;height:52px;top:-26px;left:12px}
+.cloud.c2::after{width:38px;height:38px;top:-16px;left:46px}
+.cloud.c3{width:140px;height:50px;top:13%;left:-200px;animation-duration:120s;opacity:.65}
+.cloud.c3::before{width:74px;height:74px;top:-36px;left:22px}
+.cloud.c3::after{width:56px;height:56px;top:-24px;left:70px}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(125vw)}}
+
+/* ================= 顶栏 ================= */
+.topbar{
+  position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;
+  padding:10px 18px;background:rgba(255,253,253,.94);backdrop-filter:blur(8px);
+  box-shadow:0 3px 16px rgba(150,110,140,.14);
+}
+.tb-logo{display:flex;align-items:center;gap:8px;font-size:1.25rem;font-weight:bold;white-space:nowrap}
+.tb-logo .ico{font-size:1.7rem}
+.tb-title{font-size:1.05rem;color:var(--ink-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:34vw}
+.tb-spacer{flex:1}
+.tb-btn{
+  display:flex;align-items:center;gap:6px;height:46px;padding:0 14px;border-radius:14px;
+  background:var(--white);border:2.5px solid rgba(90,74,94,.13);font-size:.95rem;font-weight:bold;
+  transition:transform .1s,background .15s;white-space:nowrap;
+}
+.tb-btn:hover{background:var(--cream-l)}
+.tb-btn:active{transform:translateY(3px)}
+.tb-btn .i{font-size:1.3rem}
+.tb-btn.on{background:var(--cream);border-color:var(--ink-3)}
+.tb-btn.primary{background:var(--mint);border-color:var(--mint-d)}
+.tb-btn.primary:hover{background:var(--mint-l)}
+
+/* ================= 布局容器 ================= */
+.wrap{max-width:1720px;margin:0 auto;padding:22px 22px 130px}
+.view{display:none;animation:fadeUp .32s ease}
+.view.show{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ================= 首页 · 单元选择 ================= */
+.home-head{text-align:center;margin:18px 0 26px}
+.home-head h1{font-size:2.5rem;letter-spacing:1px;text-shadow:2px 3px 0 #fff}
+.home-head p{color:var(--ink-2);font-size:1.1rem;margin-top:8px}
+.unit-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px}
+.unit-card{
+  position:relative;border-radius:28px;padding:26px 24px 22px;text-align:left;
+  box-shadow:var(--shadow);border:4px solid #fff;overflow:hidden;
+  transition:transform .16s;cursor:pointer;
+}
+.unit-card:hover{transform:translateY(-6px) scale(1.012)}
+.unit-card:active{transform:translateY(2px)}
+.unit-card .badge{
+  display:inline-block;padding:5px 14px;border-radius:999px;background:rgba(255,255,255,.75);
+  font-size:.9rem;font-weight:bold;margin-bottom:12px;
+}
+.unit-card h3{font-size:1.85rem;line-height:1.3;margin-bottom:6px}
+.unit-card .sub{font-size:1.05rem;color:var(--ink-2);margin-bottom:16px}
+.unit-card .meta{display:flex;gap:8px;flex-wrap:wrap}
+.unit-card .chip{background:rgba(255,255,255,.75);border-radius:999px;padding:5px 12px;font-size:.85rem}
+.unit-card .go{position:absolute;right:20px;bottom:18px;font-size:2.2rem;opacity:.65}
+.unit-card.locked{filter:grayscale(.55);opacity:.72;cursor:not-allowed}
+.unit-card.locked:hover{transform:none}
+
+/* ================= 单元页 · 游戏卡片 ================= */
+.unit-hero{
+  display:flex;align-items:center;gap:18px;padding:20px 24px;border-radius:26px;
+  box-shadow:var(--shadow-s);border:4px solid #fff;margin-bottom:22px;
+}
+.unit-hero .emo{font-size:3.2rem}
+.unit-hero .txt h2{font-size:1.9rem;line-height:1.25}
+.unit-hero .txt p{color:var(--ink-2);font-size:1.05rem;margin-top:4px}
+.game-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:20px}
+.game-card{
+  border-radius:26px;padding:24px 20px;box-shadow:var(--shadow-s);border:4px solid #fff;
+  cursor:pointer;transition:transform .16s;text-align:center;position:relative;overflow:hidden;
+}
+.game-card:hover{transform:translateY(-6px) scale(1.015)}
+.game-card:active{transform:translateY(2px)}
+.game-card .g-emo{font-size:3.2rem;display:block;margin-bottom:8px}
+.game-card h4{font-size:1.5rem;margin-bottom:6px}
+.game-card p{font-size:.95rem;color:var(--ink-2);line-height:1.5;min-height:2.8em}
+.game-card .tag{
+  display:inline-block;margin-top:10px;padding:4px 12px;border-radius:999px;
+  background:rgba(255,255,255,.8);font-size:.8rem;
+}
+.sect-title{font-size:1.3rem;margin:30px 0 14px;display:flex;align-items:center;gap:8px}
+.sect-title::before{content:'';width:8px;height:26px;border-radius:6px;background:var(--pink-d)}
+
+/* ================= 游戏舞台 ================= */
+.stage{
+  background:var(--white);border-radius:30px;padding:22px 24px 28px;min-height:64vh;
+  box-shadow:var(--shadow);border:4px solid #fff;position:relative;
+}
+.stage-head{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:3px dashed rgba(150,110,140,.18)}
+.stage-head h2{font-size:1.7rem;display:flex;align-items:center;gap:10px}
+.stage-head .spacer{flex:1}
+.hud{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hud-item{
+  background:var(--cream-l);border-radius:14px;padding:7px 14px;font-size:1.05rem;font-weight:bold;
+  display:flex;align-items:center;gap:6px;
+}
+.name-in{
+  height:46px;padding:0 14px;border-radius:14px;border:3px solid rgba(90,74,94,.15);
+  background:#FFFBF8;font-size:1.05rem;width:160px;font-family:inherit;color:var(--ink);user-select:text;
+}
+.name-in:focus{outline:none;border-color:var(--mint-d);background:#fff}
+.btn{
+  height:54px;padding:0 22px;border-radius:16px;font-size:1.1rem;font-weight:bold;
+  background:var(--white);border:3px solid rgba(90,74,94,.14);transition:transform .1s,background .15s;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn:hover{background:var(--cream-l)}
+.btn:active{transform:translateY(3px)}
+.btn.big{height:66px;font-size:1.35rem;padding:0 30px}
+.btn.pink{background:var(--pink);border-color:var(--pink-d)}
+.btn.pink:hover{background:var(--pink-l)}
+.btn.mint{background:var(--mint);border-color:var(--mint-d)}
+.btn.mint:hover{background:var(--mint-l)}
+.btn.blue{background:var(--blue);border-color:var(--blue-d)}
+.btn.blue:hover{background:var(--blue-l)}
+.btn.lav{background:var(--lav);border-color:var(--lav-d)}
+.btn.lav:hover{background:var(--lav-l)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+
+/* ================= 游戏1 · 单词对对碰 ================= */
+.match-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1180px;margin:0 auto}
+.mcard{
+  aspect-ratio:1/1;border-radius:22px;display:flex;align-items:center;justify-content:center;
+  font-size:1.55rem;font-weight:bold;text-align:center;padding:8px;cursor:pointer;
+  background:linear-gradient(160deg,var(--pink-l),var(--blue-l));border:4px solid #fff;
+  box-shadow:var(--shadow-s);transition:transform .18s;position:relative;overflow:hidden;
+  line-height:1.25;
+}
+.mcard:hover{transform:translateY(-5px)}
+.mcard .face{display:none;flex-direction:column;align-items:center;gap:4px;line-height:1.2}
+.mcard .back{font-size:2.6rem}
+.mcard.flipped{background:linear-gradient(160deg,#fff,var(--cream-l))}
+.mcard.flipped .face{display:flex}
+.mcard.flipped .back{display:none}
+.mcard .face .zc{font-size:1rem;color:var(--ink-2);font-weight:normal}
+.mcard .face .em{font-size:1.7rem}
+.mcard.done{background:linear-gradient(160deg,var(--mint-l),var(--mint));border-color:var(--mint-d);animation:pop .34s}
+.mcard.done .face{display:flex}
+.mcard.done .back{display:none}
+.mcard.wrong{animation:shake .38s}
+@keyframes pop{0%{transform:scale(.86)}60%{transform:scale(1.07)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-11px)}40%{transform:translateX(11px)}60%{transform:translateX(-7px)}80%{transform:translateX(7px)}}
+
+/* ================= 游戏2 · 闪电判断 ================= */
+.judge-box{
+  max-width:1180px;margin:6px auto 0;text-align:center;
+}
+.judge-en{font-size:2.9rem;font-weight:bold;line-height:1.35;margin:26px 10px 10px}
+.judge-zh{font-size:1.5rem;color:var(--ink-2);margin-bottom:8px}
+.judge-hint{font-size:1.05rem;color:var(--ink-3);margin-bottom:22px}
+.judge-btns{display:flex;gap:26px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.judge-btn{
+  width:min(320px,42vw);height:min(180px,26vh);border-radius:30px;font-size:2.6rem;font-weight:bold;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  border:5px solid #fff;box-shadow:var(--shadow);transition:transform .12s;
+}
+.judge-btn:hover{transform:scale(1.04)}
+.judge-btn:active{transform:scale(.97)}
+.judge-btn small{font-size:1.05rem;font-weight:normal;opacity:.85}
+.judge-btn.yes{background:linear-gradient(160deg,var(--mint),var(--mint-d));color:#164E32}
+.judge-btn.no{background:linear-gradient(160deg,#FFB3C0,var(--no));color:#5C1626}
+.judge-fb{margin-top:22px;font-size:1.6rem;font-weight:bold;min-height:2.2em}
+.judge-fb .ok{color:var(--ok)}
+.judge-fb .bad{color:var(--no)}
+.fb-line{font-size:1.8rem}
+.fb-ans{
+  display:inline-block;margin-top:10px;padding:12px 26px;border-radius:18px;font-size:1.4rem;
+  font-weight:normal;background:var(--mint-l);border:3px solid var(--mint-d);color:#1F5C3D;
+}
+.fb-ans b{font-size:1.55rem}
+.fb-arrow{opacity:.55;margin:0 8px}
+.fb-note{font-size:1.2rem;font-weight:normal;color:var(--ink-2);margin-top:10px}
+.judge-bar{height:16px;background:var(--pink-l);border-radius:999px;overflow:hidden;margin:18px auto 0;max-width:900px}
+.judge-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--mint-d),var(--blue-d));border-radius:999px;transition:width .35s}
+
+/* ================= 游戏3 · 句子拼装台 ================= */
+.build-zh{
+  text-align:center;font-size:1.7rem;margin:8px 0 6px;color:var(--ink-2);
+}
+.build-slot{
+  min-height:110px;border-radius:22px;background:var(--cream-l);border:4px dashed var(--cream-d);
+  display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;padding:14px;margin:16px auto;max-width:1180px;
+}
+.build-slot .ph{color:var(--ink-3);font-size:1.2rem}
+.word-pool{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;max-width:1180px;margin:20px auto 0}
+.wchip{
+  padding:14px 24px;border-radius:18px;font-size:1.6rem;font-weight:bold;background:var(--blue);
+  border:4px solid #fff;box-shadow:var(--shadow-s);transition:transform .12s;cursor:pointer;
+}
+.wchip:hover{transform:translateY(-4px) scale(1.03)}
+.wchip:active{transform:scale(.96)}
+.wchip.used{opacity:.28;pointer-events:none}
+.wchip.in-slot{background:var(--cream)}
+.build-msg{text-align:center;font-size:1.5rem;font-weight:bold;margin-top:22px;min-height:2em}
+.build-msg .ok{color:var(--ok)}
+.build-msg .bad{color:var(--no)}
+
+/* ================= 游戏4 · 角色对话秀 ================= */
+.roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:18px;max-width:1400px;margin:0 auto}
+.role-card{
+  border-radius:26px;padding:20px 12px;text-align:center;box-shadow:var(--shadow-s);border:4px solid #fff;
+  cursor:pointer;transition:transform .16s;background:linear-gradient(170deg,var(--pink-l),var(--blue-l));
+}
+.role-card:hover{transform:translateY(-6px) scale(1.02)}
+.role-card:active{transform:scale(.97)}
+.role-card.active{background:linear-gradient(170deg,var(--cream),var(--cream-l));border-color:var(--cream-d)}
+.role-card .ava{font-size:3.6rem;line-height:1.1}
+.role-card .nm{font-size:1.35rem;font-weight:bold;margin-top:4px}
+.role-card .hint{font-size:.85rem;color:var(--ink-3);margin-top:2px}
+.role-bubble{
+  max-width:1180px;margin:24px auto 0;position:relative;border-radius:26px;padding:26px 28px;
+  background:var(--white);border:5px solid var(--cream);box-shadow:var(--shadow-s);text-align:center;
+}
+.role-bubble::before{
+  content:'';position:absolute;top:-20px;left:50%;transform:translateX(-50%);
+  border-left:18px solid transparent;border-right:18px solid transparent;border-bottom:20px solid var(--cream);
+}
+.role-bubble .en{font-size:2.3rem;font-weight:bold;line-height:1.4}
+.role-bubble .zh{font-size:1.35rem;color:var(--ink-2);margin-top:10px}
+.role-bubble.hidden-txt .en,.role-bubble.hidden-txt .zh{filter:blur(11px);user-select:none;transition:filter .3s}
+.role-bubble .mask-tip{position:absolute;inset:0;display:none;align-items:center;justify-content:center;font-size:1.5rem;color:var(--ink-2)}
+.role-bubble.hidden-txt .mask-tip{display:flex}
+.role-modes{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+
+/* ================= 游戏5 · 小组抢答赛 ================= */
+.battle-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;margin-bottom:16px}
+.grid-lucky{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;max-width:1180px;margin:0 auto}
+.lucky{
+  aspect-ratio:1.35/1;border-radius:24px;font-size:2.2rem;display:flex;align-items:center;justify-content:center;
+  box-shadow:var(--shadow-s);border:4px solid #fff;cursor:pointer;transition:transform .14s;
+  background:linear-gradient(160deg,var(--lav),var(--lav-l));position:relative;
+}
+.lucky:hover{transform:translateY(-5px) scale(1.03)}
+.lucky:active{transform:scale(.96)}
+.lucky.used{cursor:default;background:#F2EEF2;color:var(--ink-3);font-size:1.6rem}
+.lucky.used:hover{transform:none}
+.lucky .mark{font-size:1.5rem}
+.group-pick{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin:18px 0 4px}
+.gpill{padding:12px 22px;border-radius:999px;font-size:1.2rem;font-weight:bold;border:4px solid #fff;box-shadow:var(--shadow-s);cursor:pointer;transition:transform .12s}
+.gpill:hover{transform:translateY(-3px)}
+.gpill.sel{outline:5px solid var(--ink-3);outline-offset:2px}
+.quiz-box{max-width:1180px;margin:0 auto;text-align:center}
+.quiz-q{font-size:2.2rem;font-weight:bold;line-height:1.4;margin-bottom:6px}
+.quiz-zh{font-size:1.25rem;color:var(--ink-2);margin-bottom:20px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;max-width:1000px;margin:0 auto}
+.opt{
+  padding:20px 18px;border-radius:20px;font-size:1.5rem;font-weight:bold;border:4px solid #fff;
+  box-shadow:var(--shadow-s);cursor:pointer;transition:transform .12s;background:var(--blue-l);text-align:center;
+}
+.opt:hover{transform:translateY(-4px) scale(1.02)}
+.opt:active{transform:scale(.97)}
+.opt.right{background:var(--mint);border-color:var(--mint-d);animation:pop .35s}
+.opt.wrong{background:var(--no-l);border-color:var(--no);animation:shake .38s}
+.opt.dim{opacity:.42}
+.opt .li{display:block;font-size:1.05rem;opacity:.75;margin-bottom:3px}
+
+/* ================= 计分板（固定底部） ================= */
+.scorebar{
+  position:fixed;left:0;right:0;bottom:0;z-index:70;display:flex;align-items:center;gap:12px;
+  padding:10px 18px;background:rgba(255,253,253,.95);backdrop-filter:blur(8px);
+  box-shadow:0 -4px 18px rgba(150,110,140,.16);transition:transform .3s;
+}
+.scorebar.hide-bar{transform:translateY(110%)}
+.score-list{display:flex;gap:12px;flex-wrap:wrap;flex:1}
+.gscore{
+  display:flex;align-items:center;gap:10px;padding:8px 16px;border-radius:16px;font-weight:bold;
+  border:3px solid #fff;box-shadow:var(--shadow-s);font-size:1.15rem;min-width:150px;position:relative;
+}
+.gscore .gn{white-space:nowrap}
+.gscore .gv{font-size:1.5rem;margin-left:auto;min-width:1.8em;text-align:right}
+.gscore .pm{display:flex;flex-direction:column;gap:2px}
+.gscore .pm button{width:26px;height:19px;border-radius:6px;background:rgba(255,255,255,.7);font-size:.7rem;line-height:1;font-weight:bold}
+.gscore .pm button:hover{background:#fff}
+.gscore.lead{outline:4px solid var(--cream-d);outline-offset:2px}
+.gscore.bump{animation:pop .4s}
+.g0{background:linear-gradient(120deg,var(--pink),var(--pink-l))}
+.g1{background:linear-gradient(120deg,var(--blue),var(--blue-l))}
+.g2{background:linear-gradient(120deg,var(--mint),var(--mint-l))}
+.g3{background:linear-gradient(120deg,var(--cream),var(--cream-l))}
+.g4{background:linear-gradient(120deg,var(--lav),var(--lav-l))}
+.g5{background:linear-gradient(120deg,var(--peach),#FFEEE2)}
+
+/* ================= 弹窗 ================= */
+.mask{position:fixed;inset:0;background:rgba(74,58,80,.45);z-index:200;display:none;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(3px)}
+.mask.show{display:flex;animation:fadeUp .22s}
+.modal{
+  background:var(--white);border-radius:30px;padding:26px 28px;max-width:760px;width:100%;
+  box-shadow:0 20px 50px rgba(90,60,90,.3);max-height:88vh;overflow:auto;border:5px solid #fff;
+}
+.modal h3{font-size:1.6rem;margin-bottom:14px;display:flex;align-items:center;gap:10px}
+.modal .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.modal label{font-size:1.05rem;font-weight:bold}
+.modal textarea,.modal input[type=text],.modal input[type=number]{
+  width:100%;padding:12px 14px;border-radius:14px;border:3px solid rgba(90,74,94,.15);background:#FFFBF8;font-size:1rem;user-select:text;
+}
+.modal .foot{display:flex;gap:12px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+
+/* 计时器 */
+.timer-num{font-size:6rem;font-weight:bold;text-align:center;line-height:1.1;font-variant-numeric:tabular-nums}
+.timer-ring{max-width:340px;margin:0 auto;position:relative}
+.timer-presets{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.timer-bar{height:20px;background:var(--pink-l);border-radius:999px;overflow:hidden;margin-top:14px}
+.timer-bar i{display:block;height:100%;background:linear-gradient(90deg,var(--mint-d),var(--cream-d));transition:width .3s linear}
+.timer-num.warn{color:var(--no);animation:blink .7s infinite}
+@keyframes blink{50%{opacity:.35}}
+
+/* 点名器 */
+.picker-name{font-size:3.4rem;font-weight:bold;text-align:center;min-height:1.5em;line-height:1.3;word-break:break-all;padding:20px 10px}
+.picker-name.rolling{color:var(--ink-3);opacity:.75}
+.picker-hit{font-size:1.2rem;text-align:center;color:var(--ink-2);min-height:1.6em}
+
+/* 结果庆祝 */
+.celebrate{text-align:center;padding:20px 10px}
+.celebrate .big{font-size:4rem;line-height:1.2}
+.celebrate h3{font-size:2.2rem;justify-content:center;margin:12px 0}
+.celebrate p{font-size:1.35rem;color:var(--ink-2);margin:8px 0}
+.celebrate .stars{font-size:2.4rem;margin:10px 0}
+.rank-list{max-width:520px;margin:18px auto 0;text-align:left}
+.rank-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-radius:16px;margin-bottom:10px;font-size:1.3rem;font-weight:bold;box-shadow:var(--shadow-s)}
+.rank-row .rk{font-size:1.6rem;width:2em;text-align:center}
+.rank-row .rs{margin-left:auto;font-size:1.5rem}
+
+/* 设置项 */
+.set-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:2px dashed rgba(150,110,140,.15);flex-wrap:wrap}
+.set-row:last-child{border-bottom:none}
+.set-row .lb{font-weight:bold;font-size:1.05rem;min-width:120px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}
+.seg button{padding:9px 16px;border-radius:12px;background:#F4EFF3;font-weight:bold;font-size:.95rem;border:2.5px solid transparent}
+.seg button.on{background:var(--cream);border-color:var(--cream-d)}
+.tip{font-size:.92rem;color:var(--ink-3);line-height:1.6;margin-top:6px}
+
+/* 小工具 */
+.toast{
+  position:fixed;left:50%;bottom:120px;transform:translateX(-50%) translateY(20px);z-index:300;
+  background:rgba(74,58,80,.92);color:#fff;padding:13px 26px;border-radius:999px;font-size:1.1rem;
+  opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.hintline{text-align:center;color:var(--ink-3);font-size:1rem;margin-top:16px;line-height:1.7}
+.kbd{display:inline-block;padding:2px 9px;border-radius:7px;background:#F0EBF0;border:2px solid #E0D8E2;font-size:.88rem;margin:0 2px}
+.empty-tip{text-align:center;padding:50px 20px;color:var(--ink-3);font-size:1.2rem}
+/* 嵌入模式：被工作台用 iframe 调用时（?embed=1）隐藏自带顶栏与计分底栏，避免「两层导航」 */
+body.embed .topbar{display:none}
+body.embed .scorebar{display:none}
+body.embed .wrap{padding:10px 14px 24px}
+@media (max-width:900px){
+  .match-grid{grid-template-columns:repeat(3,1fr)}
+  .grid-lucky{grid-template-columns:repeat(3,1fr)}
+  .tb-title{display:none}
+  .tb-btn .t{display:none}
+  .tb-btn{padding:0 12px}
+}
+</style>
+</head>
+<body>
+<div class="bg-scene">
+  <div class="cloud c1"></div><div class="cloud c2"></div><div class="cloud c3"></div>
+  <div class="grass"></div>
+</div>
+
+<header class="topbar">
+  <div class="tb-logo"><span class="ico">🎪</span><span>英语互动课堂</span></div>
+  <div class="tb-title" id="tbTitle">外研版（2024新版）</div>
+  <div class="tb-spacer"></div>
+  <button class="tb-btn" id="btnTimer"><span class="i">⏱</span><span class="t">计时器</span></button>
+  <button class="tb-btn" id="btnPicker"><span class="i">🎲</span><span class="t">随机点名</span></button>
+  <button class="tb-btn" id="btnScore"><span class="i">🏅</span><span class="t">分组计分</span></button>
+  <button class="tb-btn" id="btnSet"><span class="i">⚙️</span><span class="t">设置</span></button>
+  <button class="tb-btn" id="btnFull"><span class="i">⛶</span><span class="t">全屏</span></button>
+</header>
+
+<div class="wrap">
+  <!-- 首页 -->
+  <section class="view show" id="viewHome">
+    <div class="home-head">
+      <h1>🎠 英语互动课堂 · 大屏游戏厅</h1>
+      <p>外研版（2024新版）三年级、四年级上册全册 —— 选一个单元，老师点、学生喊、全班一起玩</p>
+      <p id="homeStat" style="margin-top:10px;font-size:1rem;color:var(--ink-3)"></p>
+    </div>
+    <div class="sect-title">📚 三年级上册</div>
+    <div class="unit-grid" id="gridG3"></div>
+    <div class="sect-title">📗 四年级上册</div>
+    <div class="unit-grid" id="gridG4"></div>
+    <div class="home-head" style="margin-top:40px">
+      <p style="font-size:1rem">💡 顶部工具栏随时可用：计时器 · 随机点名 · 分组计分 · 发音与音效设置</p>
+    </div>
+  </section>
+
+  <!-- 单元页 -->
+  <section class="view" id="viewUnit">
+    <div class="unit-hero" id="unitHero"></div>
+    <div class="sect-title">🎮 选一个游戏</div>
+    <div class="game-grid" id="gameGrid"></div>
+    <div class="sect-title">📖 本课重点（点一点，全班跟读）</div>
+    <div class="stage" style="min-height:auto">
+      <div id="keyBox"></div>
+    </div>
+    <div style="text-align:center;margin-top:24px">
+      <button class="btn" id="btnBackHome">← 返回单元列表</button>
+    </div>
+  </section>
+
+  <!-- 游戏页 -->
+  <section class="view" id="viewGame">
+    <div class="stage" id="stage"></div>
+    <div style="text-align:center;margin-top:22px">
+      <button class="btn" id="btnBackUnit">← 返回游戏列表</button>
+      <button class="btn ghost" id="btnRestart">🔄 再来一局</button>
+    </div>
+  </section>
+</div>
+
+<!-- 计分板 -->
+<div class="scorebar" id="scorebar">
+  <div style="font-weight:bold;font-size:1.05rem;white-space:nowrap">🏅 分组</div>
+  <div class="score-list" id="scoreList"></div>
+  <button class="tb-btn" id="btnScoreAdd"><span class="i">➕</span><span class="t">加组</span></button>
+  <button class="tb-btn" id="btnScoreReset"><span class="i">↺</span><span class="t">清零</span></button>
+  <button class="tb-btn" id="btnScoreHide"><span class="i">▾</span></button>
+</div>
+
+<!-- 弹窗：计时器 -->
+<div class="mask" id="maskTimer"><div class="modal" style="max-width:520px">
+  <h3>⏱ 课堂计时器</h3>
+  <div class="timer-ring">
+    <div class="timer-num" id="tmNum">60</div>
+  </div>
+  <div class="timer-bar"><i id="tmBar" style="width:100%"></i></div>
+  <div class="timer-presets" id="tmPresets"></div>
+  <div class="row" style="justify-content:center;margin-top:16px">
+    <button class="btn mint" id="tmStart">▶ 开始</button>
+    <button class="btn" id="tmPause">⏸ 暂停</button>
+    <button class="btn ghost" id="tmReset">↺ 重置</button>
+  </div>
+</div></div>
+
+<!-- 弹窗：随机点名 -->
+<div class="mask" id="maskPicker"><div class="modal">
+  <h3>🎲 随机点名器</h3>
+  <div class="picker-name" id="pkName">准备就绪</div>
+  <div class="picker-hit" id="pkHit">导入全班名单，一键抽人回答问题</div>
+  <div class="row" style="margin-top:14px">
+    <textarea id="pkList" rows="5" placeholder="粘贴全班名单，每行一个或用逗号/空格分隔&#10;例：&#10;李明&#10;王芳&#10;张伟"></textarea>
+  </div>
+  <div class="row" style="gap:10px">
+    <button class="btn blue" id="pkRoll">🎲 开始抽人</button>
+    <button class="btn ghost" id="pkSave">💾 保存名单</button>
+    <button class="btn ghost" id="pkClear">🗑 清空</button>
+    <span class="tip" id="pkCount" style="margin:0"></span>
+  </div>
+  <div class="tip">💡 抽过的名字会记入「已抽」，抽完一轮自动重置。名单保存在本机浏览器，下次打开还在。</div>
+</div></div>
+
+<!-- 弹窗：分组计分设置 -->
+<div class="mask" id="maskScore"><div class="modal" style="max-width:560px">
+  <h3>🏅 分组计分设置</h3>
+  <div id="scoreCfg"></div>
+  <div class="row" style="margin-top:14px">
+    <button class="btn mint" id="scSave">💾 保存</button>
+    <button class="btn ghost" id="scReset">↺ 全部清零</button>
+    <button class="btn ghost" id="scDefault">🔤 恢复默认组名</button>
+  </div>
+  <div class="tip">💡 抢答赛里可以直接给当前组加分；也可以随时点计分板上的 ＋ / － 手动调分。</div>
+</div></div>
+
+<!-- 弹窗：设置 -->
+<div class="mask" id="maskSet"><div class="modal">
+  <h3>⚙️ 课堂设置</h3>
+  <div class="set-row">
+    <span class="lb">🔊 发音</span>
+    <div class="seg" id="segVoice">
+      <button data-v="on" class="on">开</button><button data-v="off">关</button>
+    </div>
+    <span class="tip" style="margin:0">英语发音（男/女声由系统决定）</span>
+  </div>
+  <div class="set-row">
+    <span class="lb">🩺 发音诊断</span>
+    <button class="btn blue" id="setTest" style="height:46px;padding:0 18px">🔊 点我测试</button>
+    <span class="tip" id="voiceInfo" style="margin:0;flex:1;min-width:200px"></span>
+  </div>
+  <div class="set-row">
+    <span class="lb">🐢 语速</span>
+    <div class="seg" id="segRate">
+      <button data-r="0.6">慢速</button><button data-r="0.8" class="on">常速</button><button data-r="1">快速</button>
+    </div>
+  </div>
+  <div class="set-row">
+    <span class="lb">🎵 音效</span>
+    <div class="seg" id="segSfx">
+      <button data-s="on" class="on">开</button><button data-s="off">关</button>
+    </div>
+    <span class="tip" style="margin:0">答对/答错/翻牌/胜利提示音</span>
+  </div>
+  <div class="set-row">
+    <span class="lb">🅰️ 字号</span>
+    <div class="seg" id="segFont">
+      <button data-f="0.9">小</button><button data-f="1" class="on">标准</button><button data-f="1.15">大</button><button data-f="1.3">超大</button>
+    </div>
+    <span class="tip" style="margin:0">投影远、教室大 → 选「超大」</span>
+  </div>
+  <div class="foot">
+    <button class="btn mint" id="setClose">完成</button>
+  </div>
+  <div class="tip">⌨️ 快捷键： <span class="kbd">空格</span> 下一题 / 继续　<span class="kbd">Esc</span> 返回　<span class="kbd">T</span> 计时器　<span class="kbd">P</span> 随机点名</div>
+</div></div>
+
+<!-- 弹窗：挑战排行榜 -->
+<div class="mask" id="maskRank"><div class="modal" style="max-width:640px">
+  <h3>🏆 单词对对碰 · 挑战排行榜</h3>
+  <div class="seg" id="rankTab" style="margin-bottom:12px">
+    <button data-r="sec" class="on" style="font-size:1.05rem;padding:10px 20px">⏱ 用时榜</button>
+    <button data-r="mv" style="font-size:1.05rem;padding:10px 20px">👣 步数榜</button>
+  </div>
+  <p class="tip" id="rankSub" style="margin-bottom:16px"></p>
+  <div id="rankList"></div>
+  <div class="foot">
+    <button class="btn ghost" id="rankClear">🗑 清空本单元记录</button>
+    <button class="btn mint" id="rankClose">关闭</button>
+  </div>
+  <div class="tip">💡 记录存在这台电脑的浏览器里，换电脑不会同步。每个单元各有一份榜单。</div>
+</div></div>
+
+<!-- 浮层：大字结果 -->
+<div class="mask" id="maskBig"><div class="modal" style="max-width:640px;text-align:center;background:linear-gradient(170deg,#FFFDFD,#FFF3F7)">
+  <div class="celebrate" id="bigBox"></div>
+  <div class="foot" style="justify-content:center">
+    <button class="btn mint big" id="bigOk">继续</button>
+  </div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ==========================================================
+   英语互动课堂 · 单文件版
+   数据层（DATA）与游戏引擎（ENGINE）分离，加新单元只需往 COURSE 里加数据
+   ========================================================== */
+"use strict";
+
+/* ==================== 数据层 ====================
+   加新单元 = 往 COURSE 数组里加一个对象，无需改引擎代码
+   字段说明：
+   words     [{en,zh,em}]      → 单词对对碰 / 词块素材
+   sentences [{en,zh}]         → 句子拼装台（自动拆词块）/ 本课重点跟读
+   roles     [{nm,ava,en,zh}]  → 角色对话秀
+   judge     [{en,zh,ans,note}]→ 闪电判断
+   quiz      [{q,qzh,opts,ans}]→ 小组抢答赛
+==================================================*/
+const COURSE = [
+  {
+    id: "g3a-u1",
+    grade: "g3",
+    gradeName: "三年级上册",
+    unit: "Unit 1",
+    title: "Let's be friends!",
+    zh: "让我们做朋友吧！",
+    emoji: "🤝",
+    bg: "linear-gradient(160deg,#FFD9E6,#DCF1FC)",
+    tag: ["交朋友","自我介绍","I'm / He's / She's / We're"],
+    words: [
+      {
+        en: "friend",
+        zh: "朋友",
+        em: "🤝"
+      },
+      {
+        en: "meet",
+        zh: "认识，结识",
+        em: "👋"
+      },
+      {
+        en: "play",
+        zh: "玩，玩耍",
+        em: "⚽"
+      },
+      {
+        en: "happy",
+        zh: "高兴的",
+        em: "😊"
+      },
+      {
+        en: "new",
+        zh: "新的",
+        em: "✨"
+      },
+      {
+        en: "welcome",
+        zh: "欢迎",
+        em: "🎉"
+      },
+      {
+        en: "nine",
+        zh: "九",
+        em: "9️⃣"
+      },
+      {
+        en: "twin",
+        zh: "双胞胎之一",
+        em: "👯"
+      },
+      {
+        en: "help",
+        zh: "帮助，帮忙",
+        em: "🆘"
+      },
+      {
+        en: "together",
+        zh: "一起",
+        em: "🤗"
+      },
+      {
+        en: "great",
+        zh: "极棒的",
+        em: "🌟"
+      },
+      {
+        en: "song",
+        zh: "歌曲",
+        em: "🎵"
+      },
+      {
+        en: "everyone",
+        zh: "每个人",
+        em: "👦"
+      },
+      {
+        en: "thank",
+        zh: "感谢",
+        em: "🙏"
+      },
+      {
+        en: "from",
+        zh: "来自，从",
+        em: "🗺️"
+      },
+      {
+        en: "sing",
+        zh: "唱，歌唱",
+        em: "🎤"
+      }
+    ],
+    sentences: [
+      {
+        en: "I'm Sam.",
+        zh: "我是萨姆。"
+      },
+      {
+        en: "I'm nine.",
+        zh: "我九岁。"
+      },
+      {
+        en: "She's Amy.",
+        zh: "她是埃米。"
+      },
+      {
+        en: "He's Daming.",
+        zh: "他是大明。"
+      },
+      {
+        en: "We're twins!",
+        zh: "我们是双胞胎！"
+      },
+      {
+        en: "We're from the UK.",
+        zh: "我们来自英国。"
+      },
+      {
+        en: "We're friends!",
+        zh: "我们是朋友！"
+      },
+      {
+        en: "Let's be friends!",
+        zh: "我们做朋友吧！"
+      },
+      {
+        en: "Let's play!",
+        zh: "我们一起玩吧！"
+      },
+      {
+        en: "Let's have a happy day!",
+        zh: "让我们度过快乐的一天！"
+      },
+      {
+        en: "Come and play!",
+        zh: "来玩吧！"
+      },
+      {
+        en: "Thank you.",
+        zh: "谢谢你。"
+      },
+      {
+        en: "Here you are.",
+        zh: "给你。"
+      },
+      {
+        en: "I'm nine, too.",
+        zh: "我也九岁。"
+      }
+    ],
+    roles: [
+      {
+        nm: "Sam",
+        ava: "👦",
+        en: "Hi, everyone! I'm Sam. I'm nine.",
+        zh: "大家好！我是萨姆。我九岁。"
+      },
+      {
+        nm: "Amy",
+        ava: "👧",
+        en: "She's Amy. She's nine, too.",
+        zh: "她是埃米。她也九岁。"
+      },
+      {
+        nm: "Daming",
+        ava: "🧒",
+        en: "He's Daming. We're nine.",
+        zh: "他是大明。我们九岁。"
+      },
+      {
+        nm: "Lingling",
+        ava: "👧",
+        en: "Hi, Sam. Hi, Amy. I'm Lingling. Come and play!",
+        zh: "你好萨姆，你好埃米。我是玲玲。来玩吧！"
+      },
+      {
+        nm: "Mia",
+        ava: "👧",
+        en: "Hi, I'm Mia. He's David.",
+        zh: "你好，我是米娅。他是戴维。"
+      },
+      {
+        nm: "David",
+        ava: "🧒",
+        en: "Hi, I'm David. We're nine.",
+        zh: "你好，我是戴维。我们九岁。"
+      },
+      {
+        nm: "Ben",
+        ava: "🧒",
+        en: "Hi, I'm Ben. I'm nine, too.",
+        zh: "你好，我是本。我也九岁。"
+      },
+      {
+        nm: "Tara",
+        ava: "👧",
+        en: "Tara is my friend. She's from the US.",
+        zh: "塔拉是我的朋友。她来自美国。"
+      }
+    ],
+    judge: [
+      {
+        en: "She's Amy.",
+        zh: "她是埃米。",
+        ans: true
+      },
+      {
+        en: "He's Amy.",
+        zh: "她是埃米。",
+        ans: false,
+        note: "Amy 是女孩，要用 She's",
+        fix: {
+          en: "She's Amy.",
+          zh: "她是埃米。"
+        }
+      },
+      {
+        en: "I'm nine.",
+        zh: "我九岁。",
+        ans: true
+      },
+      {
+        en: "We're from the UK.",
+        zh: "我们来自美国。",
+        ans: false,
+        note: "UK 是英国，US 才是美国",
+        fix: {
+          en: "We're from the UK.",
+          zh: "我们来自英国。"
+        }
+      },
+      {
+        en: "Let's play!",
+        zh: "我们一起玩吧！",
+        ans: true
+      },
+      {
+        en: "Thank you.",
+        zh: "再见。",
+        ans: false,
+        note: "Thank you 是「谢谢你」，再见是 Goodbye",
+        fix: {
+          en: "Thank you.",
+          zh: "谢谢你。"
+        }
+      },
+      {
+        en: "He's Daming.",
+        zh: "他是大明。",
+        ans: true
+      },
+      {
+        en: "Hi, everyone!",
+        zh: "大家好！",
+        ans: true
+      },
+      {
+        en: "Let's be friends!",
+        zh: "我们一起走吧！",
+        ans: false,
+        note: "应该翻译成「我们做朋友吧」",
+        fix: {
+          en: "Let's be friends!",
+          zh: "我们做朋友吧！"
+        }
+      },
+      {
+        en: "We're twins!",
+        zh: "我们是双胞胎！",
+        ans: true
+      },
+      {
+        en: "Here you are.",
+        zh: "给你。",
+        ans: true
+      },
+      {
+        en: "I'm nine, too.",
+        zh: "我也九岁。",
+        ans: true
+      }
+    ],
+    quiz: [
+      {
+        q: "I'm Sam. I'm ___.",
+        qzh: "我是萨姆。我九岁。",
+        opts: ["nine","ten","eight","seven"],
+        ans: 0
+      },
+      {
+        q: "想说「她是埃米」，应该说：",
+        opts: ["He's Amy.","It's Amy.","She's Amy.","I'm Amy."],
+        ans: 2
+      },
+      {
+        q: "「我们是双胞胎！」英文是：",
+        opts: ["We're friends!","We're twins!","We're nine.","We're happy!"],
+        ans: 1
+      },
+      {
+        q: "别人说 \"Here you are.\"，你应该回答：",
+        opts: ["Goodbye.","Hello.","OK!","Thank you."],
+        ans: 3
+      },
+      {
+        q: "\"Let's play!\" 的意思是：",
+        opts: ["我们走吧","我们吃饭吧","我们一起玩吧","我们回家吧"],
+        ans: 2
+      },
+      {
+        q: "介绍大明（男孩），应该说：",
+        opts: ["He's Daming.","She's Daming.","It's Daming.","They're Daming."],
+        ans: 0
+      },
+      {
+        q: "\"We're from the UK.\" 中的 UK 指：",
+        opts: ["美国","中国","澳大利亚","英国"],
+        ans: 3
+      },
+      {
+        q: "\"Let's have a happy day!\" 意思是：",
+        opts: ["让我们回家吧","让我们度过快乐的一天","让我们唱首歌","让我们学习吧"],
+        ans: 1
+      },
+      {
+        q: "第一次见到新朋友，可以说：",
+        opts: ["Goodbye.","Nice to meet you.","Thank you.","Good night."],
+        ans: 1
+      },
+      {
+        q: "「我也九岁」英文是：",
+        opts: ["I'm nine.","She's nine.","We're nine.","I'm nine, too."],
+        ans: 3
+      },
+      {
+        q: "friend 的意思是：",
+        opts: ["朋友","家人","老师","同学"],
+        ans: 0
+      },
+      {
+        q: "\"Come and play!\" 意思是：",
+        opts: ["来吃饭","来上学","来玩吧","来这里"],
+        ans: 2
+      }
+    ]
+  },
+  {
+    id: "g3a-u2",
+    grade: "g3",
+    gradeName: "三年级上册",
+    unit: "Unit 2",
+    title: "My school things",
+    zh: "我的学习用品",
+    emoji: "🎒",
+    bg: "linear-gradient(160deg,#DCD0F2,#FFD9E6)",
+    tag: ["学习用品","What's this / Is it a ...?"],
+    words: [
+      {
+        en: "schoolbag",
+        zh: "书包",
+        em: "🎒"
+      },
+      {
+        en: "pen",
+        zh: "钢笔",
+        em: "🖊️"
+      },
+      {
+        en: "pencil",
+        zh: "铅笔",
+        em: "✏️"
+      },
+      {
+        en: "pencil case",
+        zh: "笔袋；铅笔盒",
+        em: "📦"
+      },
+      {
+        en: "ruler",
+        zh: "尺子，直尺",
+        em: "📏"
+      },
+      {
+        en: "eraser",
+        zh: "橡皮",
+        em: "🧽"
+      },
+      {
+        en: "book",
+        zh: "书",
+        em: "📕"
+      },
+      {
+        en: "bag",
+        zh: "袋；包",
+        em: "🛍️"
+      },
+      {
+        en: "school",
+        zh: "学校",
+        em: "🏫"
+      },
+      {
+        en: "pack",
+        zh: "收拾好",
+        em: "🧳"
+      },
+      {
+        en: "find",
+        zh: "发现，找到",
+        em: "🔍"
+      },
+      {
+        en: "look at",
+        zh: "看某人/某物",
+        em: "👀"
+      },
+      {
+        en: "guess",
+        zh: "猜，猜测",
+        em: "❓"
+      },
+      {
+        en: "lost and found",
+        zh: "失物招领",
+        em: "🗂️"
+      },
+      {
+        en: "take care of",
+        zh: "照看（照料）某人/某物",
+        em: "🤲"
+      },
+      {
+        en: "come back",
+        zh: "回来",
+        em: "↩️"
+      }
+    ],
+    sentences: [
+      {
+        en: "What's this?",
+        zh: "这是什么？"
+      },
+      {
+        en: "What's that?",
+        zh: "那是什么？"
+      },
+      {
+        en: "It's my schoolbag.",
+        zh: "它是我的书包。"
+      },
+      {
+        en: "It's a book.",
+        zh: "它是一本书。"
+      },
+      {
+        en: "It's a pen.",
+        zh: "它是一支钢笔。"
+      },
+      {
+        en: "It's a pencil.",
+        zh: "它是一支铅笔。"
+      },
+      {
+        en: "It's a ruler.",
+        zh: "它是一把尺子。"
+      },
+      {
+        en: "It's an eraser.",
+        zh: "它是一块橡皮。"
+      },
+      {
+        en: "Is it a pen?",
+        zh: "它是一支钢笔吗？"
+      },
+      {
+        en: "Yes, it is.",
+        zh: "是的，它是。"
+      },
+      {
+        en: "No, it isn't.",
+        zh: "不，它不是。"
+      },
+      {
+        en: "Is this your ruler?",
+        zh: "这是你的尺子吗？"
+      },
+      {
+        en: "Take care of your school things!",
+        zh: "照看好你们的学习用品！"
+      }
+    ],
+    roles: [
+      {
+        nm: "Ms Olivia",
+        ava: "🐙",
+        en: "Take care of your school things!",
+        zh: "照看好你们的学习用品！"
+      },
+      {
+        nm: "Amy",
+        ava: "👧",
+        en: "It's my schoolbag.",
+        zh: "它是我的书包。"
+      },
+      {
+        nm: "Tom",
+        ava: "👦",
+        en: "It's you, Amy!",
+        zh: "是你，埃米！"
+      },
+      {
+        nm: "Yoyo",
+        ava: "🐟",
+        en: "Yes, it is. Thank you.",
+        zh: "是的，它是。谢谢您。"
+      },
+      {
+        nm: "Lulu",
+        ava: "🐠",
+        en: "No, it isn't.",
+        zh: "不，它不是。"
+      },
+      {
+        nm: "Zuzu",
+        ava: "🦑",
+        en: "It's my ruler.",
+        zh: "它是我的尺子。"
+      },
+      {
+        nm: "Coco",
+        ava: "🦐",
+        en: "It's my eraser.",
+        zh: "它是我的橡皮。"
+      },
+      {
+        nm: "Daming",
+        ava: "🧒",
+        en: "Is this your eraser, Sam?",
+        zh: "萨姆，这是你的橡皮吗？"
+      }
+    ],
+    judge: [
+      {
+        en: "What's this?",
+        zh: "这是什么？",
+        ans: true
+      },
+      {
+        en: "It's a book.",
+        zh: "它是一本书。",
+        ans: true
+      },
+      {
+        en: "It's a ruler.",
+        zh: "它是一块橡皮。",
+        ans: false,
+        fix: {
+          en: "It's a ruler.",
+          zh: "它是一把尺子。"
+        },
+        note: "ruler 是尺子，橡皮是 eraser。"
+      },
+      {
+        en: "Is it a pen?",
+        zh: "它是一支钢笔吗？",
+        ans: true
+      },
+      {
+        en: "No, it isn't.",
+        zh: "是的，它是。",
+        ans: false,
+        fix: {
+          en: "No, it isn't.",
+          zh: "不，它不是。"
+        },
+        note: "No 是否定回答，意思是\"不，它不是\"；\"是的，它是\"要说 Yes, it is."
+      },
+      {
+        en: "It's my schoolbag.",
+        zh: "它是我的书包。",
+        ans: true
+      },
+      {
+        en: "Is this your ruler?",
+        zh: "这是你的尺子吗？",
+        ans: true
+      },
+      {
+        en: "Take care of your school things!",
+        zh: "照看好你们的学习用品！",
+        ans: true
+      },
+      {
+        en: "What's that?",
+        zh: "这是什么？",
+        ans: false,
+        fix: {
+          en: "What's that?",
+          zh: "那是什么？"
+        },
+        note: "that 是\"那个\"，指远处的东西；this 才是\"这个\"。"
+      },
+      {
+        en: "Pack my pen.",
+        zh: "把我的钢笔装好。",
+        ans: true
+      },
+      {
+        en: "It's an eraser.",
+        zh: "它是一支铅笔。",
+        ans: false,
+        fix: {
+          en: "It's an eraser.",
+          zh: "它是一块橡皮。"
+        },
+        note: "eraser 是橡皮，铅笔是 pencil。"
+      },
+      {
+        en: "It's a pen.",
+        zh: "它是一把尺子。",
+        ans: false,
+        fix: {
+          en: "It's a pen.",
+          zh: "它是一支钢笔。"
+        },
+        note: "pen 是钢笔，尺子是 ruler。"
+      }
+    ],
+    quiz: [
+      {
+        q: "下列哪个单词是\"铅笔\"？",
+        opts: ["pen","pencil","ruler","eraser"],
+        ans: 1
+      },
+      {
+        q: "—What's this? —It's ___ book.",
+        qzh: "空格里应该填什么？",
+        opts: ["a","an","is","it"],
+        ans: 0
+      },
+      {
+        q: "\"It's my schoolbag.\" 的意思是？",
+        opts: ["它是我的书。","它是我的笔袋。","它是我的书包。","它是我的尺子。"],
+        ans: 2
+      },
+      {
+        q: "—Is it a pen, too? —___ It's a pencil.",
+        qzh: "选出正确的答语。",
+        opts: ["Yes, it is.","No, it is.","Yes, it isn't.","No, it isn't."],
+        ans: 3
+      },
+      {
+        q: "\"Take care of your school things!\" 的意思是？",
+        opts: ["打开你的书包。","照看好你们的学习用品！","这是你的学习用品。","把书给我。"],
+        ans: 1
+      },
+      {
+        q: "\"橡皮\"的英文是？",
+        opts: ["eraser","ruler","pencil","pen"],
+        ans: 0
+      },
+      {
+        q: "—Is this your pen, Yoyo? —___",
+        qzh: "钢笔确实是悠悠的，她该怎么回答？",
+        opts: ["No, it isn't.","It's a pen.","Bye, kids.","Yes, it is."],
+        ans: 3
+      },
+      {
+        q: "你想问远处的东西是什么，应该说：What's ___?",
+        opts: ["it","this","that","here"],
+        ans: 2
+      },
+      {
+        q: "\"书包\"的英文是？",
+        opts: ["schoolbag","bag","book","pencil case"],
+        ans: 0
+      },
+      {
+        q: "—What's that? —It's ___ eraser.",
+        qzh: "空格里应该填什么？",
+        opts: ["a","an","is","the"],
+        ans: 1
+      },
+      {
+        q: "\"Pack my pen.\" 的意思是？",
+        opts: ["我的钢笔丢了。","这是你的钢笔。","给我一支钢笔。","把我的钢笔装好。"],
+        ans: 3
+      },
+      {
+        q: "\"笔袋\"的英文是？",
+        opts: ["pencil","schoolbag","pencil case","bag"],
+        ans: 2
+      }
+    ]
+  },
+  {
+    id: "g3a-u3",
+    grade: "g3",
+    gradeName: "三年级上册",
+    unit: "Unit 3",
+    title: "It's a colourful world!",
+    zh: "这是一个丰富多彩的世界！",
+    emoji: "🌈",
+    bg: "linear-gradient(160deg,#FFDCC2,#DCD0F2)",
+    tag: ["颜色","What colour is it?"],
+    words: [
+      {
+        en: "colour",
+        zh: "颜色",
+        em: "🖍️"
+      },
+      {
+        en: "colourful",
+        zh: "颜色鲜艳的；色彩丰富的",
+        em: "🎨"
+      },
+      {
+        en: "red",
+        zh: "红色（的）",
+        em: "🔴"
+      },
+      {
+        en: "pink",
+        zh: "粉红色（的）",
+        em: "🌸"
+      },
+      {
+        en: "green",
+        zh: "绿色（的）",
+        em: "🟢"
+      },
+      {
+        en: "yellow",
+        zh: "黄色（的）",
+        em: "🟡"
+      },
+      {
+        en: "orange",
+        zh: "橙色（的）",
+        em: "🟠"
+      },
+      {
+        en: "blue",
+        zh: "蓝色（的）",
+        em: "🔵"
+      },
+      {
+        en: "purple",
+        zh: "紫色（的）",
+        em: "🟣"
+      },
+      {
+        en: "black",
+        zh: "黑色（的）",
+        em: "⚫"
+      },
+      {
+        en: "rainbow",
+        zh: "彩虹",
+        em: "🌈"
+      },
+      {
+        en: "balloon",
+        zh: "气球",
+        em: "🎈"
+      },
+      {
+        en: "umbrella",
+        zh: "伞；雨伞",
+        em: "☂️"
+      },
+      {
+        en: "clothes",
+        zh: "衣服",
+        em: "👕"
+      },
+      {
+        en: "world",
+        zh: "世界",
+        em: "🌍"
+      },
+      {
+        en: "picture",
+        zh: "画，图画",
+        em: "🖼️"
+      }
+    ],
+    sentences: [
+      {
+        en: "What colour is it?",
+        zh: "它是什么颜色的？"
+      },
+      {
+        en: "It's red!",
+        zh: "它是红色的！"
+      },
+      {
+        en: "It's blue!",
+        zh: "它是蓝色的！"
+      },
+      {
+        en: "It's yellow!",
+        zh: "它是黄色的！"
+      },
+      {
+        en: "It's pink!",
+        zh: "它是粉色的！"
+      },
+      {
+        en: "It's purple!",
+        zh: "它是紫色的！"
+      },
+      {
+        en: "It's green.",
+        zh: "它是绿色的。"
+      },
+      {
+        en: "It's black!",
+        zh: "它是黑色的！"
+      },
+      {
+        en: "I want a balloon!",
+        zh: "我想要一个气球！"
+      },
+      {
+        en: "Can you guess?",
+        zh: "你能猜一猜吗？"
+      },
+      {
+        en: "You are right!",
+        zh: "你说得对！"
+      },
+      {
+        en: "Let's play together.",
+        zh: "我们一起玩吧。"
+      },
+      {
+        en: "So many colours!",
+        zh: "这么多颜色！"
+      }
+    ],
+    roles: [
+      {
+        nm: "Daming",
+        ava: "👦",
+        en: "I want a balloon!",
+        zh: "我想要一个气球！"
+      },
+      {
+        nm: "Bobo",
+        ava: "🤖",
+        en: "I want a balloon, too.",
+        zh: "我也想要一个气球。"
+      },
+      {
+        nm: "Magician",
+        ava: "🎩",
+        en: "Yes! You are right!",
+        zh: "是的！你说得对！"
+      },
+      {
+        nm: "Red",
+        ava: "🔴",
+        en: "I'm red.",
+        zh: "我是红色的。"
+      },
+      {
+        nm: "Yellow",
+        ava: "🟡",
+        en: "I'm yellow.",
+        zh: "我是黄色的。"
+      },
+      {
+        nm: "Blue",
+        ava: "🔵",
+        en: "I'm blue.",
+        zh: "我是蓝色的。"
+      },
+      {
+        nm: "Sam",
+        ava: "🧒",
+        en: "Look! A rainbow there!",
+        zh: "看！那里有一道彩虹！"
+      },
+      {
+        nm: "Amy",
+        ava: "👧",
+        en: "Look at our clothes.",
+        zh: "看我们的衣服。"
+      }
+    ],
+    judge: [
+      {
+        en: "What colour is it?",
+        zh: "它是什么颜色的？",
+        ans: true
+      },
+      {
+        en: "It's blue!",
+        zh: "它是蓝色的！",
+        ans: true
+      },
+      {
+        en: "It's red!",
+        zh: "它是绿色的。",
+        ans: false,
+        fix: {
+          en: "It's red!",
+          zh: "它是红色的！"
+        },
+        note: "red 是红色，green 才是绿色。"
+      },
+      {
+        en: "I want a balloon!",
+        zh: "我想要一个气球！",
+        ans: true
+      },
+      {
+        en: "Can you guess?",
+        zh: "你能猜一猜吗？",
+        ans: true
+      },
+      {
+        en: "It's purple!",
+        zh: "它是粉色的。",
+        ans: false,
+        fix: {
+          en: "It's purple!",
+          zh: "它是紫色的！"
+        },
+        note: "purple 是紫色，pink 才是粉红色。"
+      },
+      {
+        en: "Let's play together.",
+        zh: "我们一起玩吧。",
+        ans: true
+      },
+      {
+        en: "It's yellow!",
+        zh: "它是蓝色的。",
+        ans: false,
+        fix: {
+          en: "It's yellow!",
+          zh: "它是黄色的！"
+        },
+        note: "yellow 是黄色，blue 才是蓝色。"
+      },
+      {
+        en: "You are right!",
+        zh: "你说得对！",
+        ans: true
+      },
+      {
+        en: "So many colours!",
+        zh: "这么多颜色！",
+        ans: true
+      },
+      {
+        en: "Look at our clothes.",
+        zh: "看我们的雨伞。",
+        ans: false,
+        fix: {
+          en: "Look at our clothes.",
+          zh: "看我们的衣服。"
+        },
+        note: "clothes 是衣服，雨伞是 umbrella。"
+      },
+      {
+        en: "I want a balloon, too.",
+        zh: "我也想要一支钢笔。",
+        ans: false,
+        fix: {
+          en: "I want a balloon, too.",
+          zh: "我也想要一个气球。"
+        },
+        note: "balloon 是气球，钢笔是 pen。"
+      }
+    ],
+    quiz: [
+      {
+        q: "\"气球\"的英文是？",
+        opts: ["umbrella","rainbow","balloon","picture"],
+        ans: 2
+      },
+      {
+        q: "你想问\"它是什么颜色的？\"，应该说：",
+        opts: ["What colour is it?","What's this?","It's blue!","Can you guess?"],
+        ans: 0
+      },
+      {
+        q: "\"黄色\"的英文是？",
+        opts: ["red","pink","green","yellow"],
+        ans: 3
+      },
+      {
+        q: "\"umbrella\"的中文意思是？",
+        opts: ["衣服","雨伞","彩虹","图画"],
+        ans: 1
+      },
+      {
+        q: "把黄色和蓝色混在一起，会变成什么颜色？",
+        opts: ["purple","black","green","orange"],
+        ans: 2
+      },
+      {
+        q: "\"紫色\"的英文是？",
+        opts: ["purple","pink","orange","blue"],
+        ans: 0
+      },
+      {
+        q: "把红色和黄色混在一起，会变成什么颜色？",
+        opts: ["green","orange","purple","black"],
+        ans: 1
+      },
+      {
+        q: "\"This is a colourful picture.\" 的意思是？",
+        opts: ["这是一幅画。","这是一支彩笔。","这是一道彩虹。","这是一幅色彩丰富的画。"],
+        ans: 3
+      },
+      {
+        q: "你想说\"我想要一个气球\"，应该说：",
+        opts: ["I want a balloon!","I have a balloon.","It's a balloon.","I want a pen."],
+        ans: 0
+      },
+      {
+        q: "把红色和蓝色混在一起，会变成什么颜色？",
+        opts: ["green","orange","purple","black"],
+        ans: 2
+      },
+      {
+        q: "\"rainbow\"的中文意思是？",
+        opts: ["雨伞","彩虹","衣服","气球"],
+        ans: 1
+      },
+      {
+        q: "把红色、黄色和蓝色混在一起，会变成什么颜色？",
+        opts: ["green","orange","purple","black"],
+        ans: 3
+      }
+    ]
+  },
+  {
+    id: "g3a-u4",
+    grade: "g3",
+    gradeName: "三年级上册",
+    unit: "Unit 4",
+    title: "Fun with numbers",
+    zh: "数字真有趣",
+    emoji: "🔢",
+    bg: "linear-gradient(160deg,#FFDCC2,#DCD0F2)",
+    tag: ["数字","How many ...?"],
+    words: [
+      {
+        en: "number",
+        zh: "数，数字",
+        em: "🔢"
+      },
+      {
+        en: "count",
+        zh: "数数",
+        em: "🧮"
+      },
+      {
+        en: "one",
+        zh: "一",
+        em: "1️⃣"
+      },
+      {
+        en: "two",
+        zh: "二",
+        em: "2️⃣"
+      },
+      {
+        en: "three",
+        zh: "三",
+        em: "3️⃣"
+      },
+      {
+        en: "four",
+        zh: "四",
+        em: "4️⃣"
+      },
+      {
+        en: "five",
+        zh: "五",
+        em: "5️⃣"
+      },
+      {
+        en: "six",
+        zh: "六",
+        em: "6️⃣"
+      },
+      {
+        en: "seven",
+        zh: "七",
+        em: "7️⃣"
+      },
+      {
+        en: "eight",
+        zh: "八",
+        em: "8️⃣"
+      },
+      {
+        en: "nine",
+        zh: "九",
+        em: "9️⃣"
+      },
+      {
+        en: "ten",
+        zh: "十",
+        em: "🔟"
+      },
+      {
+        en: "eleven",
+        zh: "十一",
+        em: "🕚"
+      },
+      {
+        en: "twelve",
+        zh: "十二",
+        em: "🕛"
+      },
+      {
+        en: "rope",
+        zh: "绳",
+        em: "🪢"
+      },
+      {
+        en: "egg",
+        zh: "蛋",
+        em: "🥚"
+      }
+    ],
+    sentences: [
+      {
+        en: "Count, count, count with me!",
+        zh: "数一数，跟我一起数！"
+      },
+      {
+        en: "How many birds can you see?",
+        zh: "你能看到多少只鸟？"
+      },
+      {
+        en: "One, two, three!",
+        zh: "一，二，三！"
+      },
+      {
+        en: "Ten, eleven, twelve!",
+        zh: "十，十一，十二！"
+      },
+      {
+        en: "How many ropes?",
+        zh: "多少根绳子？"
+      },
+      {
+        en: "Only one rope!",
+        zh: "只有一根绳子！"
+      },
+      {
+        en: "This is a Chinese knot.",
+        zh: "这是一个中国结。"
+      },
+      {
+        en: "It's beautiful!",
+        zh: "它真漂亮！"
+      },
+      {
+        en: "That's amazing!",
+        zh: "那太神奇了！"
+      },
+      {
+        en: "Let me show you.",
+        zh: "让我展示给你们看。"
+      },
+      {
+        en: "How many pencils?",
+        zh: "多少支铅笔？"
+      },
+      {
+        en: "My twelve eggs!",
+        zh: "我的十二个蛋！"
+      },
+      {
+        en: "Let me count.",
+        zh: "让我数一数。"
+      }
+    ],
+    roles: [
+      {
+        nm: "Daming",
+        ava: "👦",
+        en: "Let me show you.",
+        zh: "让我展示给你们看。"
+      },
+      {
+        nm: "Amy",
+        ava: "👧",
+        en: "That's amazing!",
+        zh: "那太神奇了！"
+      },
+      {
+        nm: "Sam",
+        ava: "🧒",
+        en: "How many ropes?",
+        zh: "多少根绳子？"
+      },
+      {
+        nm: "Lingling",
+        ava: "👧",
+        en: "It's beautiful!",
+        zh: "它真漂亮！"
+      },
+      {
+        nm: "Mother Hen",
+        ava: "🐔",
+        en: "My twelve eggs!",
+        zh: "我的十二个蛋！"
+      },
+      {
+        nm: "Baby Chick",
+        ava: "🐤",
+        en: "Cheep! Cheep!",
+        zh: "叽叽！叽叽！"
+      },
+      {
+        nm: "Miss Li",
+        ava: "👩‍🏫",
+        en: "Count with me!",
+        zh: "跟我一起数！"
+      },
+      {
+        nm: "Little Bird",
+        ava: "🐦",
+        en: "One, two, three!",
+        zh: "一，二，三！"
+      }
+    ],
+    judge: [
+      {
+        en: "How many ropes?",
+        zh: "多少根绳子？",
+        ans: true
+      },
+      {
+        en: "Only one rope!",
+        zh: "只有五根绳子。",
+        ans: false,
+        fix: {
+          en: "Only one rope!",
+          zh: "只有一根绳子。"
+        },
+        note: "one 是一，五才是 five。"
+      },
+      {
+        en: "Let me show you.",
+        zh: "让我展示给你们看。",
+        ans: true
+      },
+      {
+        en: "This is a Chinese knot.",
+        zh: "这是一个中国结。",
+        ans: true
+      },
+      {
+        en: "My twelve eggs!",
+        zh: "我的十个蛋！",
+        ans: false,
+        fix: {
+          en: "My twelve eggs!",
+          zh: "我的十二个蛋！"
+        },
+        note: "twelve 是十二，十才是 ten。"
+      },
+      {
+        en: "It's beautiful!",
+        zh: "它真漂亮！",
+        ans: true
+      },
+      {
+        en: "Count, count, count with me!",
+        zh: "跟我一起数一数！",
+        ans: true
+      },
+      {
+        en: "I see numbers everywhere!",
+        zh: "我到处都能看到数字！",
+        ans: true
+      },
+      {
+        en: "Six?",
+        zh: "七根？",
+        ans: false,
+        fix: {
+          en: "Six?",
+          zh: "六根？"
+        },
+        note: "six 是六，seven 才是七。"
+      },
+      {
+        en: "That's amazing!",
+        zh: "那太可怕了！",
+        ans: false,
+        fix: {
+          en: "That's amazing!",
+          zh: "那太神奇了！"
+        },
+        note: "amazing 是令人惊讶、真神奇，不是可怕。"
+      },
+      {
+        en: "Er, I'm hungry.",
+        zh: "呃，我渴了。",
+        ans: false,
+        fix: {
+          en: "Er, I'm hungry.",
+          zh: "呃，我饿了。"
+        },
+        note: "hungry 是饥饿的，口渴要说 thirsty。"
+      },
+      {
+        en: "Let me count.",
+        zh: "让我数一数。",
+        ans: true
+      }
+    ],
+    quiz: [
+      {
+        q: "How many ropes?",
+        qzh: "这句话是什么意思？",
+        opts: ["多少根绳子？","多少只鸟？","多少个蛋？","多少本书？"],
+        ans: 0
+      },
+      {
+        q: "\"十\"的英文是？",
+        opts: ["two","ten","twelve","three"],
+        ans: 1
+      },
+      {
+        q: "Only ___ rope!",
+        qzh: "中国结\"只有一根绳子\"，横线处填哪个词？",
+        opts: ["six","twelve","one","two"],
+        ans: 2
+      },
+      {
+        q: "\"How many birds can you see?\" 的意思是？",
+        qzh: "",
+        opts: ["你能看到多少只鸟？","你能看到多少只猫？","小鸟在哪里？","这些鸟是什么颜色的？"],
+        ans: 0
+      },
+      {
+        q: "Let me show you.",
+        qzh: "这句话的中文意思是？",
+        opts: ["让我展示给你们看。","让我数一数。","让我猜一猜。","让我来帮你。"],
+        ans: 0
+      },
+      {
+        q: "数字\"十一\"的英文是？",
+        opts: ["seven","nine","eleven","twelve"],
+        ans: 2
+      },
+      {
+        q: "My twelve eggs!",
+        qzh: "这句话的意思是？",
+        opts: ["我的两个蛋！","我的十二个蛋！","我的十个蛋！","我的十一个蛋！"],
+        ans: 1
+      },
+      {
+        q: "It's beautiful!",
+        qzh: "这句话的中文是？",
+        opts: ["它真大！","它真漂亮！","它是新的！","它真小！"],
+        ans: 1
+      },
+      {
+        q: "Let me count.",
+        qzh: "这句话的意思是？",
+        opts: ["让我看看。","让我猜猜。","让我数一数。","让我来开门。"],
+        ans: 2
+      },
+      {
+        q: "This is a Chinese knot.",
+        qzh: "这句话的意思是？",
+        opts: ["这是一个中国结。","这是一根绳子。","这是一只小鸟。","这是一个蛋。"],
+        ans: 0
+      },
+      {
+        q: "数字\"七\"的英文是？",
+        opts: ["six","three","eleven","seven"],
+        ans: 3
+      },
+      {
+        q: "Numbers are all around.",
+        qzh: "这句话的意思是？",
+        opts: ["数字真有趣。","数字无处不在。","数字很大。","数字变少了。"],
+        ans: 1
+      }
+    ]
+  },
+  {
+    id: "g3a-u5",
+    grade: "g3",
+    gradeName: "三年级上册",
+    unit: "Unit 5",
+    title: "We're family",
+    zh: "我们是一家人",
+    emoji: "👨‍👩‍👧‍👦",
+    bg: "linear-gradient(160deg,#FFD9E6,#DCF1FC)",
+    tag: ["家庭成员","This is my ..."],
+    words: [
+      {
+        en: "family",
+        zh: "家庭；家人",
+        em: "👨‍👩‍👧‍👦"
+      },
+      {
+        en: "dad",
+        zh: "爸爸",
+        em: "👨"
+      },
+      {
+        en: "mum",
+        zh: "妈妈",
+        em: "👩"
+      },
+      {
+        en: "father",
+        zh: "父亲；爸爸",
+        em: "👨‍🦰"
+      },
+      {
+        en: "mother",
+        zh: "母亲；妈妈",
+        em: "👩‍🦰"
+      },
+      {
+        en: "brother",
+        zh: "哥哥；弟弟",
+        em: "👦"
+      },
+      {
+        en: "sister",
+        zh: "姐姐；妹妹",
+        em: "👧"
+      },
+      {
+        en: "grandpa",
+        zh: "祖父；外祖父",
+        em: "👴"
+      },
+      {
+        en: "grandma",
+        zh: "祖母；外祖母",
+        em: "👵"
+      },
+      {
+        en: "grandfather",
+        zh: "祖父；外祖父",
+        em: "👴"
+      },
+      {
+        en: "grandmother",
+        zh: "祖母；外祖母",
+        em: "👵"
+      },
+      {
+        en: "photo",
+        zh: "照片，相片",
+        em: "📷"
+      },
+      {
+        en: "love",
+        zh: "爱，关爱",
+        em: "❤️"
+      },
+      {
+        en: "cap",
+        zh: "帽子",
+        em: "🧢"
+      },
+      {
+        en: "dog",
+        zh: "狗",
+        em: "🐶"
+      },
+      {
+        en: "box",
+        zh: "盒；箱",
+        em: "📦"
+      }
+    ],
+    sentences: [
+      {
+        en: "This is my family.",
+        zh: "这是我的家庭。"
+      },
+      {
+        en: "We're a happy family!",
+        zh: "我们是一个幸福的家庭！"
+      },
+      {
+        en: "This is my dad.",
+        zh: "这是我的爸爸。"
+      },
+      {
+        en: "This is my mum.",
+        zh: "这是我的妈妈。"
+      },
+      {
+        en: "This is my sister.",
+        zh: "这是我的姐姐／妹妹。"
+      },
+      {
+        en: "This is my brother.",
+        zh: "这是我的哥哥／弟弟。"
+      },
+      {
+        en: "That is my grandma.",
+        zh: "那是我的奶奶。"
+      },
+      {
+        en: "Who is that?",
+        zh: "那是谁？"
+      },
+      {
+        en: "Look at the cap.",
+        zh: "看那顶帽子。"
+      },
+      {
+        en: "Don't worry!",
+        zh: "别担心！"
+      },
+      {
+        en: "We can help!",
+        zh: "我们可以帮忙！"
+      },
+      {
+        en: "Let's take a photo together.",
+        zh: "让我们一起拍张照片吧。"
+      },
+      {
+        en: "I love my family.",
+        zh: "我爱我的家人。"
+      }
+    ],
+    roles: [
+      {
+        nm: "Daming",
+        ava: "👦",
+        en: "This is my dad.",
+        zh: "这是我的爸爸。"
+      },
+      {
+        nm: "Sam",
+        ava: "🧒",
+        en: "Hello.",
+        zh: "你好。"
+      },
+      {
+        nm: "Jiajia",
+        ava: "👧",
+        en: "I'm Jiajia. This is my sister.",
+        zh: "我是佳佳。这是我的姐姐。"
+      },
+      {
+        nm: "Dad",
+        ava: "👨",
+        en: "We can help!",
+        zh: "我们可以帮忙！"
+      },
+      {
+        nm: "Mum",
+        ava: "👩",
+        en: "I love my family.",
+        zh: "我爱我的家人。"
+      },
+      {
+        nm: "Grandpa",
+        ava: "👴",
+        en: "Come on!",
+        zh: "快点！加油！"
+      },
+      {
+        nm: "Grandma",
+        ava: "👵",
+        en: "Don't worry!",
+        zh: "别担心！"
+      },
+      {
+        nm: "Sister",
+        ava: "👧",
+        en: "This is my family photo.",
+        zh: "这是我的全家福。"
+      }
+    ],
+    judge: [
+      {
+        en: "This is my family.",
+        zh: "这是我的家庭。",
+        ans: true
+      },
+      {
+        en: "This is my grandpa.",
+        zh: "这是我的奶奶。",
+        ans: false,
+        fix: {
+          en: "This is my grandma.",
+          zh: "这是我的奶奶。"
+        },
+        note: "grandpa 是爷爷，奶奶要说 grandma。"
+      },
+      {
+        en: "Who is that?",
+        zh: "那是谁？",
+        ans: true
+      },
+      {
+        en: "That is my grandma.",
+        zh: "这是我的奶奶。",
+        ans: false,
+        fix: {
+          en: "This is my grandma.",
+          zh: "这是我的奶奶。"
+        },
+        note: "That is 是\"那是\"，指离得较远的人；\"这是\"要用 This is。"
+      },
+      {
+        en: "Don't worry!",
+        zh: "别担心！",
+        ans: true
+      },
+      {
+        en: "We're a happy family!",
+        zh: "我们是一个伤心的家庭！",
+        ans: false,
+        fix: {
+          en: "We're a happy family!",
+          zh: "我们是一个幸福的家庭！"
+        },
+        note: "happy 是幸福的、快乐的，伤心是 sad。"
+      },
+      {
+        en: "We can help!",
+        zh: "我们可以帮忙！",
+        ans: true
+      },
+      {
+        en: "I love my family.",
+        zh: "我爱我的家人。",
+        ans: true
+      },
+      {
+        en: "This is my sister.",
+        zh: "这是我的哥哥。",
+        ans: false,
+        fix: {
+          en: "This is my brother.",
+          zh: "这是我的哥哥。"
+        },
+        note: "sister 是姐姐／妹妹，哥哥／弟弟是 brother。"
+      },
+      {
+        en: "Look at the cap.",
+        zh: "看那顶帽子。",
+        ans: true
+      },
+      {
+        en: "Let's take a photo together.",
+        zh: "让我们一起看电视吧。",
+        ans: false,
+        fix: {
+          en: "Let's take a photo together.",
+          zh: "让我们一起拍张照片吧。"
+        },
+        note: "take a photo 是拍照，看电视是 watch TV。"
+      },
+      {
+        en: "This is my family photo.",
+        zh: "这是我的全家福。",
+        ans: true
+      }
+    ],
+    quiz: [
+      {
+        q: "This is my dad.",
+        qzh: "这句话的意思是？",
+        opts: ["这是我的爸爸。","这是我的妈妈。","这是我的爷爷。","这是我的姐姐。"],
+        ans: 0
+      },
+      {
+        q: "想问\"那是谁？\"，应该说：",
+        opts: ["Who is this?","Who is that?","What is that?","Where is it?"],
+        ans: 1
+      },
+      {
+        q: "\"奶奶；祖母\"的英文是？",
+        opts: ["grandpa","mother","grandma","sister"],
+        ans: 2
+      },
+      {
+        q: "\"别担心！\"用英语怎么说？",
+        opts: ["Come on!","Don't worry!","Thank you!","I'm sorry!"],
+        ans: 1
+      },
+      {
+        q: "We're a happy family!",
+        qzh: "这句话的意思是？",
+        opts: ["我们是一个幸福的家庭。","我们是一个大家庭。","我们是一个小家庭。","我们是一个新家庭。"],
+        ans: 0
+      },
+      {
+        q: "介绍\"这是我的姐姐\"，应该说：",
+        opts: ["This is my brother.","This is my grandma.","This is my sister.","This is my mum."],
+        ans: 2
+      },
+      {
+        q: "\"哥哥；弟弟\"的英文是？",
+        opts: ["sister","father","mother","brother"],
+        ans: 3
+      },
+      {
+        q: "I love my family.",
+        qzh: "这句话的意思是？",
+        opts: ["我喜欢我的家。","这是我的家人。","我有一个大家庭。","我爱我的家人。"],
+        ans: 3
+      },
+      {
+        q: "\"让我们一起拍张照片吧。\"英文是？",
+        opts: ["Let's play a game.","Let's go home.","Let's take a photo together.","Let's help."],
+        ans: 2
+      },
+      {
+        q: "Look at the cap.",
+        qzh: "这句话的意思是？",
+        opts: ["看那顶帽子。","看那只狗。","看那个盒子。","看那张照片。"],
+        ans: 0
+      },
+      {
+        q: "\"我们可以帮忙！\"英文是？",
+        opts: ["We are happy!","We can go!","We can help!","We are family!"],
+        ans: 2
+      },
+      {
+        q: "\"这是我的全家福。\"英文是？",
+        opts: ["This is my family.","This is my family photo.","This is my friend.","This is my photo."],
+        ans: 1
+      }
+    ]
+  },
+  {
+    id: "g3a-u6",
+    grade: "g3",
+    gradeName: "三年级上册",
+    unit: "Unit 6",
+    title: "My sweet home",
+    zh: "我温馨的家",
+    emoji: "🏠",
+    bg: "linear-gradient(160deg,#DCD0F2,#FFD9E6)",
+    tag: ["家居房间","Where's ...?"],
+    words: [
+      {
+        en: "home",
+        zh: "家",
+        em: "🏠"
+      },
+      {
+        en: "room",
+        zh: "房间",
+        em: "🏡"
+      },
+      {
+        en: "living room",
+        zh: "客厅",
+        em: "🛋️"
+      },
+      {
+        en: "bedroom",
+        zh: "卧室",
+        em: "🛏️"
+      },
+      {
+        en: "bathroom",
+        zh: "浴室，卫生间",
+        em: "🛁"
+      },
+      {
+        en: "kitchen",
+        zh: "厨房",
+        em: "🍳"
+      },
+      {
+        en: "dining room",
+        zh: "餐厅",
+        em: "🍲"
+      },
+      {
+        en: "door",
+        zh: "门",
+        em: "🚪"
+      },
+      {
+        en: "chair",
+        zh: "椅子",
+        em: "🪑"
+      },
+      {
+        en: "table",
+        zh: "桌子",
+        em: "🍽️"
+      },
+      {
+        en: "bed",
+        zh: "床",
+        em: "🛌"
+      },
+      {
+        en: "toy",
+        zh: "玩具",
+        em: "🧸"
+      },
+      {
+        en: "cat",
+        zh: "猫",
+        em: "🐱"
+      },
+      {
+        en: "ball",
+        zh: "球",
+        em: "⚽"
+      },
+      {
+        en: "apple",
+        zh: "苹果",
+        em: "🍎"
+      },
+      {
+        en: "box",
+        zh: "盒；箱",
+        em: "📦"
+      }
+    ],
+    sentences: [
+      {
+        en: "Welcome to my new home!",
+        zh: "欢迎来到我的新家！"
+      },
+      {
+        en: "Let's play a game!",
+        zh: "我们玩个游戏吧！"
+      },
+      {
+        en: "Who is in the living room?",
+        zh: "谁在客厅里？"
+      },
+      {
+        en: "Where is Susu?",
+        zh: "苏苏在哪里？"
+      },
+      {
+        en: "Dad, where's Susu?",
+        zh: "爸爸，苏苏在哪里？"
+      },
+      {
+        en: "She's in the living room.",
+        zh: "她在客厅里。"
+      },
+      {
+        en: "Susu is not here.",
+        zh: "苏苏不在这里。"
+      },
+      {
+        en: "Look in the bedroom.",
+        zh: "看看卧室里面。"
+      },
+      {
+        en: "She's under the bed.",
+        zh: "她在床底下。"
+      },
+      {
+        en: "Susu is in the box.",
+        zh: "苏苏在盒子里。"
+      },
+      {
+        en: "Where is the ball?",
+        zh: "球在哪里？"
+      },
+      {
+        en: "It's under the table.",
+        zh: "它在桌子下面。"
+      },
+      {
+        en: "This is our sweet home!",
+        zh: "这是我们甜蜜的家！"
+      }
+    ],
+    roles: [
+      {
+        nm: "Lingling",
+        ava: "👧",
+        en: "Dad, where's Susu?",
+        zh: "爸爸，苏苏在哪里？"
+      },
+      {
+        nm: "Dad",
+        ava: "👨",
+        en: "She's in the living room.",
+        zh: "她在客厅里。"
+      },
+      {
+        nm: "Mum",
+        ava: "👩",
+        en: "Look in the bedroom.",
+        zh: "看看卧室里面。"
+      },
+      {
+        nm: "Susu",
+        ava: "🐱",
+        en: "Miaow...",
+        zh: "喵……"
+      },
+      {
+        nm: "Brother",
+        ava: "🧒",
+        en: "He likes to run.",
+        zh: "他喜欢跑步。"
+      },
+      {
+        nm: "Worm 1",
+        ava: "🐛",
+        en: "This is my home.",
+        zh: "这是我的家。"
+      },
+      {
+        nm: "Worm 2",
+        ava: "🐛",
+        en: "You are in my bedroom!",
+        zh: "你在我的卧室里！"
+      },
+      {
+        nm: "Bird",
+        ava: "🐦",
+        en: "Whose homes are they?",
+        zh: "它们是谁的家？"
+      }
+    ],
+    judge: [
+      {
+        en: "She's in the living room.",
+        zh: "她在客厅里。",
+        ans: true
+      },
+      {
+        en: "She's under the bed.",
+        zh: "她在床上面。",
+        ans: false,
+        fix: {
+          en: "She's on the bed.",
+          zh: "她在床上面。"
+        },
+        note: "under 是\"在……下面\"，表示\"在……上面\"要用 on。"
+      },
+      {
+        en: "She's under the bed.",
+        zh: "她在床底下。",
+        ans: true
+      },
+      {
+        en: "Susu is in the box.",
+        zh: "苏苏在盒子里。",
+        ans: true
+      },
+      {
+        en: "Susu is in the box.",
+        zh: "苏苏在盒子上面。",
+        ans: false,
+        fix: {
+          en: "Susu is on the box.",
+          zh: "苏苏在盒子上面。"
+        },
+        note: "in 表示\"在……里面\"，on 才表示\"在……上面\"。"
+      },
+      {
+        en: "This is my home.",
+        zh: "这是我的家。",
+        ans: true
+      },
+      {
+        en: "She's in the living room.",
+        zh: "她在餐厅里。",
+        ans: false,
+        fix: {
+          en: "She's in the dining room.",
+          zh: "她在餐厅里。"
+        },
+        note: "living room 是客厅，餐厅要说 dining room。"
+      },
+      {
+        en: "Where is the ball?",
+        zh: "球在哪里？",
+        ans: true
+      },
+      {
+        en: "Who is in the kitchen?",
+        zh: "谁在厨房里？",
+        ans: true
+      },
+      {
+        en: "Where is the ball?",
+        zh: "球是什么颜色？",
+        ans: false,
+        fix: {
+          en: "What colour is the ball?",
+          zh: "球是什么颜色？"
+        },
+        note: "where 问的是位置，问颜色要用 what colour。"
+      },
+      {
+        en: "The black cat is on the table.",
+        zh: "黑猫在桌子上。",
+        ans: true
+      },
+      {
+        en: "This is my bedroom.",
+        zh: "这是我的浴室。",
+        ans: false,
+        fix: {
+          en: "This is my bathroom.",
+          zh: "这是我的浴室。"
+        },
+        note: "bedroom 是卧室，浴室、卫生间要说 bathroom。"
+      }
+    ],
+    quiz: [
+      {
+        q: "Dad, where's Susu?",
+        qzh: "爸爸问苏苏在哪里，该怎么回答？",
+        opts: ["She's in the living room.","It's a chair.","Yes, she is.","I'm fine."],
+        ans: 0
+      },
+      {
+        q: "\"浴室，卫生间\"对应哪个单词？",
+        opts: ["bedroom","kitchen","bathroom","dining room"],
+        ans: 2
+      },
+      {
+        q: "\"在……下面\"是哪个介词？",
+        opts: ["in","under","on","at"],
+        ans: 1
+      },
+      {
+        q: "It's under the table.",
+        qzh: "这句话的意思是？",
+        opts: ["它在桌子上。","它在桌子里。","它在桌子旁边。","它在桌子下面。"],
+        ans: 3
+      },
+      {
+        q: "\"餐厅\"的英文是？",
+        opts: ["living room","bathroom","dining room","bedroom"],
+        ans: 2
+      },
+      {
+        q: "Welcome to my new home!",
+        qzh: "这句话的意思是？",
+        opts: ["欢迎来到我的新家！","这是我的新家！","我喜欢我的家！","我的家很大！"],
+        ans: 0
+      },
+      {
+        q: "This is our sweet home!",
+        qzh: "这句话的意思是？",
+        opts: ["这是我们的学校！","这是我的房间！","这是我们的教室！","这是我们甜蜜的家！"],
+        ans: 3
+      },
+      {
+        q: "教材小贴士说 bedroom = bed + room，那么 bathroom 等于？",
+        opts: ["bed + room","bath + room","table + room","door + room"],
+        ans: 1
+      },
+      {
+        q: "\"球在桌子下面\"用英语怎么说？",
+        opts: ["The ball is on the table.","The ball is in the table.","The ball is under the table.","The ball is at the table."],
+        ans: 2
+      },
+      {
+        q: "\"谁在厨房里？\"的英文是？",
+        opts: ["Who is in the kitchen?","Where is the kitchen?","What is the kitchen?","Is this the kitchen?"],
+        ans: 0
+      },
+      {
+        q: "\"她在床底下。\"的英文是？",
+        opts: ["She's on the bed.","She's under the bed.","She's in the bed.","She's at the bed."],
+        ans: 1
+      },
+      {
+        q: "Susu is in the box with four little babies!",
+        qzh: "这句话里的 four little babies 指的是什么？",
+        opts: ["四只小狗","四只小鸡","四个盒子","四只猫宝宝"],
+        ans: 3
+      }
+    ]
+  },
+  {
+    id: "g4a-u1",
+    grade: "g4",
+    gradeName: "四年级上册",
+    unit: "Unit 1",
+    title: "I love sports!",
+    zh: "我热爱运动！",
+    emoji: "🏅",
+    bg: "linear-gradient(160deg,#C9EEDC,#DCF1FC)",
+    tag: ["运动能力","Can you...?","I can / I can't"],
+    words: [
+      {
+        en: "sport",
+        zh: "运动",
+        em: "🏅"
+      },
+      {
+        en: "jump",
+        zh: "跳，跳跃",
+        em: "🤸"
+      },
+      {
+        en: "high",
+        zh: "高高地",
+        em: "⬆️"
+      },
+      {
+        en: "far",
+        zh: "远，远地",
+        em: "🎯"
+      },
+      {
+        en: "ping-pong",
+        zh: "乒乓球",
+        em: "🏓"
+      },
+      {
+        en: "volleyball",
+        zh: "排球",
+        em: "🏐"
+      },
+      {
+        en: "basketball",
+        zh: "篮球",
+        em: "🏀"
+      },
+      {
+        en: "run",
+        zh: "跑",
+        em: "🏃"
+      },
+      {
+        en: "fast",
+        zh: "快地",
+        em: "💨"
+      },
+      {
+        en: "swim",
+        zh: "游泳",
+        em: "🏊"
+      },
+      {
+        en: "skate",
+        zh: "滑冰",
+        em: "⛸️"
+      },
+      {
+        en: "skip",
+        zh: "跳绳",
+        em: "🪢"
+      },
+      {
+        en: "star",
+        zh: "明星；星星",
+        em: "⭐"
+      },
+      {
+        en: "player",
+        zh: "运动员",
+        em: "🧑‍🦱"
+      },
+      {
+        en: "ability",
+        zh: "能力",
+        em: "💪"
+      },
+      {
+        en: "hope",
+        zh: "希望",
+        em: "🌈"
+      }
+    ],
+    sentences: [
+      {
+        en: "I love sports.",
+        zh: "我热爱运动。"
+      },
+      {
+        en: "I can run fast.",
+        zh: "我能跑得快。"
+      },
+      {
+        en: "I can jump high.",
+        zh: "我能跳得高。"
+      },
+      {
+        en: "I can jump far.",
+        zh: "我能跳得远。"
+      },
+      {
+        en: "I can swim fast.",
+        zh: "我能游得快。"
+      },
+      {
+        en: "Can you swim?",
+        zh: "你会游泳吗？"
+      },
+      {
+        en: "Yes, I can.",
+        zh: "是的，我会。"
+      },
+      {
+        en: "No, I can't.",
+        zh: "不，我不会。"
+      },
+      {
+        en: "I can't skate.",
+        zh: "我不会滑冰。"
+      },
+      {
+        en: "Let's play ping-pong!",
+        zh: "我们打乒乓球吧！"
+      },
+      {
+        en: "He can play basketball.",
+        zh: "他会打篮球。"
+      },
+      {
+        en: "I can play volleyball.",
+        zh: "我会打排球。"
+      },
+      {
+        en: "Let's play together!",
+        zh: "我们一起玩吧！"
+      }
+    ],
+    roles: [
+      {
+        nm: "Runner",
+        ava: "🏃",
+        en: "I can run fast. I love sports.",
+        zh: "我能跑得快。我热爱运动。"
+      },
+      {
+        nm: "Jumper",
+        ava: "🤸",
+        en: "I can jump high. Can you?",
+        zh: "我能跳得高。你呢？"
+      },
+      {
+        nm: "Far Jump",
+        ava: "🎯",
+        en: "I can jump far. It's fun!",
+        zh: "我能跳得远。太好玩了！"
+      },
+      {
+        nm: "Swimmer",
+        ava: "🏊",
+        en: "I can swim. I can swim fast.",
+        zh: "我会游泳。我能游得快。"
+      },
+      {
+        nm: "Ping-pong",
+        ava: "🏓",
+        en: "I can play ping-pong. Let's play!",
+        zh: "我会打乒乓球。我们一起打吧！"
+      },
+      {
+        nm: "Basketball",
+        ava: "🏀",
+        en: "He can play basketball. He's great!",
+        zh: "他会打篮球。他太棒了！"
+      },
+      {
+        nm: "Skater",
+        ava: "⛸️",
+        en: "I can't skate. But I can learn!",
+        zh: "我不会滑冰。但我可以学！"
+      },
+      {
+        nm: "Skipper",
+        ava: "🪢",
+        en: "I can skip. Let's skip together!",
+        zh: "我会跳绳。我们一起跳吧！"
+      }
+    ],
+    judge: [
+      {
+        en: "I can run fast.",
+        zh: "我能跑得快。",
+        ans: true
+      },
+      {
+        en: "I can swim.",
+        zh: "我会飞。",
+        ans: false,
+        note: "swim 是游泳，fly 才是飞",
+        fix: {
+          en: "I can swim.",
+          zh: "我会游泳。"
+        }
+      },
+      {
+        en: "Can you jump high?",
+        zh: "你会跳高吗？",
+        ans: true
+      },
+      {
+        en: "No, I can't.",
+        zh: "是的，我会。",
+        ans: false,
+        note: "No 是「不」，can't 是「不会」",
+        fix: {
+          en: "No, I can't.",
+          zh: "不，我不会。"
+        }
+      },
+      {
+        en: "I can't play volleyball.",
+        zh: "我不会打排球。",
+        ans: true
+      },
+      {
+        en: "play basketball",
+        zh: "打篮球",
+        ans: true
+      },
+      {
+        en: "I love sports.",
+        zh: "我讨厌运动。",
+        ans: false,
+        note: "love 是喜爱，讨厌是 hate",
+        fix: {
+          en: "I love sports.",
+          zh: "我热爱运动。"
+        }
+      },
+      {
+        en: "skip",
+        zh: "跳绳",
+        ans: true
+      },
+      {
+        en: "volleyball",
+        zh: "足球",
+        ans: false,
+        note: "volleyball 是排球，football 才是足球",
+        fix: {
+          en: "volleyball",
+          zh: "排球"
+        }
+      },
+      {
+        en: "Yes, I can.",
+        zh: "是的，我会。",
+        ans: true
+      },
+      {
+        en: "I can jump far.",
+        zh: "我能跳得远。",
+        ans: true
+      },
+      {
+        en: "fast",
+        zh: "慢地",
+        ans: false,
+        note: "fast 是快，slow 才是慢",
+        fix: {
+          en: "fast",
+          zh: "快地"
+        }
+      }
+    ],
+    quiz: [
+      {
+        q: "「你会游泳吗？」英文是：",
+        opts: ["Can you swim?","Can you run?","Do you swim?","Are you swim?"],
+        ans: 0
+      },
+      {
+        q: "\"Can you jump high?\" 的否定回答：",
+        opts: ["No, I don't.","No, I'm not.","No, I can't.","No, I can."],
+        ans: 2
+      },
+      {
+        q: "「我能跳得远」英文是：",
+        opts: ["I can jump high.","I can jump far.","I can run far.","I can far jump."],
+        ans: 1
+      },
+      {
+        q: "ping-pong 是什么运动？",
+        opts: ["羽毛球","网球","排球","乒乓球"],
+        ans: 3
+      },
+      {
+        q: "\"I can't ___ volleyball.\"",
+        opts: ["plays","playing","play","to play"],
+        ans: 2
+      },
+      {
+        q: "fast 的反义词是：",
+        opts: ["slow","high","far","quick"],
+        ans: 0
+      },
+      {
+        q: "\"Let's play ping-pong!\" 意思是：",
+        opts: ["我们打篮球吧","我们去跑步吧","我们去游泳吧","我们打乒乓球吧"],
+        ans: 3
+      },
+      {
+        q: "\"I can swim fast.\" 意思是：",
+        opts: ["我会游泳","我能游得快","我喜欢游泳","我正在游泳"],
+        ans: 1
+      },
+      {
+        q: "「不，我不会」英文是：",
+        opts: ["No, I can.","No, I can't.","No, I don't.","Not, I can't."],
+        ans: 1
+      },
+      {
+        q: "skate 的意思是：",
+        opts: ["滑雪","滑板","游泳","滑冰"],
+        ans: 3
+      },
+      {
+        q: "\"He can play basketball.\" 意思是：",
+        opts: ["他会打篮球","他喜欢篮球","他有一个篮球","他正在打篮球"],
+        ans: 0
+      },
+      {
+        q: "\"I love sports.\" 表达的是：",
+        opts: ["我讨厌运动","我会运动","我热爱运动","我在运动"],
+        ans: 2
+      }
+    ]
+  },
+  {
+    id: "g4a-u2",
+    grade: "g4",
+    gradeName: "四年级上册",
+    unit: "Unit 2",
+    title: "Helping at home",
+    zh: "在家帮忙",
+    emoji: "🧹",
+    bg: "linear-gradient(160deg,#C9EEDC,#DCF1FC)",
+    tag: ["家务劳动","Can you ...?"],
+    words: [
+      {
+        en: "chore",
+        zh: "家庭杂务",
+        em: "📋"
+      },
+      {
+        en: "wash",
+        zh: "洗",
+        em: "🧼"
+      },
+      {
+        en: "dish",
+        zh: "盘子，碟子",
+        em: "🍽️"
+      },
+      {
+        en: "feed",
+        zh: "喂养，给……食物",
+        em: "🍖"
+      },
+      {
+        en: "sweep",
+        zh: "扫，打扫，清扫",
+        em: "🧹"
+      },
+      {
+        en: "floor",
+        zh: "地板，地面",
+        em: "🟫"
+      },
+      {
+        en: "rubbish",
+        zh: "垃圾",
+        em: "🗑️"
+      },
+      {
+        en: "tidy",
+        zh: "整理，收拾",
+        em: "🧺"
+      },
+      {
+        en: "clean",
+        zh: "（把……）弄干净",
+        em: "✨"
+      },
+      {
+        en: "dirty",
+        zh: "脏的",
+        em: "🧽"
+      },
+      {
+        en: "desk",
+        zh: "书桌，写字台",
+        em: "🪑"
+      },
+      {
+        en: "wall",
+        zh: "墙",
+        em: "🧱"
+      },
+      {
+        en: "may",
+        zh: "可以（表示允许某人做某事）",
+        em: "🙋"
+      },
+      {
+        en: "easy",
+        zh: "容易的",
+        em: "👍"
+      },
+      {
+        en: "tired",
+        zh: "疲惫的，累的",
+        em: "😪"
+      },
+      {
+        en: "helpful",
+        zh: "乐于助人的",
+        em: "🤝"
+      }
+    ],
+    sentences: [
+      {
+        en: "Take out the rubbish.",
+        zh: "倒垃圾。"
+      },
+      {
+        en: "Chores can be fun!",
+        zh: "家务也可以很有趣！"
+      },
+      {
+        en: "Dad, may I play outside?",
+        zh: "爸爸，我可以出去玩吗？"
+      },
+      {
+        en: "Can you tidy your room first?",
+        zh: "你能先整理一下你的房间吗？"
+      },
+      {
+        en: "Bobby, can you help me clean the floor?",
+        zh: "博比，你能帮我清洁地板吗？"
+      },
+      {
+        en: "It's so dirty now!",
+        zh: "现在太脏了！"
+      },
+      {
+        en: "I need to clean the floor.",
+        zh: "我需要清洁地板。"
+      },
+      {
+        en: "My room is clean now, Dad.",
+        zh: "爸爸，我的房间现在干净了。"
+      },
+      {
+        en: "Can you also take out the rubbish?",
+        zh: "你也能把垃圾倒了吗？"
+      },
+      {
+        en: "May I sweep the floor first?",
+        zh: "我可以先扫地吗？"
+      },
+      {
+        en: "My mum is busy.",
+        zh: "我妈妈很忙。"
+      },
+      {
+        en: "She is the sunshine of our family.",
+        zh: "她是我们家的阳光。"
+      },
+      {
+        en: "May I help you wash the dishes, Mum?",
+        zh: "妈妈，我可以帮你洗碗吗？"
+      }
+    ],
+    roles: [
+      {
+        nm: "Sam",
+        ava: "👦",
+        en: "Bobby, can you help me clean the floor?",
+        zh: "博比，你能帮我清洁地板吗？"
+      },
+      {
+        nm: "Bobby",
+        ava: "🐶",
+        en: "Woof! Woof!",
+        zh: "汪汪！汪汪！"
+      },
+      {
+        nm: "Sam's dad",
+        ava: "👨",
+        en: "Can you tidy your room first?",
+        zh: "你能先整理一下你的房间吗？"
+      },
+      {
+        nm: "Wenwen",
+        ava: "👧",
+        en: "I'm happy to warm up my family.",
+        zh: "我很高兴能温暖我的家人。"
+      },
+      {
+        nm: "Grandma",
+        ava: "👵",
+        en: "Wenwen, can you help clean the room?",
+        zh: "文文，你能帮忙打扫房间吗？"
+      },
+      {
+        nm: "Mum",
+        ava: "👩",
+        en: "Thank you, my dear!",
+        zh: "谢谢你，亲爱的！"
+      },
+      {
+        nm: "Wenwen's dad",
+        ava: "🤒",
+        en: "Thank you, Wenwen.",
+        zh: "谢谢你，文文。"
+      },
+      {
+        nm: "Amy",
+        ava: "🧒",
+        en: "I can sweep the floor.",
+        zh: "我会扫地。"
+      }
+    ],
+    judge: [
+      {
+        en: "Can you help me clean the floor?",
+        zh: "你能帮我清洁地板吗？",
+        ans: true
+      },
+      {
+        en: "Bobby, can you help me clean the floor?",
+        zh: "博比，你能帮我洗碗吗？",
+        ans: false,
+        fix: {
+          en: "Bobby, can you help me wash the dishes?",
+          zh: "博比，你能帮我洗碗吗？"
+        },
+        note: "洗碗要说 wash the dishes，clean the floor 是清洁地板。"
+      },
+      {
+        en: "Dad, may I play outside?",
+        zh: "爸爸，我可以出去玩吗？",
+        ans: true
+      },
+      {
+        en: "I need to clean the floor.",
+        zh: "我需要清洁地板。",
+        ans: true
+      },
+      {
+        en: "It's so dirty now!",
+        zh: "现在太干净了！",
+        ans: false,
+        fix: {
+          en: "It's so clean now!",
+          zh: "现在太干净了！"
+        },
+        note: "dirty 是\"脏的\"，clean 才是\"干净的\"。"
+      },
+      {
+        en: "Take out the rubbish.",
+        zh: "倒垃圾。",
+        ans: true
+      },
+      {
+        en: "May I sweep the floor first?",
+        zh: "我可以先擦桌子吗？",
+        ans: false,
+        fix: {
+          en: "May I clean the desk first?",
+          zh: "我可以先擦桌子吗？"
+        },
+        note: "sweep the floor 是扫地，擦桌子要说 clean the desk。"
+      },
+      {
+        en: "She is the sunshine of our family.",
+        zh: "她是我们家的阳光。",
+        ans: true
+      },
+      {
+        en: "My room is clean now, Dad.",
+        zh: "爸爸，我的房间现在干净了。",
+        ans: true
+      },
+      {
+        en: "My grandma is old.",
+        zh: "我奶奶很忙。",
+        ans: false,
+        fix: {
+          en: "My grandma is busy.",
+          zh: "我奶奶很忙。"
+        },
+        note: "old 是\"年纪大的\"，busy 才是\"忙碌的\"。"
+      },
+      {
+        en: "Sometimes Mum feels tired.",
+        zh: "有时候妈妈觉得很累。",
+        ans: true
+      },
+      {
+        en: "I take care of Dad.",
+        zh: "我照顾妈妈。",
+        ans: false,
+        fix: {
+          en: "I take care of Mum.",
+          zh: "我照顾妈妈。"
+        },
+        note: "Dad 是爸爸，妈妈要说 Mum。"
+      }
+    ],
+    quiz: [
+      {
+        q: "\"倒垃圾\"用英语怎么说？",
+        opts: ["take out the rubbish","wash the dishes","sweep the floor","make the beds"],
+        ans: 0
+      },
+      {
+        q: "Can you help me clean the floor?",
+        qzh: "想回答\"好的，可以\"，应该选哪一句？",
+        opts: ["Sorry, I can't.","No, I can't.","Yes, I can.","Thank you."],
+        ans: 2
+      },
+      {
+        q: "想礼貌地问\"我可以出去玩吗？\"，应该说？",
+        opts: ["Can I go outside?","May I play outside?","Do I play outside?","Am I outside?"],
+        ans: 1
+      },
+      {
+        q: "Wash the clothes.",
+        qzh: "这句话的意思是？",
+        opts: ["洗碗。","扫地。","整理床铺。","洗衣服。"],
+        ans: 3
+      },
+      {
+        q: "表示\"扫地\"的短语是？",
+        opts: ["clean the desk","wash the floor","sweep the floor","tidy the floor"],
+        ans: 2
+      },
+      {
+        q: "I need to clean the floor.",
+        qzh: "这句话的意思是？",
+        opts: ["我需要清洁地板。","我喜欢清洁地板。","我正在清洁地板。","我会清洁地板。"],
+        ans: 0
+      },
+      {
+        q: "\"她是我们家的阳光。\"的英文是？",
+        opts: ["She is my friend.","She is a good helper.","She is very helpful.","She is the sunshine of our family."],
+        ans: 3
+      },
+      {
+        q: "tidy your room 的意思是？",
+        opts: ["打扫地板","整理你的房间","洗你的衣服","倒垃圾"],
+        ans: 1
+      },
+      {
+        q: "姚沁雯在课文里帮家人做了什么？",
+        opts: ["只照顾自己","只和朋友一起玩","照顾爸爸、奶奶和妈妈","只在学校学习"],
+        ans: 2
+      },
+      {
+        q: "\"It's so dirty now!\" 中 dirty 的意思是？",
+        qzh: "",
+        opts: ["脏的","干净的","容易的","疲惫的"],
+        ans: 0
+      },
+      {
+        q: "Sometimes Mum feels tired.",
+        qzh: "这句话的意思是？",
+        opts: ["妈妈很忙。","有时候妈妈觉得很累。","妈妈很开心。","妈妈在洗衣服。"],
+        ans: 1
+      },
+      {
+        q: "Chores can be fun!",
+        qzh: "这句话的意思是？",
+        opts: ["家务很累人。","家务太多了。","我不会做家务。","家务也可以很有趣！"],
+        ans: 3
+      }
+    ]
+  },
+  {
+    id: "g4a-u3",
+    grade: "g4",
+    gradeName: "四年级上册",
+    unit: "Unit 3",
+    title: "What's the weather like?",
+    zh: "天气怎么样？",
+    emoji: "⛅",
+    bg: "linear-gradient(160deg,#DCF1FC,#FFD9E6)",
+    tag: ["天气","What's the weather like?"],
+    words: [
+      {
+        en: "weather",
+        zh: "天气",
+        em: "🌤️"
+      },
+      {
+        en: "sunny",
+        zh: "阳光充足的",
+        em: "☀️"
+      },
+      {
+        en: "cloudy",
+        zh: "多云的，阴天的",
+        em: "🌥️"
+      },
+      {
+        en: "windy",
+        zh: "风大的；多风的",
+        em: "🌬️"
+      },
+      {
+        en: "rainy",
+        zh: "多雨的",
+        em: "🌧️"
+      },
+      {
+        en: "snowy",
+        zh: "下雪的",
+        em: "❄️"
+      },
+      {
+        en: "hot",
+        zh: "热的，炎热的",
+        em: "🔥"
+      },
+      {
+        en: "cold",
+        zh: "冷的，寒冷的",
+        em: "🥶"
+      },
+      {
+        en: "cool",
+        zh: "凉爽的",
+        em: "🍃"
+      },
+      {
+        en: "warm",
+        zh: "温暖的",
+        em: "🌡️"
+      },
+      {
+        en: "cloud",
+        zh: "云",
+        em: "☁️"
+      },
+      {
+        en: "wind",
+        zh: "风",
+        em: "💨"
+      },
+      {
+        en: "rain",
+        zh: "雨",
+        em: "💧"
+      },
+      {
+        en: "snow",
+        zh: "雪",
+        em: "🌨️"
+      },
+      {
+        en: "coat",
+        zh: "外套",
+        em: "🧥"
+      },
+      {
+        en: "report",
+        zh: "报道",
+        em: "📺"
+      }
+    ],
+    sentences: [
+      {
+        en: "What's the weather like?",
+        zh: "天气怎么样？"
+      },
+      {
+        en: "It's sunny and warm.",
+        zh: "天气晴朗且温暖。"
+      },
+      {
+        en: "We can go out to play.",
+        zh: "我们可以出去玩。"
+      },
+      {
+        en: "It's windy and cloudy.",
+        zh: "风大而且多云。"
+      },
+      {
+        en: "Oh! It's rainy now.",
+        zh: "哦！现在下雨了。"
+      },
+      {
+        en: "I've got a good idea.",
+        zh: "我有一个好主意。"
+      },
+      {
+        en: "Our umbrellas are great!",
+        zh: "我们的雨伞太好了！"
+      },
+      {
+        en: "It's snowy and cold.",
+        zh: "又下雪又冷。"
+      },
+      {
+        en: "But it's hot in Sanya.",
+        zh: "但是三亚很热。"
+      },
+      {
+        en: "Look! Real snow!",
+        zh: "看！真的下雪了！"
+      },
+      {
+        en: "Is it cold or hot?",
+        zh: "是冷还是热？"
+      },
+      {
+        en: "Can we have some fun outside?",
+        zh: "我们能出去玩吗？"
+      },
+      {
+        en: "In any weather, we have fun.",
+        zh: "无论什么天气，我们都玩得很开心。"
+      }
+    ],
+    roles: [
+      {
+        nm: "Liu Fei",
+        ava: "👩‍🏫",
+        en: "I'm a teacher at a children's home in Sanya.",
+        zh: "我是三亚儿童之家的一名老师。"
+      },
+      {
+        nm: "Lin Jia",
+        ava: "🧣",
+        en: "It's snowy and cold here.",
+        zh: "我这儿又下雪又冷。"
+      },
+      {
+        nm: "Sam",
+        ava: "🧒",
+        en: "Look! It's sunny and warm.",
+        zh: "看！天气晴朗又暖和。"
+      },
+      {
+        nm: "Amy",
+        ava: "👧",
+        en: "Oh! It's rainy now.",
+        zh: "哦！现在下雨了。"
+      },
+      {
+        nm: "Lingling",
+        ava: "👱‍♀️",
+        en: "I've got a good idea.",
+        zh: "我有一个好主意。"
+      },
+      {
+        nm: "Grandpa",
+        ava: "👴",
+        en: "Thank you!",
+        zh: "谢谢你们！"
+      },
+      {
+        nm: "Weatherman",
+        ava: "🎙️",
+        en: "Let's watch the report today!",
+        zh: "今天让我们看看天气预报吧！"
+      },
+      {
+        nm: "Child in Sanya",
+        ava: "🧑",
+        en: "We love our snowy day!",
+        zh: "我们喜欢我们的下雪天！"
+      }
+    ],
+    judge: [
+      {
+        en: "It's sunny and warm.",
+        zh: "天气晴朗且温暖。",
+        ans: true
+      },
+      {
+        en: "It's snowy and cold.",
+        zh: "今天下雨而且很冷。",
+        ans: false,
+        fix: {
+          en: "It's rainy and cold.",
+          zh: "今天下雨而且很冷。"
+        },
+        note: "snowy 是下雪的，rainy 才是下雨的。"
+      },
+      {
+        en: "We can go out to play.",
+        zh: "我们可以出去玩。",
+        ans: true
+      },
+      {
+        en: "The rain comes down.",
+        zh: "雨落下来。",
+        ans: true
+      },
+      {
+        en: "It's windy and cloudy.",
+        zh: "天气晴朗又暖和。",
+        ans: false,
+        fix: {
+          en: "It's sunny and warm.",
+          zh: "天气晴朗又暖和。"
+        },
+        note: "windy and cloudy 是刮风又多云，不是晴朗温暖。"
+      },
+      {
+        en: "Let's turn on the TV.",
+        zh: "我们打开电视吧。",
+        ans: true
+      },
+      {
+        en: "Do I need my coat?",
+        zh: "我需要带雨伞吗？",
+        ans: false,
+        fix: {
+          en: "Do I need my umbrella?",
+          zh: "我需要带雨伞吗？"
+        },
+        note: "coat 是外套，umbrella 才是雨伞。"
+      },
+      {
+        en: "In any weather, we have fun.",
+        zh: "无论什么天气，我们都玩得很开心。",
+        ans: true
+      },
+      {
+        en: "Is it rainy or sunny?",
+        zh: "是雨天还是晴天？",
+        ans: true
+      },
+      {
+        en: "It never snows in Harbin.",
+        zh: "哈尔滨从来不下雪。",
+        ans: false,
+        fix: {
+          en: "It never snows in Sanya.",
+          zh: "三亚从来不下雪。"
+        },
+        note: "课文里从来不下雪的是三亚，哈尔滨正在下雪。"
+      },
+      {
+        en: "Look! Real snow!",
+        zh: "看！真的下雪了！",
+        ans: true
+      },
+      {
+        en: "It's hot in Sanya.",
+        zh: "三亚很冷。",
+        ans: false,
+        fix: {
+          en: "It's hot in Sanya.",
+          zh: "三亚很热。"
+        },
+        note: "hot 是炎热的，cold 才是寒冷的。"
+      }
+    ],
+    quiz: [
+      {
+        q: "—What's the weather like?\n—___ sunny and warm.",
+        qzh: "（选出正确的开头）",
+        opts: ["It's","It","Is it","Its"],
+        ans: 0
+      },
+      {
+        q: "It's windy and cloudy.",
+        qzh: "这句话的意思是？",
+        opts: ["天气晴朗又暖和。","又下雨又冷。","风大而且多云。","又下雪又冷。"],
+        ans: 2
+      },
+      {
+        q: "The ______ go by, by, by.",
+        qzh: "云朵飘过，飘过，飘过。",
+        opts: ["winds","clouds","rains","snow"],
+        ans: 1
+      },
+      {
+        q: "rainy 的意思是？",
+        opts: ["晴朗的","多风的","下雪的","多雨的"],
+        ans: 3
+      },
+      {
+        q: "Do I need my ______?",
+        qzh: "我需要外套吗？",
+        opts: ["coat","cloud","cold","cool"],
+        ans: 0
+      },
+      {
+        q: "It never ______ in Sanya.",
+        qzh: "三亚从来不下雪。",
+        opts: ["rain","rains","snows","snowing"],
+        ans: 2
+      },
+      {
+        q: "______ any weather, we have fun.",
+        qzh: "无论什么天气，我们都玩得很开心。",
+        opts: ["On","In","At","For"],
+        ans: 1
+      },
+      {
+        q: "hot 的反义词是？",
+        opts: ["warm","sunny","cloudy","cold"],
+        ans: 3
+      },
+      {
+        q: "Let's turn on the ______ and watch the report.",
+        qzh: "打开电视看天气预报。",
+        opts: ["radio","window","TV","light"],
+        ans: 2
+      },
+      {
+        q: "Is it cold ______ hot?",
+        qzh: "是冷还是热？",
+        opts: ["or","and","but","so"],
+        ans: 0
+      },
+      {
+        q: "The snow ______ around, around, around.",
+        qzh: "雪到处飞舞，飞舞，飞舞。",
+        opts: ["dance","dancing","danced","dances"],
+        ans: 3
+      },
+      {
+        q: "The children want to see ______ snow.",
+        qzh: "孩子们想看真正的雪。",
+        opts: ["cold","real","hot","warm"],
+        ans: 1
+      }
+    ]
+  },
+  {
+    id: "g4a-u4",
+    grade: "g4",
+    gradeName: "四年级上册",
+    unit: "Unit 4",
+    title: "Wonderful seasons",
+    zh: "美好的季节",
+    emoji: "🍂",
+    bg: "linear-gradient(160deg,#FFF3D9,#C9EEDC)",
+    tag: ["季节","What's your favourite season?"],
+    words: [
+      {
+        en: "wonderful",
+        zh: "令人惊叹的，奇妙的",
+        em: "✨"
+      },
+      {
+        en: "season",
+        zh: "季节",
+        em: "📅"
+      },
+      {
+        en: "spring",
+        zh: "春天，春季",
+        em: "🌸"
+      },
+      {
+        en: "summer",
+        zh: "夏天，夏季",
+        em: "☀️"
+      },
+      {
+        en: "autumn",
+        zh: "秋天，秋季",
+        em: "🍁"
+      },
+      {
+        en: "winter",
+        zh: "冬天，冬季",
+        em: "❄️"
+      },
+      {
+        en: "favourite",
+        zh: "最喜欢的",
+        em: "💖"
+      },
+      {
+        en: "birthday",
+        zh: "生日",
+        em: "🎂"
+      },
+      {
+        en: "fly",
+        zh: "放飞",
+        em: "🪁"
+      },
+      {
+        en: "snowstorm",
+        zh: "雪暴，暴风雪",
+        em: "🌨️"
+      },
+      {
+        en: "beach",
+        zh: "海滩，沙滩",
+        em: "🏖️"
+      },
+      {
+        en: "sea",
+        zh: "海，海洋",
+        em: "🌊"
+      },
+      {
+        en: "equator",
+        zh: "赤道",
+        em: "🌐"
+      },
+      {
+        en: "round",
+        zh: "循环地，周而复始地",
+        em: "🔄"
+      },
+      {
+        en: "quite",
+        zh: "非常，十分",
+        em: "🌟"
+      },
+      {
+        en: "join",
+        zh: "参与，加入",
+        em: "🤝"
+      }
+    ],
+    sentences: [
+      {
+        en: "What's your favourite season?",
+        zh: "你最喜欢什么季节？"
+      },
+      {
+        en: "I like winter best.",
+        zh: "我最喜欢冬天。"
+      },
+      {
+        en: "I can play in the snow.",
+        zh: "我可以在雪地里玩。"
+      },
+      {
+        en: "I don't like winter. It's cold.",
+        zh: "我不喜欢冬天，冬天很冷。"
+      },
+      {
+        en: "I like spring and autumn.",
+        zh: "我喜欢春天和秋天。"
+      },
+      {
+        en: "I can eat ice cream.",
+        zh: "我可以吃冰激凌。"
+      },
+      {
+        en: "Why do you also like summer?",
+        zh: "你为什么也喜欢夏天？"
+      },
+      {
+        en: "Because my birthday is in summer!",
+        zh: "因为我的生日在夏天！"
+      },
+      {
+        en: "I can fly kites in spring.",
+        zh: "我可以在春天放风筝。"
+      },
+      {
+        en: "There are four seasons in a year.",
+        zh: "一年有四个季节。"
+      },
+      {
+        en: "The apple tree is like a sun umbrella.",
+        zh: "苹果树像一把太阳伞。"
+      },
+      {
+        en: "Don't worry. Let's wait for spring.",
+        zh: "别担心，让我们等待春天。"
+      },
+      {
+        en: "It's winter in Harbin now.",
+        zh: "哈尔滨现在是冬天。"
+      }
+    ],
+    roles: [
+      {
+        nm: "Lingling",
+        ava: "👧",
+        en: "I like summer best, too.",
+        zh: "我也最喜欢夏天。"
+      },
+      {
+        nm: "Daming",
+        ava: "🧒",
+        en: "I like winter best. I can play in the snow.",
+        zh: "我最喜欢冬天，我可以在雪地里玩。"
+      },
+      {
+        nm: "Amy",
+        ava: "👧",
+        en: "I like spring and autumn. They are beautiful.",
+        zh: "我喜欢春天和秋天，它们很美。"
+      },
+      {
+        nm: "Sam",
+        ava: "🧒",
+        en: "I like summer best. I can eat ice cream.",
+        zh: "我最喜欢夏天，我可以吃冰激凌。"
+      },
+      {
+        nm: "Li Han",
+        ava: "🧑",
+        en: "This is my apple tree.",
+        zh: "这是我的苹果树。"
+      },
+      {
+        nm: "Li Han's dad",
+        ava: "👨",
+        en: "Don't worry. Let's wait for spring.",
+        zh: "别担心，让我们一起等春天。"
+      },
+      {
+        nm: "Leilei",
+        ava: "🧒",
+        en: "It's summer here. Go to the beach!",
+        zh: "这里是夏天，去海滩吧！"
+      },
+      {
+        nm: "Cody",
+        ava: "🧒",
+        en: "On the equator, there is no winter.",
+        zh: "在赤道上没有冬天。"
+      }
+    ],
+    judge: [
+      {
+        en: "I like winter best.",
+        zh: "我最喜欢冬天。",
+        ans: true
+      },
+      {
+        en: "I like winter best.",
+        zh: "我最喜欢夏天。",
+        ans: false,
+        fix: {
+          en: "I like summer best.",
+          zh: "我最喜欢夏天。"
+        },
+        note: "winter 是冬天，summer 才是夏天。"
+      },
+      {
+        en: "I can play in the snow.",
+        zh: "我可以在雪地里玩。",
+        ans: true
+      },
+      {
+        en: "Because my birthday is in summer!",
+        zh: "因为我的生日在夏天！",
+        ans: true
+      },
+      {
+        en: "There are many red apples on the tree!",
+        zh: "春天树上有许多红苹果。",
+        ans: false,
+        fix: {
+          en: "There are many red apples on the tree in autumn.",
+          zh: "秋天树上有许多红苹果。"
+        },
+        note: "苹果树结红苹果是在秋天 autumn，不是春天 spring。"
+      },
+      {
+        en: "I can fly kites in spring.",
+        zh: "我可以在春天放风筝。",
+        ans: true
+      },
+      {
+        en: "On the equator, there is no winter.",
+        zh: "在赤道上没有夏天。",
+        ans: false,
+        fix: {
+          en: "On the equator, there is no winter.",
+          zh: "在赤道上没有冬天。"
+        },
+        note: "赤道全年炎热，没有的是冬天 winter，不是夏天 summer。"
+      },
+      {
+        en: "Don't worry. Let's wait for spring.",
+        zh: "别担心，让我们等待春天。",
+        ans: true
+      },
+      {
+        en: "There are four seasons in a year.",
+        zh: "一年有四个季节。",
+        ans: true
+      },
+      {
+        en: "A snowstorm comes in summer.",
+        zh: "夏天来了暴风雪。",
+        ans: false,
+        fix: {
+          en: "A snowstorm comes in winter.",
+          zh: "冬天来了暴风雪。"
+        },
+        note: "snowstorm 是暴风雪，出现在冬天 winter，不是夏天 summer。"
+      },
+      {
+        en: "Go to the beach. Jump in the sea!",
+        zh: "去海滩，跳进海里！",
+        ans: true
+      },
+      {
+        en: "The apple tree is like a sun umbrella.",
+        zh: "苹果树像一把雨伞。",
+        ans: false,
+        fix: {
+          en: "The apple tree is like a sun umbrella.",
+          zh: "苹果树像一把太阳伞。"
+        },
+        note: "sun umbrella 是遮阳的太阳伞，雨伞是 umbrella。"
+      }
+    ],
+    quiz: [
+      {
+        q: "I like winter ___.",
+        qzh: "（我最喜欢冬天。）",
+        opts: ["good","best","very","much"],
+        ans: 1
+      },
+      {
+        q: "autumn 的意思是？",
+        opts: ["春天","夏天","冬天","秋天"],
+        ans: 3
+      },
+      {
+        q: "There are four ______ in a year.",
+        qzh: "一年有四个季节。",
+        opts: ["seasons","season","season's","seasones"],
+        ans: 0
+      },
+      {
+        q: "I can play in the ______ in winter.",
+        qzh: "冬天我可以在雪里玩。",
+        opts: ["rain","sea","snow","sun"],
+        ans: 2
+      },
+      {
+        q: "___ my birthday is in summer!",
+        qzh: "（因为我的生日在夏天！）",
+        opts: ["So","Because","And","But"],
+        ans: 1
+      },
+      {
+        q: "\"雪暴，暴风雪\"是哪个单词？",
+        opts: ["snowman","snowball","snowy","snowstorm"],
+        ans: 3
+      },
+      {
+        q: "It's so hot in the ______.",
+        qzh: "在阳光下很热。",
+        opts: ["sun","sea","shade","snow"],
+        ans: 0
+      },
+      {
+        q: "There are many red apples ______ the tree.",
+        qzh: "树上有许多红苹果。",
+        opts: ["in","at","on","under"],
+        ans: 2
+      },
+      {
+        q: "On the equator, there is no ______.",
+        qzh: "在赤道上没有冬天。",
+        opts: ["summer","spring","autumn","winter"],
+        ans: 3
+      },
+      {
+        q: "The apple tree is like a sun ______.",
+        qzh: "苹果树像一把太阳伞。",
+        opts: ["hat","umbrella","flower","chair"],
+        ans: 1
+      },
+      {
+        q: "Don't worry. Let's wait ______ spring.",
+        qzh: "别担心，让我们等待春天。",
+        opts: ["for","to","at","on"],
+        ans: 0
+      },
+      {
+        q: "The weather's ______ cold in winter here.",
+        qzh: "这里的冬天天气十分冷。",
+        opts: ["quiet","quick","quite","quit"],
+        ans: 2
+      }
+    ]
+  },
+  {
+    id: "g4a-u5",
+    grade: "g4",
+    gradeName: "四年级上册",
+    unit: "Unit 5",
+    title: "Let's go!",
+    zh: "我们出发吧！",
+    emoji: "🚌",
+    bg: "linear-gradient(160deg,#FFDCC2,#DCD0F2)",
+    tag: ["交通出行","How do we get there?"],
+    words: [
+      {
+        en: "bus",
+        zh: "公共汽车",
+        em: "🚌"
+      },
+      {
+        en: "car",
+        zh: "汽车",
+        em: "🚗"
+      },
+      {
+        en: "train",
+        zh: "火车，列车",
+        em: "🚆"
+      },
+      {
+        en: "plane",
+        zh: "飞机",
+        em: "✈️"
+      },
+      {
+        en: "ship",
+        zh: "大船",
+        em: "🚢"
+      },
+      {
+        en: "bike",
+        zh: "自行车",
+        em: "🚲"
+      },
+      {
+        en: "subway",
+        zh: "地铁",
+        em: "🚇"
+      },
+      {
+        en: "tram",
+        zh: "有轨电车",
+        em: "🚊"
+      },
+      {
+        en: "truck",
+        zh: "货车，卡车",
+        em: "🚚"
+      },
+      {
+        en: "city",
+        zh: "城市",
+        em: "🏙️"
+      },
+      {
+        en: "town",
+        zh: "镇，城镇",
+        em: "🏘️"
+      },
+      {
+        en: "sky",
+        zh: "天，天空",
+        em: "☁️"
+      },
+      {
+        en: "place",
+        zh: "地方，地点",
+        em: "📍"
+      },
+      {
+        en: "way",
+        zh: "方式，方法",
+        em: "🛣️"
+      },
+      {
+        en: "travel",
+        zh: "旅行",
+        em: "🧳"
+      },
+      {
+        en: "picnic",
+        zh: "野餐",
+        em: "🧺"
+      }
+    ],
+    sentences: [
+      {
+        en: "How do we get there?",
+        zh: "我们怎么去那里？"
+      },
+      {
+        en: "Let's go by car!",
+        zh: "我们坐汽车去吧！"
+      },
+      {
+        en: "Let's go by bus.",
+        zh: "我们坐公交车去吧。"
+      },
+      {
+        en: "Let's go for a picnic.",
+        zh: "我们去野餐吧。"
+      },
+      {
+        en: "Let's go in a 'green' way!",
+        zh: "我们绿色出行吧！"
+      },
+      {
+        en: "Let's meet in five minutes.",
+        zh: "我们五分钟后见。"
+      },
+      {
+        en: "Let's go to the park!",
+        zh: "我们去公园吧！"
+      },
+      {
+        en: "How do you go to school?",
+        zh: "你怎么去上学？"
+      },
+      {
+        en: "I go to school by bus.",
+        zh: "我坐公交车上学。"
+      },
+      {
+        en: "She goes to school by car.",
+        zh: "她坐汽车上学。"
+      },
+      {
+        en: "We can go by plane.",
+        zh: "我们可以坐飞机去。"
+      },
+      {
+        en: "We can go to different places.",
+        zh: "我们能去不同的地方。"
+      },
+      {
+        en: "We go to our new home by truck.",
+        zh: "我们坐卡车去我们的新家。"
+      }
+    ],
+    roles: [
+      {
+        nm: "Daming 大明",
+        ava: "🧒",
+        en: "Let's go by car! It's fast!",
+        zh: "我们坐汽车去吧！它很快！"
+      },
+      {
+        nm: "Lingling 玲玲",
+        ava: "👧",
+        en: "We're green now! Let's go!",
+        zh: "我们现在是绿色的啦！我们出发吧！"
+      },
+      {
+        nm: "Mum 妈妈",
+        ava: "👩",
+        en: "Let's go for a picnic in the park.",
+        zh: "我们去公园野餐吧。"
+      },
+      {
+        nm: "Dad 爸爸",
+        ava: "👨",
+        en: "No, let's go in a 'green' way!",
+        zh: "不，我们绿色出行吧！"
+      },
+      {
+        nm: "Jingjing 京京",
+        ava: "🐼",
+        en: "I'm Jingjing. We live in Sichuan.",
+        zh: "我是京京。我们住在四川。"
+      },
+      {
+        nm: "Sihai 四海",
+        ava: "🐼",
+        en: "Now we are on a plane in the sky.",
+        zh: "现在我们在天空中的飞机上。"
+      },
+      {
+        nm: "Luoluo 洛洛",
+        ava: "🧑",
+        en: "I go to school by car.",
+        zh: "我坐汽车上学。"
+      },
+      {
+        nm: "Junjun 君君",
+        ava: "👦",
+        en: "Let's go to the zoo!",
+        zh: "我们去动物园吧！"
+      }
+    ],
+    judge: [
+      {
+        en: "How do we get there?",
+        zh: "我们怎么去那里？",
+        ans: true
+      },
+      {
+        en: "We go to our new home by truck.",
+        zh: "我们坐火车去我们的新家。",
+        ans: false,
+        fix: {
+          en: "We go to our new home by truck.",
+          zh: "我们坐卡车去我们的新家。"
+        },
+        note: "truck 是卡车，火车是 train。"
+      },
+      {
+        en: "I go to school by bus.",
+        zh: "我坐公交车上学。",
+        ans: true
+      },
+      {
+        en: "Daming wants to go by bus.",
+        zh: "大明想坐公交车去。",
+        ans: false,
+        fix: {
+          en: "Daming wants to go by car.",
+          zh: "大明想坐汽车去。"
+        },
+        note: "课文里大明说的是 Let's go by car，爸爸才提议绿色出行，没说坐公交车。"
+      },
+      {
+        en: "Let's go for a picnic in the park.",
+        zh: "我们去公园野餐吧。",
+        ans: true
+      },
+      {
+        en: "I go to school by foot.",
+        zh: "我步行去上学。",
+        ans: false,
+        fix: {
+          en: "I go to school on foot.",
+          zh: "我步行去上学。"
+        },
+        note: "步行要用固定搭配 on foot，不能说 by foot。"
+      },
+      {
+        en: "She goes to school by bike.",
+        zh: "她骑自行车上学。",
+        ans: true
+      },
+      {
+        en: "We can go by ship across the sea.",
+        zh: "我们可以坐轮船横渡大海。",
+        ans: true
+      },
+      {
+        en: "We go to the zoo by plane.",
+        zh: "我们坐火车去动物园。",
+        ans: false,
+        fix: {
+          en: "We go to the zoo by train.",
+          zh: "我们坐火车去动物园。"
+        },
+        note: "by plane 是坐飞机，坐火车要说 by train。"
+      },
+      {
+        en: "Let's meet in five minutes.",
+        zh: "我们五分钟后见。",
+        ans: true
+      },
+      {
+        en: "They go to school on foot.",
+        zh: "他们坐地铁上学。",
+        ans: false,
+        fix: {
+          en: "They go to school by subway.",
+          zh: "他们坐地铁上学。"
+        },
+        note: "on foot 是步行，坐地铁是 by subway。"
+      },
+      {
+        en: "It comes from China by plane!",
+        zh: "它是坐飞机从中国运来的！",
+        ans: true
+      }
+    ],
+    quiz: [
+      {
+        q: "—How do we get there? —___",
+        qzh: "我们怎么去那里？该怎么回答？",
+        opts: ["Let's go by bus.","It's a bus.","I'm fine.","Yes, we do."],
+        ans: 0
+      },
+      {
+        q: "We go to school ___ foot.",
+        qzh: "我们步行上学。横线上填哪个介词？",
+        opts: ["by","on","in","with"],
+        ans: 1
+      },
+      {
+        q: "We can go by ___, high up in the sky.",
+        qzh: "我们能坐什么高高飞在天上？",
+        opts: ["ship","train","plane","bus"],
+        ans: 2
+      },
+      {
+        q: "It comes from China ___ plane!",
+        qzh: "它是坐飞机从中国运来的！",
+        opts: ["on","in","at","by"],
+        ans: 3
+      },
+      {
+        q: "Where is the pandas' new home?",
+        qzh: "熊猫京京和四海的新家在哪个国家？",
+        opts: ["China","Qatar","the UK","Japan"],
+        ans: 1
+      },
+      {
+        q: "She goes by bus. Beep, beep, beep. 里的 beep 是什么声音？",
+        opts: ["自行车铃声","地铁呼啸声","汽车喇叭声","火车突突声"],
+        ans: 2
+      },
+      {
+        q: "下面哪一种是课文中说的 a 'green' way（绿色出行）？",
+        opts: ["on foot","by car","by plane","by truck"],
+        ans: 0
+      },
+      {
+        q: "tram 的意思是？",
+        opts: ["地铁","货车","轮船","有轨电车"],
+        ans: 3
+      },
+      {
+        q: "How do you go to school? 的正确回答是？",
+        qzh: "你怎么去上学？",
+        opts: ["I'm nine.","I go by bike.","It's near.","Yes, I do."],
+        ans: 1
+      },
+      {
+        q: "They go ___ tram. Chug, chug, chug.",
+        qzh: "他们坐有轨电车去。",
+        opts: ["by","on","in","with"],
+        ans: 0
+      },
+      {
+        q: "We can go to different ___, near and far.",
+        qzh: "我们能去不同的地方，无论远近。",
+        opts: ["place","a place","the place","places"],
+        ans: 3
+      },
+      {
+        q: "爸爸不赞成坐汽车去野餐，他说要怎么去？",
+        opts: ["by bus","on foot","in a 'green' way","by train"],
+        ans: 2
+      }
+    ]
+  },
+  {
+    id: "g4a-u6",
+    grade: "g4",
+    gradeName: "四年级上册",
+    unit: "Unit 6",
+    title: "Find your way",
+    zh: "找到你的路",
+    emoji: "🗺️",
+    bg: "linear-gradient(160deg,#C9EEDC,#DCF1FC)",
+    tag: ["问路指路","Go straight on."],
+    words: [
+      {
+        en: "wheel",
+        zh: "车轮",
+        em: "🛞"
+      },
+      {
+        en: "left",
+        zh: "向左，朝左",
+        em: "⬅️"
+      },
+      {
+        en: "straight",
+        zh: "笔直地",
+        em: "⬆️"
+      },
+      {
+        en: "library",
+        zh: "图书室；图书馆",
+        em: "📚"
+      },
+      {
+        en: "centre",
+        zh: "中心",
+        em: "🏟️"
+      },
+      {
+        en: "cinema",
+        zh: "电影院",
+        em: "🎬"
+      },
+      {
+        en: "hospital",
+        zh: "医院",
+        em: "🏥"
+      },
+      {
+        en: "supermarket",
+        zh: "超市",
+        em: "🛒"
+      },
+      {
+        en: "museum",
+        zh: "博物馆，博物院",
+        em: "🏛️"
+      },
+      {
+        en: "tomorrow",
+        zh: "（在）明天",
+        em: "📅"
+      },
+      {
+        en: "woman",
+        zh: "成年女子，妇女",
+        em: "👩"
+      },
+      {
+        en: "step",
+        zh: "步；一步（的距离）",
+        em: "👣"
+      },
+      {
+        en: "own",
+        zh: "自己的",
+        em: "🙋"
+      },
+      {
+        en: "walk",
+        zh: "走，行走",
+        em: "🚶"
+      },
+      {
+        en: "cross",
+        zh: "横穿",
+        em: "🚸"
+      },
+      {
+        en: "underground",
+        zh: "在地（面）下",
+        em: "🚇"
+      }
+    ],
+    sentences: [
+      {
+        en: "Go straight on to the museum.",
+        zh: "一直走到博物馆。"
+      },
+      {
+        en: "Turn left at the hospital.",
+        zh: "在医院那里向左转。"
+      },
+      {
+        en: "Turn right at the hospital.",
+        zh: "在医院那里向右转。"
+      },
+      {
+        en: "Turn left and go straight on.",
+        zh: "向左转然后直走。"
+      },
+      {
+        en: "Go straight and turn right.",
+        zh: "直走然后向右转。"
+      },
+      {
+        en: "Where does Susu go?",
+        zh: "苏苏去哪里？"
+      },
+      {
+        en: "Let's find out tomorrow.",
+        zh: "我们明天去弄清楚吧。"
+      },
+      {
+        en: "Can you tell me the way?",
+        zh: "你能告诉我怎么走吗？"
+      },
+      {
+        en: "The school is on your right.",
+        zh: "学校在你的右边。"
+      },
+      {
+        en: "She goes to school on her own.",
+        zh: "她独自去上学。"
+      },
+      {
+        en: "Be careful, my girl!",
+        zh: "小心点，我的孩子！"
+      },
+      {
+        en: "Here's the sports centre.",
+        zh: "体育中心到了。"
+      },
+      {
+        en: "How do we get around the city?",
+        zh: "我们怎么在这座城市出行？"
+      }
+    ],
+    roles: [
+      {
+        nm: "Lingling 玲玲",
+        ava: "👧",
+        en: "My cat Susu goes out every morning!",
+        zh: "我的猫苏苏每天早上都出去！"
+      },
+      {
+        nm: "Daming 大明",
+        ava: "🧒",
+        en: "Let's find out tomorrow.",
+        zh: "我们明天去弄清楚吧。"
+      },
+      {
+        nm: "Bob 博博",
+        ava: "🤖",
+        en: "Susu goes straight on to the museum.",
+        zh: "苏苏一直走到博物馆。"
+      },
+      {
+        nm: "Susu 苏苏",
+        ava: "🐱",
+        en: "At the hospital, I turn right.",
+        zh: "在医院那里，我向右转。"
+      },
+      {
+        nm: "The woman 那位女士",
+        ava: "👵",
+        en: "Your cat visits me every day.",
+        zh: "你的猫每天都来看我。"
+      },
+      {
+        nm: "Yanyan 燕燕",
+        ava: "🧒",
+        en: "I want to go to school on my own!",
+        zh: "我想自己去上学！"
+      },
+      {
+        nm: "Yanyan's mum 燕燕妈妈",
+        ava: "👩",
+        en: "Be careful, my girl!",
+        zh: "小心点，我的孩子！"
+      },
+      {
+        nm: "Gary 加里",
+        ava: "👦",
+        en: "From my home, go straight on and turn left.",
+        zh: "从我家出发，直走然后向左转。"
+      }
+    ],
+    judge: [
+      {
+        en: "Go straight on to the museum.",
+        zh: "一直走到博物馆。",
+        ans: true
+      },
+      {
+        en: "Turn left at the hospital.",
+        zh: "在医院那里向右转。",
+        ans: false,
+        fix: {
+          en: "Turn left at the hospital.",
+          zh: "在医院那里向左转。"
+        },
+        note: "turn left 是向左转，turn right 才是向右转。"
+      },
+      {
+        en: "Turn right and go straight on.",
+        zh: "向右转然后直走。",
+        ans: true
+      },
+      {
+        en: "The school is on your right.",
+        zh: "学校在你的右边。",
+        ans: true
+      },
+      {
+        en: "At the hospital, she turns left.",
+        zh: "在医院那里，她向左转。",
+        ans: false,
+        fix: {
+          en: "At the hospital, she turns right.",
+          zh: "在医院那里，她向右转。"
+        },
+        note: "苏苏是在博物馆那里向左转，到医院才向右转。"
+      },
+      {
+        en: "Cross the road.",
+        zh: "过马路。",
+        ans: true
+      },
+      {
+        en: "Yanyan can see very well.",
+        zh: "燕燕视力很好。",
+        ans: false,
+        fix: {
+          en: "Yanyan can't see.",
+          zh: "燕燕看不见。"
+        },
+        note: "课文第一句就是 Yanyan can't see，她每天靠妈妈帮助上学。"
+      },
+      {
+        en: "Where does Susu go?",
+        zh: "苏苏去哪里？",
+        ans: true
+      },
+      {
+        en: "I want to go to school on my own!",
+        zh: "我想自己去上学！",
+        ans: true
+      },
+      {
+        en: "Can you tell me the way to the library?",
+        zh: "你能告诉我去电影院的路吗？",
+        ans: false,
+        fix: {
+          en: "Can you tell me the way to the library?",
+          zh: "你能告诉我去图书馆的路吗？"
+        },
+        note: "library 是图书馆，电影院是 cinema。"
+      },
+      {
+        en: "Let's find out tomorrow.",
+        zh: "我们明天去弄清楚吧。",
+        ans: true
+      },
+      {
+        en: "Yanyan goes to school with her mum's help every day.",
+        zh: "燕燕每天独自去上学。",
+        ans: false,
+        fix: {
+          en: "Yanyan goes to school on her own.",
+          zh: "燕燕独自去上学。"
+        },
+        note: "故事开头燕燕是每天在妈妈帮助下上学，独自上学是她 11 岁的生日愿望。"
+      }
+    ],
+    quiz: [
+      {
+        q: "Go straight on ___ the museum.",
+        qzh: "一直走到博物馆。横线上填哪个介词？",
+        opts: ["to","at","in","on"],
+        ans: 0
+      },
+      {
+        q: "Turn left ___ the hospital.",
+        qzh: "在医院那里向左转。横线上填哪个介词？",
+        opts: ["to","at","on","in"],
+        ans: 1
+      },
+      {
+        q: "The school is ___ your right.",
+        qzh: "学校在你的右边。",
+        opts: ["in","at","on","to"],
+        ans: 2
+      },
+      {
+        q: "苏苏一直走到博物馆后，在那里向哪边转？",
+        opts: ["向右转","一直走","过马路","向左转"],
+        ans: 3
+      },
+      {
+        q: "Yanyan goes to school ___ her own.",
+        qzh: "燕燕独自去上学。",
+        opts: ["in","on","at","with"],
+        ans: 1
+      },
+      {
+        q: "Where does Susu go every morning?",
+        qzh: "苏苏每天早上去了哪里？",
+        opts: ["To the park.","To the school.","To the woman's house.","To the cinema."],
+        ans: 2
+      },
+      {
+        q: "向别人问路时，开头应该先说什么礼貌用语？",
+        opts: ["Excuse me.","Thank you.","Be careful!","Here you are."],
+        ans: 0
+      },
+      {
+        q: "妈妈教燕燕去学校，直走要数多少步？",
+        opts: ["15 steps","30 steps","45 steps","50 steps"],
+        ans: 3
+      },
+      {
+        q: "The wheels on the bus go ___ and round.",
+        qzh: "巴士的车轮转啊转。",
+        opts: ["up","round","down","on"],
+        ans: 1
+      },
+      {
+        q: "wish 的中文意思是？",
+        opts: ["愿望","车轮","脚步","地图"],
+        ans: 0
+      },
+      {
+        q: "下列哪个场所是你可以借书的地方？",
+        opts: ["cinema","hospital","museum","library"],
+        ans: 3
+      },
+      {
+        q: "Cross the road. 的意思是？",
+        opts: ["向右转","直走","过马路","上车"],
+        ans: 2
+      }
+    ]
+  }
+];
+
+/* 游戏清单（通用引擎，所有单元共用） */
+const GAMES = [
+  {id:'match', em:'🃏', name:'单词对对碰', desc:'翻牌配对英文和中文，翻对了就消失', tag:'词汇 · 记忆', bg:'linear-gradient(160deg,#FFD9E6,#FFF3D9)'},
+  {id:'judge', em:'⚡', name:'闪电判断', desc:'英文配中文，对不对？全班喊 Yes / No', tag:'句型 · 反应', bg:'linear-gradient(160deg,#C9EEDC,#DCF1FC)'},
+  {id:'build', em:'🧩', name:'句子拼装台', desc:'打乱的词块，点一点拼成完整句子', tag:'句型 · 组句', bg:'linear-gradient(160deg,#DCD0F2,#FFD9E6)'},
+  {id:'role',  em:'🎭', name:'角色对话秀', desc:'点人物听台词，还能玩配音挑战', tag:'听说 · 表达', bg:'linear-gradient(160deg,#FFF3D9,#C9EEDC)'},
+  {id:'battle',em:'🏆', name:'小组抢答赛', desc:'幸运格子选题，分组抢答计分', tag:'综合 · PK', bg:'linear-gradient(160deg,#FFDCC2,#DCD0F2)'}
+];
+
+/* ==================== 基础工具 ==================== */
+const $=(s,el)=>(el||document).querySelector(s);
+const $$=(s,el)=>Array.from((el||document).querySelectorAll(s));
+const LS='engclass_v1';
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;};
+const pickN=(a,n)=>shuffle(a).slice(0,n);
+const getUnit=()=>COURSE.find(u=>u.id===S.unitId)||COURSE[0];
+
+const S={
+  unitId:null, gameId:null, curGroup:0,
+  set:{voice:'on',rate:0.8,sfx:'on',font:1},
+  groups:[{nm:'🌸 太阳组',sc:0},{nm:'🌊 海洋组',sc:0},{nm:'🍀 树叶组',sc:0},{nm:'⭐ 星星组',sc:0}],
+  names:[], picked:[]
+};
+function save(){try{localStorage.setItem(LS,JSON.stringify({set:S.set,groups:S.groups,names:S.names}));}catch(e){}}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem(LS)||'{}');
+    if(d.set)Object.assign(S.set,d.set);
+    if(Array.isArray(d.groups)&&d.groups.length)S.groups=d.groups;
+    if(Array.isArray(d.names))S.names=d.names;
+  }catch(e){}
+}
+
+/* ---- 朗读 ---- */
+let VOICES=[],speakTid=null,everSpoken=false;
+const HAS_TTS=('speechSynthesis' in window);
+function loadVoices(){try{VOICES=(HAS_TTS&&speechSynthesis.getVoices())||[];}catch(e){VOICES=[];}return VOICES;}
+if(HAS_TTS){loadVoices();speechSynthesis.onvoiceschanged=loadVoices;}
+/* 首次点击时做两件事：
+   ① 重取语音列表（Chrome 常常到这一刻才给全）
+   ② 静默预热 TTS 引擎 —— 浏览器要等一次用户手势才真正初始化语音合成。
+      不预热的话「进页面后第一次点句子」没声音，点第二次才有（谭谭实测到的就是这个） */
+document.addEventListener('click',function once(){
+  loadVoices();
+  if(S.set.voice==='on'){try{
+    const u=new SpeechSynthesisUtterance('a');
+    u.volume=0;u.lang='en-GB';
+    speechSynthesis.speak(u);
+  }catch(e){}}
+  document.removeEventListener('click',once);
+},{once:true});
+
+function voiceWarn(){
+  if(window.__vw)return;window.__vw=true;
+  toast('⚠️ 没听到声音？去顶栏「设置 → 发音诊断」');
+}
+/* 坑：cancel() 之后必须隔一帧再 speak，否则 Chrome 会把刚排入的新语音一起取消掉 */
+function speak(text,rate){
+  if(S.set.voice!=='on'||!HAS_TTS)return;
+  const ss=speechSynthesis;
+  try{
+    if(!VOICES.length)loadVoices();
+    ss.cancel();
+    if(ss.resume){try{ss.resume();}catch(e){}}   /* Chrome 处于挂起状态时会静默失败 */
+    clearTimeout(speakTid);
+    speakTid=setTimeout(()=>{
+      const u=new SpeechSynthesisUtterance(String(text).replace(/[’‘]/g,"'").replace(/[“”]/g,'"'));
+      u.lang='en-GB';u.rate=rate||S.set.rate;u.pitch=1.05;u.volume=1;
+      const v=VOICES.find(x=>/en-GB/i.test(x.lang))||VOICES.find(x=>/^en/i.test(x.lang));
+      if(v)u.voice=v;
+      u.onstart=()=>{everSpoken=true;};
+      u.onerror=e=>{if(!everSpoken&&e&&e.error!=='interrupted'&&e.error!=='canceled')voiceWarn();};
+      ss.speak(u);
+      /* 兜底：2.5 秒后还没开口且队列已空 → 提示做诊断 */
+      setTimeout(()=>{if(!everSpoken&&!ss.speaking&&!ss.pending)voiceWarn();},2500);
+    },80);
+  }catch(e){}
+}
+function updateVoiceInfo(){
+  const v=loadVoices(),el=$('#voiceInfo');if(!el)return;
+  if(!HAS_TTS){el.textContent='⚠️ 当前浏览器不支持语音朗读，建议换 Chrome / Edge';return;}
+  if(!v.length){el.innerHTML='语音列表还没加载出来（打开设置会自动重试）';return;}
+  const en=v.filter(x=>/^en/i.test(x.lang)),gb=v.filter(x=>/en-GB/i.test(x.lang));
+  el.innerHTML=`检测到 <b>${v.length}</b> 个语音，其中英语 <b>${en.length}</b> 个（英式 ${gb.length} 个）`;
+  if(!en.length)el.innerHTML+=`<br>⚠️ <b>系统没有英语语音包</b>，朗读不会出声。解决办法：Windows「设置 → 时间和语言 → 语音」添加 English 语音，或直接换 Edge 浏览器（自带在线英语语音）。`;
+}
+
+/* ---- 音效（Web Audio 合成，无需外部文件） ---- */
+let AC=null;
+function ac(){try{if(!AC)AC=new (window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}return AC;}
+function tone(f,d,type,delay,vol){
+  const c=ac();if(!c)return;
+  const t0=c.currentTime+(delay||0);
+  const o=c.createOscillator(),g=c.createGain();
+  o.type=type||'sine';o.frequency.setValueAtTime(f,t0);
+  g.gain.setValueAtTime(0,t0);
+  g.gain.linearRampToValueAtTime(vol==null?.16:vol,t0+.02);
+  g.gain.exponentialRampToValueAtTime(.0001,t0+d);
+  o.connect(g);g.connect(c.destination);o.start(t0);o.stop(t0+d+.02);
+}
+function noise(d,delay,vol){
+  const c=ac();if(!c)return;
+  const len=Math.floor(c.sampleRate*d),buf=c.createBuffer(1,len,c.sampleRate),dt=buf.getChannelData(0);
+  for(let i=0;i<len;i++)dt[i]=(Math.random()*2-1)*(1-i/len);
+  const src=c.createBufferSource();src.buffer=buf;
+  const g=c.createGain();g.gain.value=vol==null?.1:vol;
+  const f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=1800;
+  src.connect(f);f.connect(g);g.connect(c.destination);src.start(c.currentTime+(delay||0));
+}
+function sfx(n){
+  if(S.set.sfx!=='on')return;
+  switch(n){
+    case 'flip': tone(760,.08,'triangle',0,.1); break;
+    case 'right':tone(523,.14,'sine',0,.15);tone(659,.14,'sine',.1,.15);tone(784,.22,'sine',.2,.15);break;
+    case 'wrong':tone(220,.22,'sawtooth',0,.11);tone(160,.3,'sawtooth',.12,.11);break;
+    case 'click':tone(600,.05,'square',0,.06);break;
+    case 'bell': tone(880,.3,'sine',0,.16);tone(1174,.5,'sine',.25,.16);break;
+    case 'win':  [523,659,784,1046].forEach((f,i)=>tone(f,.24,'sine',i*.11,.15));noise(.7,.5,.08);noise(.5,.75,.06);break;
+    case 'roll': tone(400+Math.random()*300,.04,'square',0,.05);break;
+  }
+}
+/* ---- toast ---- */
+let toastT=null;
+function toast(msg){
+  const t=$('#toast');t.textContent=msg;t.classList.add('show');
+  clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),1900);
+}
+/* ---- 大字结果浮层 ---- */
+function bigShow(html,okText,cb){
+  $('#bigBox').innerHTML=html;
+  const b=$('#bigOk');b.textContent=okText||'继续';
+  $('#maskBig').classList.add('show');
+  b.onclick=()=>{$('#maskBig').classList.remove('show');if(cb)cb();};
+}
+
+/* ==================== 视图切换 ==================== */
+function showView(v){
+  $$('.view').forEach(e=>e.classList.remove('show'));
+  $('#view'+v).classList.add('show');
+  try{window.scrollTo({top:0,behavior:'smooth'});}catch(e){}
+  if(v==='Home'){$('#tbTitle').textContent='外研版（2024新版）';S.gameId=null;}
+  if(v==='Unit'){const u=getUnit();$('#tbTitle').textContent=u.gradeName+' '+u.unit+' '+u.title;}
+  if(v==='Game'){const u=getUnit();const g=GAMES.find(x=>x.id===S.gameId);$('#tbTitle').textContent=(g?g.em+' '+g.name:'')+' · '+u.gradeName+' '+u.unit;}
+}
+
+/* ==================== 首页 ==================== */
+function renderHome(){
+  ['g3','g4'].forEach(g=>{
+    const box=$('#grid'+(g==='g3'?'G3':'G4'));
+    const list=COURSE.filter(u=>u.grade===g);
+    box.innerHTML=list.map(u=>`
+      <div class="unit-card" data-id="${u.id}" style="background:${u.bg}">
+        <span class="badge">${esc(u.gradeName)} · ${esc(u.unit)}</span>
+        <h3>${esc(u.emoji)} ${esc(u.title)}</h3>
+        <div class="sub">${esc(u.zh)}</div>
+        <div class="meta">${(u.tag||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join('')}</div>
+        <div class="go">▶</div>
+      </div>`).join('')
+      /* 没做满 6 个单元才显示占位卡 */
+      +(list.length<6?`
+      <div class="unit-card locked" style="background:linear-gradient(160deg,#F2EEF4,#E8E4EC)">
+        <span class="badge">${g==='g3'?'三年级上册':'四年级上册'} · Unit ${list.length+1}</span>
+        <h3>🔒 敬请期待</h3>
+        <div class="sub">下一课正在制作中…</div>
+      </div>`:'');
+  });
+  $$('.unit-card:not(.locked)').forEach(c=>c.addEventListener('click',()=>openUnit(c.dataset.id)));
+  const st=$('#homeStat');
+  if(st)st.innerHTML=`已收录 <b>${COURSE.length}</b> 个单元 · <b>${COURSE.reduce((s,u)=>s+u.words.length,0)}</b> 个重点词 · <b>${COURSE.reduce((s,u)=>s+u.sentences.length,0)}</b> 个核心句 · <b>${COURSE.reduce((s,u)=>s+u.judge.length+u.quiz.length,0)}</b> 道练习题`;
+}
+function openUnit(id){
+  S.unitId=id;const u=getUnit();
+  $('#unitHero').style.background=u.bg;
+  $('#unitHero').innerHTML=`
+    <div class="emo">${esc(u.emoji)}</div>
+    <div class="txt">
+      <h2>${esc(u.gradeName)} ${esc(u.unit)} · ${esc(u.title)}</h2>
+      <p>${esc(u.zh)}　|　${u.words.length} 个重点词 · ${u.sentences.length} 个核心句</p>
+    </div>`;
+  $('#gameGrid').innerHTML=GAMES.map(g=>`
+    <div class="game-card" data-g="${g.id}" style="background:${g.bg}">
+      <span class="g-emo">${g.em}</span>
+      <h4>${esc(g.name)}</h4>
+      <p>${esc(g.desc)}</p>
+      <span class="tag">${esc(g.tag)}</span>
+    </div>`).join('');
+  $$('#gameGrid .game-card').forEach(c=>c.addEventListener('click',()=>startGame(c.dataset.g)));
+  renderKeys();
+  showView('Unit');
+}
+/* 本课重点 */
+function renderKeys(){
+  const u=getUnit();
+  $('#keyBox').innerHTML=`
+    <div style="text-align:center;margin-bottom:14px">
+      <button class="btn big mint" id="keyAll">🔊 全班齐读（慢速）</button>
+      <button class="btn" id="keyStop" style="margin-left:10px">⏹ 停止</button>
+    </div>
+    <div class="word-pool">
+      ${u.sentences.map((s,i)=>`<div class="wchip" data-i="${i}" title="点一下听发音" style="flex-direction:column;font-size:1.25rem;padding:12px 18px">
+        <span>${esc(s.en)}</span><span style="font-size:.85rem;font-weight:normal;opacity:.8">${esc(s.zh)}</span>
+      </div>`).join('')}
+    </div>
+    <div class="hintline">点击任意句子即可发音 · 慢速适合全班跟读</div>`;
+  $$('#keyBox .wchip').forEach(c=>c.addEventListener('click',()=>{
+    sfx('click');const s=u.sentences[+c.dataset.i];speak(s.en,0.7);
+    c.style.transform='scale(1.08)';setTimeout(()=>c.style.transform='',220);
+  }));
+  $('#keyAll').addEventListener('click',()=>{
+    sfx('click');let i=0;window.__keyTimer&&clearInterval(window.__keyTimer);
+    const go=()=>{if(i>=u.sentences.length){clearInterval(window.__keyTimer);toast('✅ 齐读完成');return;}speak(u.sentences[i].en,0.62);i++;};
+    go();window.__keyTimer=setInterval(go,2600);
+  });
+  $('#keyStop').addEventListener('click',()=>{
+    clearInterval(window.__keyTimer);
+    try{speechSynthesis.cancel();}catch(e){}
+  });
+}
+
+/* ==================== 游戏分发 ==================== */
+function stageHead(unit,game,hudHtml){
+  return `<div class="stage-head">
+    <h2><span>${game.em}</span><span>${esc(game.name)}</span></h2>
+    <span class="spacer"></span>
+    <div class="hud" id="hud">${hudHtml||''}</div>
+  </div>`;
+}
+function startGame(id){
+  if(!id&&S.gameId)id=S.gameId;
+  S.gameId=id;
+  clearInterval(window.__keyTimer);
+  clearInterval(window.__gameTimer);
+  window.__space=null;
+  try{speechSynthesis.cancel();}catch(e){}
+  const u=getUnit(),g=GAMES.find(x=>x.id===id);
+  if(!u||!g)return;
+  showView('Game');
+  const st=$('#stage');st.innerHTML='';
+  ({match:gameMatch,judge:gameJudge,build:gameBuild,role:gameRole,battle:gameBattle}[id]||function(){})(u,g,st);
+  sfx('click');
+}
+
+/* ==================== 课堂工具 · 计时器 ==================== */
+const T={total:60,left:60,run:false,tid:null};
+function tmRender(){
+  const n=$('#tmNum');if(n)n.textContent=T.left;
+  if(n)n.classList.toggle('warn',T.left<=10&&T.left>0);
+  const b=$('#tmBar');if(b)b.style.width=Math.max(0,T.left/T.total*100)+'%';
+}
+function tmSet(v){T.total=v;T.left=v;T.run=false;clearInterval(T.tid);tmRender();}
+function tmTick(){
+  T.left--;tmRender();
+  if(T.left<=0){tmSet(T.total);sfx('bell');toast('⏰ 时间到！');}
+}
+function tmStart(){if(T.run)return;T.run=true;T.tid=setInterval(tmTick,1000);toast('▶ 开始计时 '+T.left+' 秒');}
+function tmPause(){T.run=false;clearInterval(T.tid);}
+
+/* ==================== 课堂工具 · 随机点名 ==================== */
+function pkParse(str){
+  return String(str||'').split(/[\n,，、;；\s]+/).map(s=>s.trim()).filter(Boolean);
+}
+function pkRender(){const c=$('#pkCount');if(c)c.textContent=S.names.length?'共 '+S.names.length+' 人 / 已抽 '+S.picked.length+' 人':'';}
+let pkTid=null;
+function pkRoll(){
+  const list=S.names.filter(n=>S.names.length);
+  if(!list.length){toast('请先在下方粘贴全班名单');return;}
+  if(S.picked.length>=list.length){S.picked=[];toast('🎉 全班都抽过啦，重新开始一轮');}
+  const rest=list.filter(n=>S.picked.indexOf(n)<0);
+  const el=$('#pkName'),hit=$('#pkHit');
+  el.classList.add('rolling');
+  clearInterval(pkTid);
+  let n=0;
+  pkTid=setInterval(()=>{
+    el.textContent=list[Math.floor(Math.random()*list.length)];
+    sfx('roll');n++;
+    if(n>34){
+      clearInterval(pkTid);
+      const who=rest[Math.floor(Math.random()*rest.length)];
+      S.picked.push(who);
+      el.classList.remove('rolling');
+      el.textContent=who;
+      hit.textContent='🎉 请这位同学来回答！';
+      const mn=$('#mName');if(mn&&!mn.value.trim())mn.value=who;  /* 顺手填进「挑战者名字」 */
+      sfx('win');
+      try{speak('Hello!');}catch(e){}
+      pkRender();
+    }
+  },70);
+}
+
+/* ==================== 课堂工具 · 计分板 ==================== */
+let sbHidden=false;
+function scoreRender(){
+  const max=Math.max.apply(null,S.groups.map(g=>g.sc).concat([0]));
+  $('#scoreList').innerHTML=S.groups.map((g,i)=>`
+    <div class="gscore g${i%6} ${(g.sc===max&&max>0)?'lead':''}" data-i="${i}">
+      <span class="gn">${esc(g.nm)}</span>
+      <span class="gv">${g.sc}</span>
+      <span class="pm">
+        <button data-a="up" data-i="${i}">＋</button>
+        <button data-a="dn" data-i="${i}">－</button>
+      </span>
+    </div>`).join('');
+  $$('#scoreList .pm button').forEach(b=>b.addEventListener('click',e=>{
+    e.stopPropagation();
+    const i=+b.dataset.i;
+    S.groups[i].sc=Math.max(0,S.groups[i].sc+(b.dataset.a==='up'?1:-1));
+    sfx('click');scoreRender();save();
+  }));
+  $$('#scoreList .gscore').forEach(c=>c.addEventListener('click',()=>{
+    S.curGroup=+c.dataset.i;sfx('click');
+    toast('当前答题组：'+S.groups[S.curGroup].nm);
+  }));
+}
+function scoreAdd(n,i){
+  if(i==null)i=S.curGroup;
+  if(!S.groups[i])return;
+  S.groups[i].sc=Math.max(0,S.groups[i].sc+(n||1));
+  const el=$$('#scoreList .gscore')[i];
+  if(el){el.classList.add('bump');setTimeout(()=>el.classList.remove('bump'),420);}
+  scoreRender();save();
+}
+/* ---------- 挑战排行榜（按单元独立存本机，双榜：用时榜 / 步数榜） ---------- */
+function recKey(){return 'engclass_rec_match_'+(S.unitId||'all');}
+function recGet(){try{const a=JSON.parse(localStorage.getItem(recKey())||'[]');return Array.isArray(a)?a:[];}catch(e){return [];}}
+function recAdd(o){
+  const list=recGet();list.push(o);
+  try{localStorage.setItem(recKey(),JSON.stringify(list.slice(-200)));}catch(e){}
+  return list;
+}
+/* by='sec' 用时榜（先比用时再比步数）；by='mv' 步数榜（先比步数再比用时） */
+function rankSort(list,by){
+  return list.slice().sort((x,y)=> by==='mv' ? ((x.mv-y.mv)||(x.sec-y.sec)) : ((x.sec-y.sec)||(x.mv-y.mv)));
+}
+function rankOf(list,o,by){return rankSort(list,by).indexOf(o);}
+function recClear(){try{localStorage.removeItem(recKey());}catch(e){}}
+let rankTab='sec';
+function rankOpen(){
+  const all=recGet(),list=rankSort(all,rankTab),u=getUnit(),medal=['🥇','🥈','🥉'];
+  const bg=['linear-gradient(120deg,#FFE9A8,#FFF6D6)','linear-gradient(120deg,#E6EEF5,#F6F9FC)','linear-gradient(120deg,#FFDCC2,#FFEEE2)'];
+  const sub=$('#rankSub');
+  if(sub)sub.textContent=u.gradeName+' '+u.unit+' '+u.title+' ｜ '+(rankTab==='mv'?'按步数从少到多':'按用时从短到长')+'，共 '+all.length+' 条记录';
+  const box=$('#rankList');
+  if(box)box.innerHTML=list.length?list.map((r,i)=>`
+    <div class="rank-row" style="background:${bg[i]||'#F6F2F6'};box-shadow:var(--shadow-s)">
+      <span class="rk">${medal[i]||(i+1)}</span>
+      <span>${esc(r.nm)}</span>
+      <span class="rs">${rankTab==='mv'?r.mv+' 步':fmt(r.sec)}
+        <span style="font-size:.9rem;font-weight:normal;opacity:.75;margin-left:8px">· ${rankTab==='mv'?fmt(r.sec):r.mv+' 步'}</span></span>
+    </div>`).join('')
+   :`<div class="empty-tip">还没有记录 🫧<br><span style="font-size:1rem">在游戏里输入名字，点「🏁 开始挑战」就有了</span></div>`;
+  $$('#rankTab button').forEach(b=>b.classList.toggle('on',b.dataset.r===rankTab));
+  $('#maskRank').classList.add('show');
+}
+
+function renderScoreCfg(){
+  $('#scoreCfg').innerHTML=S.groups.map((g,i)=>`
+    <div class="row">
+      <span style="width:2em;font-weight:bold">${i+1}</span>
+      <input type="text" value="${esc(g.nm)}" data-i="${i}" style="flex:1;min-width:150px">
+      <button class="btn ghost" data-del="${i}" style="height:44px;padding:0 14px">🗑</button>
+    </div>`).join('');
+  $$('#scoreCfg [data-del]').forEach(b=>b.addEventListener('click',()=>{
+    if(S.groups.length<=2){toast('至少保留 2 个组');return;}
+    S.groups.splice(+b.dataset.del,1);renderScoreCfg();scoreRender();save();
+  }));
+}
+
+/* ==================== 课堂工具 · 设置 ==================== */
+function segBind(sel,key,cast,after){
+  $$(sel+' button').forEach(b=>b.addEventListener('click',()=>{
+    $$(sel+' button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    const raw=b.dataset[Object.keys(b.dataset)[0]];
+    S.set[key]=cast?cast(raw):raw;
+    sfx('click');save();if(after)after();
+  }));
+}
+function applyFont(){
+  document.documentElement.style.fontSize='calc(clamp(15px,0.78vw + 8px,24px) * '+S.set.font+')';
+}
+function applySetUI(){
+  $$('#segVoice button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.set.voice));
+  $$('#segRate button').forEach(b=>b.classList.toggle('on',Math.abs(+b.dataset.r-S.set.rate)<.01));
+  $$('#segSfx button').forEach(b=>b.classList.toggle('on',b.dataset.s===S.set.sfx));
+  $$('#segFont button').forEach(b=>b.classList.toggle('on',Math.abs(+b.dataset.f-S.set.font)<.01));
+  applyFont();
+}
+
+/* ==================== 游戏1 · 单词对对碰 ==================== */
+function gameMatch(u,g,st){
+  let words=pickN(u.words,8),open=[],done=0,moves=0,lock=false,sec=0,chn=null,chStart=0;
+  clearInterval(window.__gameTimer);
+  /* 用时按「时间戳差值」算，不靠累加计数 —— 页面卡顿、切后台被节流也不会少算。
+     interval 只负责刷新显示。只有挑战模式才计时，自由练习显示 --:-- */
+  function recSec(){sec=chn?Math.max(0,Math.round((Date.now()-chStart)/1000)):0;return sec;}
+  function updSec(){const e=$('#mSec');if(e)e.textContent=chn?fmt(recSec()):'--:--';}
+  window.__gameTimer=setInterval(updSec,500);
+
+  function build(){
+    const cards=[];
+    words.forEach((w,i)=>{cards.push({k:i,t:'en',txt:w.en,sub:w.em||''},{k:i,t:'zh',txt:w.zh,sub:w.zh===undefined?'':'',em:w.em||''});});
+    return shuffle(cards);
+  }
+  let cards=build();
+
+  function render(){
+    st.innerHTML=stageHead(u,g,`
+      <div class="hud-item">⏱ <span id="mSec">--:--</span></div>
+      <div class="hud-item">👣 <span id="mMv">0</span> 步</div>
+      <div class="hud-item">✅ <span id="mDone">0</span>/8 对</div>
+      ${chn?`<div class="hud-item" style="background:var(--cream)">🏁 <span id="mChNm">${esc(chn)}</span> 挑战中</div>`:''}
+      <input id="mName" class="name-in" placeholder="挑战者名字" maxlength="8" value="${esc(chn||'')}">
+      <button class="btn mint" id="mGo" style="height:44px;padding:0 16px">🏁 ${chn?'重新挑战':'开始挑战'}</button>
+      <button class="btn" id="mRank" style="height:44px;padding:0 16px">🏆 排行榜</button>
+      <button class="btn" id="mPeek" style="height:44px;padding:0 16px" ${chn?'disabled title="挑战中不能偷看"':''}>👀 全翻开</button>
+      <button class="btn" id="mNew" style="height:44px;padding:0 16px">🔄 换一批</button>`)
+      +`<div class="match-grid">${cards.map((c,i)=>`
+        <div class="mcard" data-i="${i}">
+          <span class="back">❓</span>
+          <span class="face">${c.t==='en'
+            ? `<span>${esc(c.txt)}</span>`
+            : `<span class="em">${esc(c.em||'')}</span><span>${esc(c.txt)}</span>`}</span>
+        </div>`).join('')}</div>
+      <div class="hintline">两个学生上来各点一张，翻到一对就 together 得 1 分 · 全班一起喊单词</div>`;
+
+    $$('#stage .mcard').forEach(el=>el.addEventListener('click',()=>flip(el)));
+    $('#mPeek').addEventListener('click',peek);
+    $('#mNew').addEventListener('click',()=>{words=pickN(u.words,8);reset(true);});
+    $('#mRank').addEventListener('click',rankOpen);
+    $('#mGo').addEventListener('click',startChallenge);
+    if(chn){const e=$('#mSec');if(e)e.textContent=fmt(sec);}
+    window.__space=null;
+  }
+  function startChallenge(){
+    const nm=($('#mName').value||'').trim();
+    if(!nm){toast('先输入挑战者的名字 🎯');const i=$('#mName');if(i)i.focus();return;}
+    chn=nm;reset(true);chStart=Date.now();updSec();sfx('bell');
+    toast('🏁 '+nm+' 挑战开始！计时中…');
+  }
+  function reset(keepCh){
+    if(!keepCh)chn=null;
+    open=[];done=0;moves=0;lock=false;sec=0;cards=build();render();
+  }
+
+  function flip(el){
+    if(lock)return;
+    const i=+el.dataset.i,c=cards[i];
+    if(el.classList.contains('done')||el.classList.contains('flipped'))return;
+    if(open.length>=2)return;
+    el.classList.add('flipped');sfx('flip');
+    if(c.t==='en')speak(c.txt);
+    open.push({i,el});
+    if(open.length===2){
+      moves++;$('#mMv').textContent=moves;lock=true;
+      const a=cards[open[0].i],b=cards[open[1].i];
+      if(a.k===b.k){
+        open.forEach(o=>o.el.classList.add('done'));
+        done++;$('#mDone').textContent=done;sfx('right');open=[];lock=false;
+        if(done===8){clearInterval(window.__gameTimer);setTimeout(finish,420);}
+      }else{
+        open.forEach(o=>o.el.classList.add('wrong'));
+        setTimeout(()=>{open.forEach(o=>{o.el.classList.remove('flipped','wrong');});open=[];lock=false;},760);
+      }
+    }
+  }
+  function peek(){
+    sfx('click');lock=true;
+    $$('#stage .mcard').forEach(el=>el.classList.add('flipped'));
+    setTimeout(()=>{
+      $$('#stage .mcard').forEach(el=>{if(!el.classList.contains('done'))el.classList.remove('flipped');});
+      open=[];lock=false;
+    },2000);
+  }
+  function finish(){
+    sfx('win');
+    const used=recSec();
+    let rankLine='';
+    if(chn){
+      const rec={nm:chn,sec:used,mv:moves,ts:Date.now()};
+      const list=recAdd(rec);
+      const kT=rankOf(list,rec,'sec'),kM=rankOf(list,rec,'mv');
+      const t1=rankSort(list,'sec')[0],m1=rankSort(list,'mv')[0];
+      rankLine=`<p style="font-size:1.55rem;margin:8px 0 2px">
+          ${kT===0?'🏆 用时新纪录！':'⏱ 用时第 '+(kT+1)+' 名'}
+          <span style="opacity:.5">｜</span>
+          ${kM===0?'👣 步数最少！':'👣 步数第 '+(kM+1)+' 名'}</p>
+        <p style="font-size:1.05rem;color:var(--ink-2)">共 ${list.length} 位挑战者
+          ${t1?'｜最快：'+esc(t1.nm)+' '+fmt(t1.sec):''}${m1?'｜最省步：'+esc(m1.nm)+' '+m1.mv+' 步':''}</p>`;
+    }
+    bigShow(`<div class="celebrate">
+      <div class="big">${chn?(used<=30?'🚀':used<=60?'🏁':'🎉'):'🎉'}</div>
+      <h3>${chn?esc(chn)+' 挑战完成！':'全部配对成功！'}</h3>
+      <p>用时 <b>${chn?fmt(used):'--:--'}</b> · <b>${moves}</b> 步</p>
+      ${rankLine}
+      <div class="stars">⭐⭐⭐</div>
+      <p style="font-size:1.1rem">全班齐读一遍这些单词吧！</p>
+    </div>`,chn?'再来一局':'再玩一次',()=>reset(true));
+  }
+  render();
+}
+
+/* ==================== 游戏2 · 闪电判断 ==================== */
+function gameJudge(u,g,st){
+  const list=shuffle(u.judge).slice(0,10);
+  let idx=0,right=0,locked=false;
+
+  function render(){
+    if(idx>=list.length)return finish();
+    const q=list[idx];
+    st.innerHTML=stageHead(u,g,`
+      <div class="hud-item">📍 第 <span id="jIdx">${idx+1}</span>/${list.length} 题</div>
+      <div class="hud-item">✅ <span id="jR">${right}</span> 分</div>
+      <button class="btn" id="jSpeak" style="height:44px;padding:0 16px">🔊 再读一遍</button>`)
+      +`<div class="judge-box">
+        <div class="judge-en" id="jEn">${esc(q.en)}</div>
+        <div class="judge-zh">${esc(q.zh)}</div>
+        <div class="judge-hint">这个中文对吗？全班一起喊 Yes / No 👇</div>
+        <div class="judge-btns">
+          <button class="judge-btn yes" id="jYes">✅<small>YES! 对！</small></button>
+          <button class="judge-btn no" id="jNo">❌<small>NO! 不对！</small></button>
+        </div>
+        <div class="judge-fb" id="jFb"></div>
+        <div class="judge-bar"><i id="jBar" style="width:${idx/list.length*100}%"></i></div>
+      </div>
+      <div class="hintline">左边站 Yes，右边站 No，全班站队抢答 · 按 <span class="kbd">空格</span> 下一题</div>`;
+    locked=false;
+    $('#jSpeak').addEventListener('click',()=>speak(q.en));
+    $('#jYes').addEventListener('click',()=>answer(true));
+    $('#jNo').addEventListener('click',()=>answer(false));
+    window.__space=()=>{if(locked)next();};
+    setTimeout(()=>speak(q.en),260);
+  }
+  function answer(sel){
+    if(locked)return;locked=true;
+    const q=list[idx],ok=(sel===q.ans);
+    if(ok){right++;sfx('right');}else{sfx('wrong');}
+    $('#jR').textContent=right;
+    /* 不管答对答错，都把正确答案亮出来 */
+    const fix=q.fix||{en:q.en,zh:q.zh};
+    $('#jFb').innerHTML=`
+      <div class="fb-line ${ok?'ok':'bad'}">${ok?'🎉 答对啦！':'😅 不对哦，看正确答案 👇'}</div>
+      <div class="fb-ans">✅ 正确答案：<b>${esc(fix.en)}</b><span class="fb-arrow">—</span>${esc(fix.zh)}</div>
+      ${(!ok&&q.note)?`<div class="fb-note">💡 ${esc(q.note)}</div>`:''}`;
+    $('#jBar').style.width=((idx+1)/list.length*100)+'%';
+    setTimeout(()=>speak(fix.en,0.62),900);   /* 顺带把正确答案读一遍 */
+    setTimeout(next,3600);
+  }
+  function next(){idx++;render();}
+  function finish(){
+    const pct=Math.round(right/list.length*100);
+    sfx('win');
+    bigShow(`<div class="celebrate">
+      <div class="big">${pct>=90?'🏆':pct>=70?'🎉':'💪'}</div>
+      <h3>闪电判断结束！</h3>
+      <p>答对 <b>${right}</b> / ${list.length} 题，正确率 <b>${pct}%</b></p>
+      <div class="stars">${pct>=90?'⭐⭐⭐':pct>=70?'⭐⭐':'⭐'}</div>
+    </div>`,'再来一局',()=>{idx=0;right=0;render();});
+    idx=0;right=0;render();
+  }
+  render();
+}
+
+/* ==================== 游戏3 · 句子拼装台 ==================== */
+function gameBuild(u,g,st){
+  let list=shuffle(u.sentences).slice(0,8);
+  let idx=0,right=0,slot=[],pool=[],locked=false;
+
+  function loadQ(){
+    const q=list[idx];
+    const parts=q.en.split(/\s+/);
+    slot=[];pool=shuffle(parts.map((t,i)=>({t,i})));locked=false;
+  }
+  function render(){
+    if(idx>=list.length)return finish();
+    const q=list[idx];
+    st.innerHTML=stageHead(u,g,`
+      <div class="hud-item">📍 第 <span>${idx+1}</span>/${list.length} 句</div>
+      <div class="hud-item">✅ <span id="bR">${right}</span> 分</div>
+      <button class="btn" id="bTip" style="height:44px;padding:0 16px">💡 提示</button>
+      <button class="btn" id="bSkip" style="height:44px;padding:0 16px">⏭ 跳过</button>`)
+      +`<div class="build-zh">🈶 ${esc(q.zh)}</div>
+      <div class="build-slot" id="bSlot"></div>
+      <div class="word-pool" id="bPool"></div>
+      <div class="build-msg" id="bMsg"></div>
+      <div style="text-align:center;margin-top:18px">
+        <button class="btn big mint" id="bCheck">✔ 检查</button>
+        <button class="btn big" id="bClear" style="margin-left:12px">↺ 重排</button>
+        <button class="btn big ghost" id="bRead" style="margin-left:12px">🔊 试读</button>
+      </div>
+      <div class="hintline">请同学上来点词块，按顺序拼成句子 · 拼对了全班跟读两遍</div>`;
+
+    drawSlot();drawPool();
+    $('#bCheck').addEventListener('click',check);
+    $('#bClear').addEventListener('click',()=>{loadQ();render();sfx('click');});
+    $('#bRead').addEventListener('click',()=>speak(slot.map(s=>s.t).join(' ')||q.en));
+    $('#bTip').addEventListener('click',tip);
+    $('#bSkip').addEventListener('click',()=>{
+      $('#bMsg').innerHTML=`<span class="bad">正确答案：${esc(q.en)}</span>`;
+      speak(q.en);locked=true;setTimeout(()=>{idx++;if(idx<list.length)loadQ();render();},2300);
+    });
+    window.__space=()=>{if(!locked)check();};
+  }
+  function drawSlot(){
+    const box=$('#bSlot');
+    if(!slot.length){box.innerHTML=`<span class="ph">👆 点下面的词块，把句子拼在这里</span>`;return;}
+    box.innerHTML=slot.map(s=>`<span class="wchip in-slot" data-uid="${s.uid}">${esc(s.t)}</span>`).join('');
+    $$('#bSlot .wchip').forEach(el=>el.addEventListener('click',()=>{
+      const uid=+el.dataset.uid;
+      const k=slot.findIndex(s=>s.uid===uid);
+      if(k<0)return;
+      pool.push(slot[k]);slot.splice(k,1);
+      sfx('click');drawSlot();drawPool();
+    }));
+  }
+  let uidSeed=0;
+  function drawPool(){
+    const box=$('#bPool');
+    box.innerHTML=pool.map(p=>`<span class="wchip" data-i="${p.i}">${esc(p.t)}</span>`).join('');
+    $$('#bPool .wchip').forEach(el=>el.addEventListener('click',()=>{
+      const i=+el.dataset.i,k=pool.findIndex(p=>p.i===i);
+      if(k<0)return;
+      pool[k].uid=++uidSeed;slot.push(pool[k]);pool.splice(k,1);
+      sfx('flip');drawSlot();drawPool();
+    }));
+  }
+  function tip(){
+    if(locked)return;
+    const q=list[idx],parts=q.en.split(/\s+/);
+    const k=pool.findIndex(p=>p.i===slot.length);
+    if(k<0)return;
+    pool[k].uid=++uidSeed;slot.push(pool[k]);pool.splice(k,1);
+    sfx('click');drawSlot();drawPool();
+    $('#bMsg').innerHTML=`<span style="color:var(--ink-2)">💡 已帮你放好一个词，继续！</span>`;
+  }
+  function check(){
+    if(locked)return;
+    const q=list[idx];
+    const cur=slot.map(s=>s.t).join(' ').replace(/\s+/g,' ').trim();
+    const ans=q.en.replace(/\s+/g,' ').trim();
+    if(cur===ans){
+      locked=true;right++;sfx('right');
+      $('#bR').textContent=right;
+      $('#bMsg').innerHTML=`<span class="ok">🎉 完全正确！${esc(q.zh)}</span>`;
+      $$('#bSlot .wchip').forEach(el=>{el.style.background='var(--mint)';});
+      speak(q.en);scoreAdd(1);
+      setTimeout(()=>{speak(q.en,0.62);},1700);
+      setTimeout(()=>{idx++;if(idx<list.length)loadQ();render();},3600);
+    }else{
+      sfx('wrong');
+      const box=$('#bSlot');box.classList.add('wrong');
+      setTimeout(()=>box.classList.remove('wrong'),400);
+      $('#bMsg').innerHTML=`<span class="bad">😅 顺序还不对，再试一次！</span>`;
+    }
+  }
+  function finish(){
+    sfx('win');
+    bigShow(`<div class="celebrate">
+      <div class="big">${right>=7?'🏆':right>=5?'🎉':'💪'}</div>
+      <h3>拼句挑战完成！</h3>
+      <p>拼对 <b>${right}</b> / ${list.length} 句</p>
+      <div class="stars">${right>=7?'⭐⭐⭐':right>=5?'⭐⭐':'⭐'}</div>
+    </div>`,'再来一局',()=>{idx=0;right=0;list=shuffle(u.sentences).slice(0,8);loadQ();render();});
+    idx=0;right=0;list=shuffle(u.sentences).slice(0,8);loadQ();render();
+  }
+  loadQ();render();
+}
+
+/* ==================== 游戏4 · 角色对话秀 ==================== */
+function gameRole(u,g,st){
+  let cur=-1,mode='read',masked=false;
+  function render(){
+    st.innerHTML=stageHead(u,g,`
+      <div class="hud-item" id="rMode">🗣 听读模式</div>
+      <button class="btn" id="rAll" style="height:44px;padding:0 16px">🌟 全班齐读</button>`)
+      +`<div class="roles">${u.roles.map((r,i)=>`
+        <div class="role-card ${i===cur?'active':''}" data-i="${i}">
+          <div class="ava">${esc(r.ava)}</div>
+          <div class="nm">${esc(r.nm)}</div>
+          <div class="hint">点我说话</div>
+        </div>`).join('')}</div>
+      <div class="role-bubble ${masked?'hidden-txt':''}" id="rBub">
+        <div class="mask-tip">🎤 猜猜他/她说了什么？</div>
+        <div class="en" id="rEn">${cur<0?'👆 点上面的人物，听听他/她说什么':esc(u.roles[cur].en)}</div>
+        <div class="zh" id="rZh">${cur<0?'也可以让学生先猜，再揭晓答案':esc(u.roles[cur].zh)}</div>
+      </div>
+      <div class="role-modes">
+        <button class="btn big mint" id="rAgain">🔊 再听一遍</button>
+        <button class="btn big" id="rSlow">🐢 慢速跟读</button>
+        <button class="btn big lav" id="rMask">🎤 配音挑战</button>
+        <button class="btn big ghost" id="rRev">👀 揭晓答案</button>
+      </div>
+      <div class="hintline">🎤 配音挑战：台词会被盖住，学生先说，再点「揭晓答案」对照</div>`;
+
+    $$('#stage .role-card').forEach(el=>el.addEventListener('click',()=>{
+      cur=+el.dataset.i;masked=(mode==='mask');
+      sfx('click');
+      render();
+      speak(u.roles[cur].en);
+    }));
+    $('#rAgain').addEventListener('click',()=>{if(cur<0)return toast('先点一个人物');speak(u.roles[cur].en);});
+    $('#rSlow').addEventListener('click',()=>{if(cur<0)return toast('先点一个人物');speak(u.roles[cur].en,0.55);});
+    $('#rMask').addEventListener('click',()=>{
+      if(cur<0)return toast('先点一个人物');
+      mode=mode==='mask'?'read':'mask';masked=(mode==='mask');
+      $('#rMode').textContent=masked?'🎤 配音挑战':'🗣 听读模式';
+      sfx('click');render();
+      if(masked)toast('台词已盖住，让学生先说！');
+    });
+    $('#rRev').addEventListener('click',()=>{
+      masked=false;mode='read';
+      $('#rMode').textContent='🗣 听读模式';
+      sfx('click');render();speak(u.roles[cur<0?0:cur].en,0.62);
+    });
+    $('#rAll').addEventListener('click',()=>{
+      sfx('click');let i=0;
+      clearInterval(window.__gameTimer);
+      const go=()=>{
+        if(i>=u.roles.length){clearInterval(window.__gameTimer);toast('✅ 齐读完成');return;}
+        cur=i;masked=false;render();speak(u.roles[i].en,0.6);i++;
+      };
+      go();window.__gameTimer=setInterval(go,3200);
+    });
+    window.__space=null;
+  }
+  render();
+}
+
+/* ==================== 游戏5 · 小组抢答赛 ==================== */
+function gameBattle(u,g,st){
+  const qs=shuffle(u.quiz).slice(0,12);
+  const state=qs.map(()=>null);
+  let open=-1,done=0;
+
+  function head(){
+    return stageHead(u,g,`
+      <div class="hud-item">✅ 已答 <span id="btDone">0</span>/${qs.length}</div>
+      <div class="hud-item">🎯 当前：<span id="btG">${esc(S.groups[S.curGroup]?S.groups[S.curGroup].nm:'')}</span></div>
+      <button class="btn" id="btPick" style="height:44px;padding:0 16px">🎲 随机点名</button>`);
+  }
+  function render(){
+    st.innerHTML=head()
+      +`<div class="battle-top">
+        <div class="group-pick" id="btGroups">
+          ${S.groups.map((gp,i)=>`<span class="gpill g${i%6}" data-i="${i}" style="border-width:4px">${esc(gp.nm)} ${gp.sc}分</span>`).join('')}
+        </div>
+      </div>
+      <div class="grid-lucky">${qs.map((q,i)=>`
+        <div class="lucky ${state[i]?'used':''}" data-i="${i}">
+          ${state[i]?(state[i]==='right'?'✔ 答对':'✘ 答错'):(i+1)}
+        </div>`).join('')}</div>
+      <div class="hintline">轮流选题：点一个格子 → 屏幕弹出题目 → 该组同学回答 → 老师点答案揭晓</div>`;
+    bind();
+  }
+  function bind(){
+    $$('#stage .lucky').forEach(el=>el.addEventListener('click',()=>{
+      const i=+el.dataset.i;if(state[i])return;
+      open=i;showQ();
+    }));
+    $$('#stage .gpill').forEach(el=>el.addEventListener('click',()=>{
+      S.curGroup=+el.dataset.i;sfx('click');markGroup();
+    }));
+    const p=$('#btPick');if(p)p.addEventListener('click',()=>$('#btnPicker').click());
+    window.__space=null;
+    markGroup();
+  }
+  function markGroup(){
+    $$('#stage .gpill').forEach(el=>el.classList.toggle('sel',+el.dataset.i===S.curGroup));
+    const e=$('#btG');if(e)e.textContent=S.groups[S.curGroup]?S.groups[S.curGroup].nm:'';
+  }
+  function showQ(){
+    const q=qs[open];
+    st.innerHTML=head()
+      +`<div class="quiz-box">
+        <div class="quiz-zh">第 ${open+1} 题 · ${esc(S.groups[S.curGroup].nm)} 请作答</div>
+        <div class="quiz-q">${esc(q.q)}</div>
+        ${q.qzh?`<div class="quiz-zh" style="font-size:1.1rem">${esc(q.qzh)}</div>`:''}
+        <div class="opts">${q.opts.map((o,i)=>`
+          <div class="opt" data-i="${i}"><span class="li">${'ABCD'[i]}</span>${esc(o)}</div>`).join('')}</div>
+        <div style="margin-top:22px"><button class="btn ghost" id="btBack">← 返回格子</button></div>
+      </div>`;
+    $$('#stage .opt').forEach(el=>el.addEventListener('click',()=>answer(+el.dataset.i,el)));
+    $('#btBack').addEventListener('click',()=>{open=-1;render();});
+    const p=$('#btPick');if(p)p.addEventListener('click',()=>$('#btnPicker').click());
+    setTimeout(()=>{if(/^[A-Za-z]/.test(q.q))speak(q.q);},200);
+  }
+  function answer(i,el){
+    const q=qs[open];
+    const ok=(i===q.ans);
+    $$('#stage .opt').forEach(o=>{o.classList.add('dim');o.style.pointerEvents='none';});
+    el.classList.remove('dim');
+    el.classList.add(ok?'right':'wrong');
+    if(!ok)$$('#stage .opt')[q.ans].classList.add('right');
+    state[open]=ok?'right':'wrong';done++;
+    const e=$('#btDone');if(e)e.textContent=done;
+    if(ok){sfx('right');scoreAdd(2,S.curGroup);toast('🎉 '+S.groups[S.curGroup].nm+' +2 分！');}
+    else{sfx('wrong');toast('😅 很遗憾，换下一组');}
+    setTimeout(()=>{
+      if(done>=qs.length)return finish();
+      S.curGroup=(S.curGroup+1)%S.groups.length;
+      open=-1;render();
+    },1900);
+  }
+  function finish(){
+    const rank=S.groups.map((gp,i)=>({nm:gp.nm,sc:gp.sc,i})).sort((a,b)=>b.sc-a.sc);
+    sfx('win');
+    const medal=['🥇','🥈','🥉'];
+    bigShow(`<div class="celebrate">
+      <div class="big">🏆</div>
+      <h3>抢答赛结束！</h3>
+      <div class="rank-list">
+        ${rank.map((r,k)=>`<div class="rank-row g${r.i%6}">
+          <span class="rk">${medal[k]||(k+1)}</span>
+          <span>${esc(r.nm)}</span>
+          <span class="rs">${r.sc} 分</span>
+        </div>`).join('')}
+      </div>
+      <p style="margin-top:14px">👏 给自己组鼓个掌！</p>
+    </div>`,'再来一局',()=>{
+      state.forEach((_,i)=>state[i]=null);done=0;open=-1;render();
+    });
+    state.forEach((_,i)=>state[i]=null);done=0;open=-1;render();
+  }
+  render();
+}
+
+/* 时间格式化 */
+function fmt(s){const m=Math.floor(s/60);return String(m).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+
+/* ==================== 初始化 ==================== */
+function init(){
+  load();applySetUI();renderHome();scoreRender();pkRender();tmSet(60);
+  if(S.names.length)$('#pkList').value=S.names.join('\n');
+
+  /* ---- URL 参数：供工作台 iframe / 快捷入口调用 ----
+     ?embed=1          隐藏自带顶栏与计分底栏（嵌入工作台用，避免两层导航）
+     ?unit=g3a-u2      直接进入指定单元
+     ?unit=g3a-u2&game=judge  直接打开指定单元的指定游戏 */
+  try{
+    const QS=new URLSearchParams(location.search);
+    if(QS.get('embed')==='1')document.body.classList.add('embed');
+    const uid=QS.get('unit'),gid=QS.get('game');
+    if(uid&&COURSE.some(u=>u.id===uid)){
+      openUnit(uid);
+      if(gid&&GAMES.some(x=>x.id===gid))startGame(gid);
+    }else if(gid&&COURSE.length){
+      openUnit(COURSE[0].id);startGame(gid);   /* 只给 game 时默认进第一个单元 */
+    }
+  }catch(e){}
+
+  $('#btnBackHome').addEventListener('click',()=>{sfx('click');showView('Home');});
+  $('#btnBackUnit').addEventListener('click',()=>{sfx('click');showView('Unit');});
+  $('#btnRestart').addEventListener('click',()=>{startGame(S.gameId);});
+
+  /* 顶栏 */
+  $('#btnTimer').addEventListener('click',()=>{sfx('click');$('#maskTimer').classList.add('show');});
+  $('#btnPicker').addEventListener('click',()=>{sfx('click');$('#maskPicker').classList.add('show');pkRender();});
+  $('#btnScore').addEventListener('click',()=>{sfx('click');renderScoreCfg();$('#maskScore').classList.add('show');});
+  $('#btnSet').addEventListener('click',()=>{sfx('click');applySetUI();updateVoiceInfo();$('#maskSet').classList.add('show');});
+  $('#btnFull').addEventListener('click',()=>{
+    sfx('click');
+    if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}
+    else{document.exitFullscreen&&document.exitFullscreen();}
+  });
+  $$('.mask').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show');}));
+  $('#setClose').addEventListener('click',()=>$('#maskSet').classList.remove('show'));
+
+  /* 计时器 */
+  $('#tmPresets').innerHTML=[30,60,90,120,180,300].map(v=>`<button class="btn ${v===60?'mint':''}" data-v="${v}">${v<60?v+' 秒':(v/60)+' 分钟'}</button>`).join('');
+  $$('#tmPresets button').forEach(b=>b.addEventListener('click',()=>{
+    tmSet(+b.dataset.v);
+    $$('#tmPresets button').forEach(x=>x.classList.remove('mint'));
+    b.classList.add('mint');sfx('click');
+  }));
+  $('#tmStart').addEventListener('click',()=>{sfx('click');tmStart();});
+  $('#tmPause').addEventListener('click',()=>{sfx('click');tmPause();toast('⏸ 已暂停');});
+  $('#tmReset').addEventListener('click',()=>{sfx('click');tmSet(T.total);});
+
+  /* 点名 */
+  $('#pkRoll').addEventListener('click',pkRoll);
+  $('#pkSave').addEventListener('click',()=>{
+    S.names=pkParse($('#pkList').value);S.picked=[];
+    save();pkRender();toast(S.names.length?'✅ 已保存 '+S.names.length+' 个名字':'名单是空的哦');
+  });
+  $('#pkClear').addEventListener('click',()=>{
+    $('#pkList').value='';S.names=[];S.picked=[];save();pkRender();
+    $('#pkName').textContent='准备就绪';$('#pkHit').textContent='导入全班名单，一键抽人回答问题';
+  });
+
+  /* 计分 */
+  $('#btnScoreAdd').addEventListener('click',()=>{
+    if(S.groups.length>=6){toast('最多 6 个组');return;}
+    const nm=['🌸','🌊','🍀','⭐','🌙','🔥'][S.groups.length];
+    S.groups.push({nm:nm+' 第'+(S.groups.length+1)+'组',sc:0});
+    sfx('click');scoreRender();save();
+  });
+  $('#btnScoreReset').addEventListener('click',()=>{
+    S.groups.forEach(g=>g.sc=0);sfx('click');scoreRender();save();toast('↺ 分数已清零');
+  });
+  $('#btnScoreHide').addEventListener('click',()=>{
+    sbHidden=!sbHidden;
+    $('#scorebar').classList.toggle('hide-bar',sbHidden);
+    $('#btnScoreHide .i').textContent=sbHidden?'▴':'▾';
+  });
+  $('#scSave').addEventListener('click',()=>{
+    $$('#scoreCfg input').forEach(inp=>{S.groups[+inp.dataset.i].nm=inp.value.trim()||S.groups[+inp.dataset.i].nm;});
+    save();scoreRender();$('#maskScore').classList.remove('show');toast('✅ 组名已保存');
+  });
+  $('#scReset').addEventListener('click',()=>{
+    S.groups.forEach(g=>g.sc=0);save();scoreRender();toast('↺ 分数已清零');
+  });
+  $('#rankClose').addEventListener('click',()=>$('#maskRank').classList.remove('show'));
+  $('#rankClear').addEventListener('click',()=>{recClear();rankOpen();toast('🗑 本单元记录已清空');});
+  $$('#rankTab button').forEach(b=>b.addEventListener('click',()=>{
+    rankTab=b.dataset.r;sfx('click');rankOpen();
+  }));
+  $('#scDefault').addEventListener('click',()=>{
+    S.groups=[{nm:'🌸 太阳组',sc:0},{nm:'🌊 海洋组',sc:0},{nm:'🍀 树叶组',sc:0},{nm:'⭐ 星星组',sc:0}];
+    renderScoreCfg();scoreRender();save();
+  });
+
+  /* 设置 */
+  $('#setTest').addEventListener('click',()=>{
+    loadVoices();updateVoiceInfo();sfx('click');
+    speak('Hello! I can speak English.',0.85);
+    toast('🔊 正在朗读，没听到就看右边的诊断信息');
+  });
+  segBind('#segVoice','voice');
+  segBind('#segRate','rate',parseFloat);
+  segBind('#segSfx','sfx');
+  segBind('#segFont','font',parseFloat,applyFont);
+
+  /* 键盘 */
+  document.addEventListener('keydown',e=>{
+    if(/input|textarea/i.test((e.target.tagName||'')))return;
+    if(e.code==='Space'){e.preventDefault();if(window.__space)window.__space();}
+    if(e.key==='Escape'){$$('.mask.show').forEach(m=>m.classList.remove('show'));}
+    if(e.key==='t'||e.key==='T')$('#btnTimer').click();
+    if(e.key==='p'||e.key==='P')$('#btnPicker').click();
+  });
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
+</html>
