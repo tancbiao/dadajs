@@ -5147,6 +5147,7 @@ function renderSchedule(box){
         <button class="btn sm b-cream" onclick="exportCls()">📤 导出 CSV</button>
 
         <button class="btn sm b-ghost" onclick="openEdit('classMulti',null)">⚡ 批量粘贴</button>
+        <button class="btn sm b-blue" onclick="openEdit('classCfg',null)">⚙ 作息时间</button>
 
       </div>
 
@@ -5172,11 +5173,19 @@ function renderSchedule(box){
 
 
 
-const CLS_DAYS = ['一','二','三','四','五'];
-
-const CLS_PERIODS = ['第1节','第2节','第3节','第4节','第5节','第6节','第7节','第8节'];
-
-const CLS_TIMES = ['08:00','08:50','09:50','10:40','11:30','13:30','14:20','15:10'];
+/* ── 作息配置：点「⚙ 作息时间」可自定义，存在本机 ── */
+const CLS_DEF = { days: ['一','二','三','四','五'], periods: ['第1节','第2节','第3节','第4节','第5节','第6节','第7节','第8节'], times: ['08:00','08:50','09:50','10:40','11:30','13:30','14:20','15:10'] };
+function clsCfg(){
+  var c = S.class.cfg;
+  if(!c || !c.periods || !c.periods.length) c = S.class.cfg = {days:CLS_DEF.days.slice(), periods:CLS_DEF.periods.slice(), times:CLS_DEF.times.slice()};
+  if(!c.days || !c.days.length) c.days = CLS_DEF.days.slice();
+  if(!c.times) c.times = [];
+  while(c.times.length < c.periods.length) c.times.push('');
+  return c;
+}
+function clsDays(){ return clsCfg().days; }
+function clsPeriods(){ return clsCfg().periods; }
+function clsTimes(){ return clsCfg().times; }
 
 
 
@@ -5184,19 +5193,20 @@ function drawClsGrid(){
 
   const g = document.getElementById('clsGrid');
 
+  g.style.gridTemplateColumns = '70px repeat(' + clsDays().length + ',1fr)';
   let html = '<div class="h">节次</div>';
 
-  CLS_DAYS.forEach((d,i)=>{ html += `<div class="h">星期${d}</div>`; });
+  clsDays().forEach((d,i)=>{ html += `<div class="h">星期${d}</div>`; });
 
   const now = new Date();
 
   const curDay = now.getDay(); // 0-6
 
-  for(let p=0;p<CLS_PERIODS.length;p++){
+  for(let p=0;p<clsPeriods().length;p++){
 
-    html += `<div class="h">${CLS_PERIODS[p]}<br><small style="font-size:.65rem;color:var(--ink-l)">${CLS_TIMES[p]}</small></div>`;
+    html += `<div class="h">${clsPeriods()[p]}<br><small style="font-size:.65rem;color:var(--ink-l)">${clsTimes()[p]}</small></div>`;
 
-    for(let d=0;d<5;d++){
+    for(let d=0;d<clsDays().length;d++){
 
       const item = S.class.items.find(x => x.day===d && x.period===p);
 
@@ -5234,7 +5244,7 @@ function drawTodayCls(){
 
   const curDay = new Date().getDay();
 
-  if(curDay<1 || curDay>5){
+  if(curDay<1 || curDay>clsDays().length){
 
     document.getElementById('todayClassList').innerHTML = `<div class="empty"><span class="pic">🌙</span>今天是周末，休息一下吧</div>`;
 
@@ -5264,13 +5274,13 @@ function drawTodayCls(){
 
   function inPeriod(p){
 
-    const t = CLS_TIMES[p] || '00:00';
+    const t = clsTimes()[p] || '00:00';
 
     const [h,m] = t.split(':').map(Number);
 
     const start = h*60+m;
 
-    const next = p+1<CLS_TIMES.length ? (parseInt(CLS_TIMES[p+1].split(':')[0])*60 + parseInt(CLS_TIMES[p+1].split(':')[1])) : (start+50);
+    const next = p+1<clsTimes().length ? (parseInt(clsTimes()[p+1].split(':')[0])*60 + parseInt(clsTimes()[p+1].split(':')[1])) : (start+50);
 
     return nowMin>=start && nowMin<next;
 
@@ -5288,11 +5298,11 @@ function drawTodayCls(){
 
       <div class="it-main">
 
-        <div class="it-title">${escapeHtml(it.name||'')} <span class="badge blue">${CLS_PERIODS[it.period]||''}</span> ${active?'<span class="badge mint">进行中</span>':''}</div>
+        <div class="it-title">${escapeHtml(it.name||'')} <span class="badge blue">${clsPeriods()[it.period]||''}</span> ${active?'<span class="badge mint">进行中</span>':''}</div>
 
         <div class="it-sub">
 
-          <span>⏰ ${CLS_TIMES[it.period]||''}</span>
+          <span>⏰ ${clsTimes()[it.period]||''}</span>
 
           ${it.room?`<span>📍 ${escapeHtml(it.room)}</span>`:''}
 
@@ -5314,11 +5324,11 @@ window.exportCls = function(){
 
   let csv = '星期,节次,时间,科目,教室\n';
 
-  const dayName = ['一','二','三','四','五'];
+  const dayName = clsDays();
 
   for(const it of S.class.items.sort((a,b)=>(a.day-b.day)||(a.period-b.period))){
 
-    csv += `星期${dayName[it.day]},${CLS_PERIODS[it.period]},${CLS_TIMES[it.period]},${(it.name||'').replace(/,/g,'，')},${(it.room||'').replace(/,/g,'，')}\n`;
+    csv += `星期${dayName[it.day]},${clsPeriods()[it.period]},${clsTimes()[it.period]},${(it.name||'').replace(/,/g,'，')},${(it.room||'').replace(/,/g,'，')}\n`;
 
   }
 
@@ -7696,7 +7706,7 @@ window.openEdit = function(type, a, b){
 
         <select class="inp" id="clsDay">
 
-          ${CLS_DAYS.map((d,i)=>`<option value="${i}" ${item && item.day===i?'selected':''}>星期${d}</option>`).join('')}
+          ${clsDays().map((d,i)=>`<option value="${i}" ${item && item.day===i?'selected':''}>星期${d}</option>`).join('')}
 
         </select>
 
@@ -7704,7 +7714,7 @@ window.openEdit = function(type, a, b){
 
         <select class="inp" id="clsPeriod">
 
-          ${CLS_PERIODS.map((p,i)=>`<option value="${i}" ${item && item.period===i?'selected':''}>${p}（${CLS_TIMES[i]}）</option>`).join('')}
+          ${clsPeriods().map((p,i)=>`<option value="${i}" ${item && item.period===i?'selected':''}>${p}（${clsTimes()[i]}）</option>`).join('')}
 
         </select>
 
@@ -7723,11 +7733,36 @@ window.openEdit = function(type, a, b){
           ${item?`<button class="btn danger" onclick="delCls('${item.id}')">删除</button>`:''}
 
           <button class="btn b-blue" onclick="saveCls('${item?item.id:''}')">保存</button>
-
         </div>`
-
     });
-
+  } else if(type==='classCfg'){
+    const c = clsCfg();
+    const WEEK = ['一','二','三','四','五','六','日'];
+    showModal({
+      title: '⚙ 作息时间设置',
+      bodyHtml: `
+        <p style="color:var(--ink-l);font-size:.85rem;margin:0 0 12px">改节次名称和上课时间。已排的课会自动跟着平移，不会丢。</p>
+        <label class="lbl">上课日</label>
+        <div id="cfgDays" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
+          ${WEEK.map((d,i)=>`<label style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.85rem;cursor:pointer"><input type="checkbox" value="${i}" ${c.days.indexOf(d)>=0?'checked':''}> 周${d}</label>`).join('')}
+        </div>
+        <label class="lbl">节次与时间</label>
+        <div id="cfgRows" style="display:flex;flex-direction:column;gap:6px">
+          ${c.periods.map((p,i)=>`<div style="display:flex;gap:6px;align-items:center">
+            <input class="inp" data-pname value="${escapeHtml(p)}" placeholder="节次名称" style="flex:1">
+            <input class="inp" data-ptime type="time" value="${escapeHtml(c.times[i]||'')}" style="width:112px">
+            <button class="btn xs b-ghost" onclick="this.parentNode.remove()">✕</button>
+          </div>`).join('')}
+        </div>
+        <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn sm b-mint" onclick="addCfgRow()">+ 加一节</button>
+          <button class="btn sm b-ghost" onclick="resetCfg()">↺ 恢复默认</button>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn b-ghost" onclick="closeModal()">取消</button>
+          <button class="btn b-blue" onclick="saveClsCfg()">保存</button>
+        </div>`
+    });
   } else if(type==='classMulti'){
 
     showModal({
@@ -8164,9 +8199,8 @@ window.bulkImportCls = function(){
 
     const day = +m[1]-1, period = +m[2]-1;
 
-    if(day<0 || day>4) continue;
-
-    if(period<0 || period>7) continue;
+if(day<0 || day>=clsDays().length) continue;
+    if(period<0 || period>=clsPeriods().length) continue;
 
     S.class.items = S.class.items.filter(x => !(x.day===day && x.period===period));
 
@@ -8182,6 +8216,52 @@ window.bulkImportCls = function(){
 
   toast('✅ 已导入');
 
+};
+
+window.addCfgRow = function(){
+  const box = document.getElementById('cfgRows');
+  if(!box) return;
+  const d = document.createElement('div');
+  d.style.cssText = 'display:flex;gap:6px;align-items:center';
+  d.innerHTML = '<input class="inp" data-pname placeholder="节次名称" style="flex:1">'
+    + '<input class="inp" data-ptime type="time" style="width:112px">'
+    + '<button class="btn xs b-ghost" onclick="this.parentNode.remove()">✕</button>';
+  box.appendChild(d);
+};
+
+window.resetCfg = function(){
+  S.class.cfg = {days:CLS_DEF.days.slice(), periods:CLS_DEF.periods.slice(), times:CLS_DEF.times.slice()};
+  save(); closeModal(); drawClsGrid();
+  toast('↺ 已恢复默认作息（课程安排保留）');
+};
+
+window.saveClsCfg = function(){
+  const WEEK = ['一','二','三','四','五','六','日'];
+  const dayBox = document.getElementById('cfgDays');
+  const rowBox = document.getElementById('cfgRows');
+  if(!dayBox || !rowBox) return;
+  const days = Array.prototype.slice.call(dayBox.querySelectorAll('input:checked')).map(function(x){ return +x.value; });
+  const names = Array.prototype.slice.call(rowBox.querySelectorAll('[data-pname]')).map(function(x){ return x.value.trim(); });
+  const times = Array.prototype.slice.call(rowBox.querySelectorAll('[data-ptime]')).map(function(x){ return x.value; });
+  if(!days.length) return toast('至少选一个上课日');
+  const keep = [];
+  names.forEach(function(n,i){ if(n) keep.push({n:n, t:times[i]||''}); });
+  if(!keep.length) return toast('至少保留一个节次');
+  days.sort(function(a,b){ return a-b; });
+  const oldP = clsPeriods().slice();
+  const oldD = clsDays().slice();
+  const newDays = days.map(function(i){ return WEEK[i]; });
+  // 已排的课按「星期名 / 节次名」重新映射，对不上就夹到最接近的一格
+  S.class.items.forEach(function(it){
+    const di = newDays.indexOf(oldD[it.day]);
+    it.day = di>=0 ? di : Math.min(it.day, newDays.length-1);
+    const pi = keep.findIndex(function(k){ return k.n===oldP[it.period]; });
+    it.period = pi>=0 ? pi : Math.min(it.period, keep.length-1);
+  });
+  S.class.items = S.class.items.filter(function(it){ return it.day < newDays.length && it.period < keep.length; });
+  S.class.cfg = {days:newDays, periods:keep.map(function(k){return k.n;}), times:keep.map(function(k){return k.t;})};
+  save(); closeModal(); drawClsGrid();
+  toast('✅ 作息已更新');
 };
 
 
@@ -8584,7 +8664,7 @@ window.importClsCsv = function(){
 
     const day = +m[1]-1, period = +m[2]-1;
 
-    if(day<0||day>4||period<0||period>7) continue;
+    if(day<0||day>=clsDays().length||period<0||period>=clsPeriods().length) continue;
 
     S.class.items = S.class.items.filter(x => !(x.day===day && x.period===period));
 
