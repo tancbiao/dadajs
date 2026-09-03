@@ -110,7 +110,7 @@ footer a:hover{color:var(--ink)}
   <header>
     <div class="badge">🎒 单文件 · 离线可用 · 数据存在本机</div>
     <h1>小学<span class="em">教师工作台</span></h1>
-    <p class="sub">按学科进入，目前上线 <b id="cnt">4</b> 个工具</p>
+    <p class="sub">通用打底 · 按学科进入，目前上线 <b id="cnt">4</b> 个工具</p>
   </header>
 
   <main id="main"></main>
@@ -128,6 +128,13 @@ footer a:hover{color:var(--ink)}
    accent 主色 / tint 浅色底 / icon 图标
 =========================================================== */
 var GROUPS = [
+  {
+    name:'通用', accent:'#993556', tint:'#FBEAF0',
+    items:[
+      { icon:'🐰', name:'哒哒工作台', tag:'通用', path:'/dada/',
+        desc:'13 个效率模块，不分学科都能用；语文老师可直接拿它当语文工作台' }
+    ]
+  },
   {
     name:'语文', accent:'#D85A30', tint:'#FAECE7',
     items:[
@@ -149,13 +156,6 @@ var GROUPS = [
     items:[
       { icon:'🔬', name:'科学工作台 · 教案版', tag:'52份', path:'/kexue/',
         desc:'教科版四上五上全册教案，随备随查，含教案阅读与进度管理' }
-    ]
-  },
-  {
-    name:'通用', accent:'#993556', tint:'#FBEAF0',
-    items:[
-      { icon:'🐰', name:'哒哒工作台', tag:'母版', path:'/dada/',
-        desc:'13 个效率模块通用版，其他工作台都由它改造而来' }
     ]
   },
   {
