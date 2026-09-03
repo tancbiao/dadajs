@@ -10,7 +10,7 @@
 
 <meta name="theme-color" content="#FFD3E0">
 
-<title>dada · 个人效率工作台</title>
+<title>科学工作台 · 教科版教案（全册52份）</title>
 
 <style>
 
@@ -1588,11 +1588,11 @@ function load(){
 
   S.profile = Object.assign(d.profile, S.profile);
 
-  // 品牌迁移：旧本地数据里遗留的"米菲"标题一律替换为"dada 工作台"
+  // 品牌迁移：旧本地数据里遗留的"米菲"标题一律替换为"科学工作台"
 
   if(S.profile && S.profile.title && String(S.profile.title).indexOf('米菲')>-1){
 
-    S.profile.title = 'dada 工作台';
+    S.profile.title = '科学工作台';
 
   }
 
@@ -1708,7 +1708,7 @@ function showBanner(text){
 
   if(window.Notification && Notification.permission==='granted'){
 
-    try{ new Notification('dada 工作台 💗', {body:text, icon:IMG_MASCOT}); }catch(_){}
+    try{ new Notification('科学工作台 💗', {body:text, icon:IMG_MASCOT}); }catch(_){}
 
   }
 
@@ -1942,7 +1942,7 @@ function renderPages(){
 
         ${stickers}
 
-        ${id==='home' ? `<div class="cover-edit"><button type="button" title="更换首页封面" onclick="pickCover(event)">🖼️ 换封面</button>${S.profile.homeCover?`<button type="button" class="ghost" title="恢复默认dada封面" onclick="resetCover(event)">恢复</button>`:''}</div>` : ''}
+        ${id==='home' ? `<div class="cover-edit"><button type="button" title="更换首页封面" onclick="pickCover(event)">🖼️ 换封面</button>${S.profile.homeCover?`<button type="button" class="ghost" title="恢复默认封面" onclick="resetCover(event)">恢复</button>`:''}</div>` : ''}
 
       </div>
 
@@ -4058,7 +4058,7 @@ function renderDigest(art){
 
     if(art.notes[i]){
 
-      html += '<div class="annot"><div class="who">'+bunnyHeadSVG('#FFC2D4',15)+' dada批注 · '+escapeHtml(art.notes[i].t)+'</div><div>'+escapeHtml(art.notes[i].d)+'</div></div>';
+      html += '<div class="annot"><div class="who">'+bunnyHeadSVG('#FFC2D4',15)+' 科学批注 · '+escapeHtml(art.notes[i].t)+'</div><div>'+escapeHtml(art.notes[i].d)+'</div></div>';
 
     }
 
@@ -4750,13 +4750,13 @@ function applyProfile(){
 
   const t = document.getElementById('brandTitle');
 
-  if(t) t.innerHTML = escapeHtml(S.profile.title||'dada 工作台') + ' <span class="pen">✏️</span>';
+  if(t) t.innerHTML = escapeHtml(S.profile.title||'科学工作台') + ' <span class="pen">✏️</span>';
 
   const s = document.getElementById('brandSub');
 
   if(s) s.textContent = S.profile.sub||'老师的小助手';
 
-  document.title = (S.profile.title||'dada 工作台') + ' · 个人效率工作台';
+  document.title = (S.profile.title||'科学工作台') + ' · 科学工作台';
 
 }
 
@@ -5020,7 +5020,7 @@ window.onAvatarPicked = function(ev){
 
 window.resetAvatar = function(){
 
-  S.profile.avatar = ''; save(); applyProfile(); toast('已恢复默认dada头像');
+  S.profile.avatar = ''; save(); applyProfile(); toast('已恢复默认头像');
 
 };
 
@@ -5080,7 +5080,7 @@ window.resetCover = function(ev){
 
   if(ev) ev.stopPropagation();
 
-  S.profile.homeCover = ''; save(); renderPages(); switchPage(S.activePage); applyProfile(); toast('已恢复默认dada封面');
+  S.profile.homeCover = ''; save(); renderPages(); switchPage(S.activePage); applyProfile(); toast('已恢复默认封面');
 
 };
 
@@ -5094,7 +5094,7 @@ window.editBrandName = function(){
 
       <label class="lbl">工作台名字</label>
 
-      <input class="inp" id="pfTitle" value="${escapeHtml(S.profile.title)}" maxlength="20" placeholder="比如：dada 工作台">
+      <input class="inp" id="pfTitle" value="${escapeHtml(S.profile.title)}" maxlength="20" placeholder="比如：科学工作台">
 
       <label class="lbl">副标题（一句话介绍）</label>
 
@@ -5116,7 +5116,7 @@ window.editBrandName = function(){
 
 window.saveProfile = function(){
 
-  S.profile.title = (document.getElementById('pfTitle').value||'').trim() || 'dada 工作台';
+  S.profile.title = (document.getElementById('pfTitle').value||'').trim() || '科学工作台';
 
   S.profile.sub = (document.getElementById('pfSub').value||'').trim() || '老师的小助手';
 
@@ -8890,7 +8890,7 @@ window.exportData = function(){
 
   a.href = url;
 
-  a.download = 'dada 工作台_备份_'+ymdhms().replace(/[: ]/g,'-')+'.json';
+  a.download = '科学工作台_备份_'+ymdhms().replace(/[: ]/g,'-')+'.json';
 
   document.body.appendChild(a);
 
@@ -9188,7 +9188,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 /* ==========================================================
 
-   科学老师增补包 v1.0（在原 dada 工作台基础上叠加，不改动原代码）
+   科学老师增补包 v1.0（在原 科学工作台基础上叠加，不改动原代码）
 
    1) 新增「教案库」页面（教科版 2024 新教材 四上+五上）
 
