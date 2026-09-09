@@ -1,0 +1,1081 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 作文批改助手 · 小学语文</title>
+<style>
+:root{
+  --ink:#5A4A5E; --ink-l:#8A7A8E; --ink-h:#3C3440;
+  --white:#FFFDFD; --card:rgba(255,253,253,.94);
+  --bg1:#FFF6FA; --bg2:#F2F7FF; --bg3:#F3FBF6;
+  --line:rgba(90,74,94,.13);
+  --radius:22px; --radius-s:14px;
+  --shadow:0 4px 18px rgba(150,120,140,.10);
+  --shadow-h:0 10px 28px rgba(150,120,140,.18);
+  --accent:#D85A30; --accent-l:#FAECE7; --accent-d:#B4471F;
+  --red:#D9534F; --red-l:#FDE8E7;
+  --amber:#E67E22; --amber-l:#FDF1E3;
+  --sky:#3A8FD6; --sky-l:#E7F2FC;
+  --gree:#2E9E5B; --gree-l:#E6F5EC;
+  --gold:#C89000; --gold-l:#FBF3D9;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:"PingFang SC","Microsoft YaHei","Hiragino Sans GB",system-ui,-apple-system,sans-serif;
+  color:var(--ink);min-height:100vh;line-height:1.7;
+  background:
+    radial-gradient(1100px 620px at 8% -8%, var(--bg1) 0%, transparent 58%),
+    radial-gradient(980px 560px at 96% 4%, var(--bg2) 0%, transparent 56%),
+    radial-gradient(900px 620px at 50% 104%, var(--bg3) 0%, transparent 58%),
+    var(--white);
+  background-attachment:fixed;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1040px;margin:0 auto;padding:0 16px 60px}
+.topbar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:18px 0 12px;
+}
+.brand{display:flex;align-items:center;gap:11px;flex:1;min-width:240px}
+.brand .logo{
+  width:46px;height:46px;border-radius:15px;flex:none;
+  background:linear-gradient(135deg,#D85A30,#F79CB8);
+  display:flex;align-items:center;justify-content:center;font-size:23px;
+  box-shadow:0 6px 14px rgba(216,90,48,.28);
+}
+.brand h1{margin:0;font-size:19px;font-weight:800;color:var(--ink-h);letter-spacing:.2px}
+.brand .slogan{font-size:12px;color:var(--ink-l)}
+.brand .slogan b{color:var(--accent-d)}
+.ver{
+  font-size:10.5px;font-weight:800;color:var(--accent-d);background:var(--accent-l);
+  border:1px solid rgba(216,90,48,.25);border-radius:999px;padding:1px 9px;vertical-align:2px;
+}
+.tabbar{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 16px}
+.tab{
+  border:1px solid var(--line);background:var(--card);border-radius:999px;
+  padding:8px 18px;font-size:14px;font-weight:700;color:var(--ink-l);cursor:pointer;
+  box-shadow:var(--shadow);transition:all .15s;user-select:none;
+}
+.tab:hover{color:var(--ink-h)}
+.tab.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 5px 12px rgba(216,90,48,.28)}
+.page{display:none}
+.page.on{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 19px;box-shadow:var(--shadow);margin-bottom:14px}
+.card h3{margin:0 0 4px;font-size:16px;color:var(--ink-h);display:flex;align-items:center;gap:8px}
+.card .sub{font-size:12px;color:var(--ink-l);margin:0 0 12px}
+.lbl{display:block;font-size:12.5px;font-weight:700;color:var(--ink-h);margin:10px 0 5px}
+.row2{display:flex;gap:10px;flex-wrap:wrap}
+.row2>div{flex:1;min-width:150px}
+input[type=text],input[type=password],textarea,select{
+  width:100%;border:1.5px solid rgba(90,74,94,.18);border-radius:13px;
+  padding:10px 13px;font-size:14.5px;color:var(--ink-h);background:var(--white);
+  font-family:inherit;outline:none;transition:border-color .15s;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+textarea{resize:vertical;line-height:1.85}
+select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--ink-l) 50%),linear-gradient(135deg,var(--ink-l) 50%,transparent 50%);background-position:calc(100% - 18px) 50%,calc(100% - 13px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:32px}
+.btn{
+  border:none;border-radius:999px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;
+  background:var(--accent);color:#fff;transition:transform .12s,opacity .15s;box-shadow:0 4px 10px rgba(216,90,48,.22);
+  display:inline-flex;align-items:center;gap:6px;justify-content:center;
+}
+.btn:hover{opacity:.9}
+.btn:active{transform:scale(.97)}
+.btn.ghost{background:var(--white);color:var(--ink);box-shadow:none;border:1.5px solid var(--line)}
+.btn.green{background:var(--gree);box-shadow:0 4px 10px rgba(46,158,91,.22)}
+.btn.blue{background:var(--sky);box-shadow:0 4px 10px rgba(58,143,214,.22)}
+.btn.small{padding:6px 13px;font-size:12.5px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{
+  border:1.5px solid var(--line);background:var(--white);border-radius:999px;
+  padding:5px 13px;font-size:13px;font-weight:600;color:var(--ink-l);cursor:pointer;transition:all .12s;
+}
+.chip:hover{border-color:var(--accent);color:var(--accent-d)}
+.chip.on{background:var(--accent-l);border-color:var(--accent);color:var(--accent-d)}
+
+/* 概览条 */
+.ov{display:flex;gap:9px;flex-wrap:wrap;margin:4px 0 12px}
+.ov .o{
+  background:var(--white);border:1px solid var(--line);border-radius:14px;padding:7px 13px;
+  display:flex;gap:7px;align-items:baseline;font-size:12px;color:var(--ink-l);
+}
+.ov .o b{font-size:17px;color:var(--ink-h)}
+.ov .o.hot{background:var(--red-l);border-color:rgba(217,83,79,.3)}
+.ov .o.hot b{color:var(--red)}
+
+/* 正文标注 */
+.paper{
+  background:repeating-linear-gradient(transparent,transparent 34px,rgba(90,74,94,.08) 35px);
+  border:1.5px dashed rgba(90,74,94,.22);border-radius:16px;padding:14px 18px 16px;
+  line-height:35px;font-size:16.5px;color:#3B3338;margin-bottom:4px;
+}
+.paper .p{margin:0 0 2px}
+.paper .empty{color:var(--ink-l);font-size:14px;line-height:1.8}
+.w{position:relative;border-radius:4px;padding:0 1px;cursor:default}
+.flag-word{background:var(--red-l);box-shadow:0 0 0 1px rgba(217,83,79,.35);color:#8E2F2C}
+.flag-long{background:var(--sky-l);box-shadow:0 0 0 1px rgba(58,143,214,.35)}
+.flag-de{background:var(--amber-l);box-shadow:0 0 0 1px rgba(230,126,34,.35)}
+.flag-good{background:var(--gold-l);box-shadow:0 0 0 1px rgba(200,144,0,.3)}
+.w .no{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:15px;height:15px;border-radius:50%;color:#fff;font-size:10px;font-weight:800;
+  margin-left:2px;vertical-align:super;padding:0 3px;
+}
+.flag-word .no{background:var(--red)}
+.flag-long .no{background:var(--sky)}
+.flag-de .no{background:var(--amber)}
+.flag-good .no{background:var(--gold)}
+.legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-l);margin:8px 0 2px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:3px;vertical-align:-1px}
+
+/* 建议列表 */
+.res-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:11px}
+.issue{
+  display:flex;gap:11px;padding:10px 12px;border-radius:15px;border:1px solid var(--line);
+  background:var(--white);margin-bottom:8px;align-items:flex-start;scroll-margin-top:90px;
+}
+.issue.blink{border-color:var(--accent);box-shadow:0 0 0 2px rgba(216,90,48,.18)}
+.issue .it{flex:none;border-radius:9px;padding:3px 9px;font-size:11.5px;font-weight:800;color:#fff;margin-top:1px}
+.issue .ib{flex:1;min-width:0}
+.issue .quote{font-size:13.5px;color:var(--ink-h);font-weight:600}
+.issue .fix{font-size:13px;color:var(--accent-d);margin-top:1px}
+.issue .why{font-size:12px;color:var(--ink-l);margin-top:1px}
+.issue .quote b, .issue .fix b{color:inherit}
+.none{font-size:13px;color:var(--ink-l);padding:14px;text-align:center;border:1.5px dashed var(--line);border-radius:14px}
+
+/* AI 区 */
+.ai-loading{text-align:center;padding:18px;color:var(--ink-l);font-size:13.5px}
+.spin{display:inline-block;width:16px;height:16px;border:2.5px solid var(--accent-l);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-3px;margin-right:8px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ai-out .verdict-card{margin-top:11px}
+.ed-areas{margin-top:11px}
+
+/* 档案 & 讲评 */
+.rec{
+  display:flex;gap:12px;align-items:flex-start;padding:13px 15px;border-radius:16px;
+  border:1px solid var(--line);background:var(--white);margin-bottom:9px;cursor:pointer;
+}
+.rec:hover{border-color:var(--accent)}
+.rec .ra{flex:1;min-width:0}
+.rec .rt{font-weight:700;font-size:14.5px;color:var(--ink-h)}
+.rec .rm{font-size:12px;color:var(--ink-l);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rec .lv{flex:none;border-radius:9px;padding:3px 10px;font-size:12px;font-weight:800}
+.rec .del{flex:none;border:none;background:none;color:var(--ink-l);cursor:pointer;font-size:16px;padding:4px 7px;border-radius:9px}
+.rec .del:hover{background:var(--red-l);color:var(--red)}
+.lv.优{background:var(--gold-l);color:#8a6d00}
+.lv.良{background:var(--gree-l);color:#1E7A44}
+.lv.合格{background:var(--sky-l);color:#1F5E91}
+.lv.待提高{background:var(--red-l);color:#B03A34}
+
+/* modal */
+.mask{position:fixed;inset:0;background:rgba(60,52,64,.4);backdrop-filter:blur(2px);display:none;z-index:50;align-items:flex-end;justify-content:center}
+.mask.on{display:flex}
+.modal{
+  background:var(--white);border-radius:26px 26px 0 0;width:100%;max-width:760px;
+  max-height:88vh;overflow:auto;padding:20px 20px 30px;animation:up .22s ease;
+}
+@media(min-width:720px){.mask{align-items:center;padding:20px}.modal{border-radius:26px}}
+@keyframes up{from{transform:translateY(30px);opacity:.4}to{transform:none;opacity:1}}
+.modal h3{margin:0 0 10px;font-size:17px;color:var(--ink-h)}
+.close-x{float:right;border:none;background:var(--accent-l);color:var(--accent-d);width:32px;height:32px;border-radius:11px;font-size:16px;cursor:pointer}
+
+/* toast */
+#toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:#3C3440;color:#fff;padding:10px 22px;border-radius:999px;font-size:13.5px;opacity:0;pointer-events:none;transition:all .25s;z-index:99;box-shadow:0 8px 22px rgba(0,0,0,.25)}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.hint{font-size:12px;color:var(--ink-l);background:rgba(90,74,94,.05);border-radius:11px;padding:8px 12px;margin-top:9px;line-height:1.7}
+.hint b{color:var(--accent-d)}
+.hr{border:none;border-top:1.5px dashed var(--line);margin:15px 0}
+a.link{color:var(--accent-d)}
+#txtOut{white-space:pre-wrap;font-size:13px;background:var(--white);border:1.5px solid var(--line);border-radius:13px;padding:12px;max-height:330px;overflow:auto;margin-top:8px;display:none;line-height:1.8}
+.plain{white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--ink);background:var(--white);border:1px solid var(--line);border-radius:13px;padding:12px;margin-top:8px}
+table.mini{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+table.mini th,table.mini td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+table.mini th{background:var(--accent-l);color:var(--accent-d)}
+@media(max-width:640px){
+  body{font-size:15px}
+  .paper{font-size:15.5px;padding:12px 13px}
+  .wrap{padding:0 10px 44px}
+  .tab{padding:7px 13px;font-size:13px}
+}
+@media print{
+  body{background:#fff}
+  .tabbar,.btn,.legend,.close-x,.no,.topbar .actions{display:none}
+  .page{display:block!important}
+  .card{box-shadow:none;break-inside:avoid}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="logo">✍️</div>
+      <div>
+        <h1>AI 作文批改助手 <span class="ver">v1.0</span></h1>
+        <div class="slogan"><b>AI 先读一遍 · 老师最后拍板</b> · 错字标点体检离线可用 · 病句评语交给 AI</div>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn ghost small" onclick="goTab('set')">⚙ 设置</button>
+      <button class="btn small" onclick="goTab('batch')">✍️ 去批改</button>
+    </div>
+  </div>
+
+  <!-- 页签 -->
+  <div class="tabbar">
+    <button class="tab on" data-tab="batch" onclick="goTab('batch')">✍️ 批改</button>
+    <button class="tab" data-tab="files" onclick="goTab('files')">📁 学生档案 <span id="cntRec" style="opacity:.7"></span></button>
+    <button class="tab" data-tab="stats" onclick="goTab('stats')">📊 讲评统计</button>
+    <button class="tab" data-tab="set" onclick="goTab('set')">⚙ 设置</button>
+  </div>
+
+  <!-- ============ 批改页 ============ -->
+  <div class="page on" id="page-batch">
+
+    <!-- 卡1 录入 -->
+    <div class="card">
+      <h3>📥 录入作文</h3>
+      <p class="sub">把作文本的内容打出来 / 语音转文字 / 拍照后复制文字贴进来。本地体检不联网，马上出结果。</p>
+      <div class="row2">
+        <div><span class="lbl">题目</span><input type="text" id="inTitle" placeholder="如：那次玩得真高兴"></div>
+        <div><span class="lbl">学生姓名</span><input type="text" id="inStudent" placeholder="留空则不入档案"></div>
+        <div><span class="lbl">年级</span>
+          <select id="inGrade"><option value="">不限</option><option>一年级</option><option>二年级</option><option>三年级</option><option>四年级</option><option>五年级</option><option>六年级</option></select>
+        </div>
+      </div>
+      <details style="margin-top:4px"><summary style="cursor:pointer;font-size:12.5px;color:var(--ink-l)">＋ 本次习作要求（可选，AI 会对照着查偏题）</summary>
+        <textarea id="inTask" rows="2" style="margin-top:8px" placeholder="如：统编版四上第八单元——把一件事写清楚，按事情发展顺序，写出当时的心情。"></textarea>
+      </details>
+      <span class="lbl">作文正文</span>
+      <textarea id="inText" rows="10" placeholder="把作文粘贴在这里…… 支持分段。"></textarea>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:11px">
+        <button class="btn" id="btnGo" onclick="runCheck()">🚀 开始体检</button>
+        <button class="btn ghost small" onclick="fillDemo()">📋 填入示例作文</button>
+        <button class="btn ghost small" onclick="clearText()">清空</button>
+      </div>
+    </div>
+
+    <!-- 卡2 本地体检结果 -->
+    <div class="card" id="resCard" style="display:none">
+      <h3>🔎 本地体检 <span class="ver" style="font-size:9.5px">离线引擎</span></h3>
+      <p class="sub">错别字、长句断句、的/地/得 由本机规则初筛 —— <b>仅供参考，请老师复核</b>。病句 / 偏题 / 深度评语点下方「AI 深度批改」。</p>
+      <div class="ov" id="ovBar"></div>
+      <div class="paper" id="paperBox"></div>
+      <div class="legend">
+        <span><i style="background:var(--red)"></i>疑似错字/错词</span>
+        <span><i style="background:var(--amber)"></i>的/地/得 提示</span>
+        <span><i style="background:var(--sky)"></i>长句串（建议断句）</span>
+        <span><i style="background:var(--gold)"></i>亮点候选</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 4px">
+        <button class="btn blue" id="btnAI" onclick="aiDeep()">✨ AI 深度批改（联网）</button>
+        <button class="btn ghost small" onclick="aiConfigTip()">未配 AI？点这里</button>
+      </div>
+      <div id="aiArea"></div>
+      <hr class="hr">
+      <h3 style="font-size:15px">📝 评语工作台 <span class="ver" style="font-size:9.5px">老师定稿</span></h3>
+      <p class="sub">AI 生成或本地草稿 → 您修改润色 → 选等第 → 存入学生档案。机器建议，老师拍板。</p>
+      <textarea id="inComment" rows="5" placeholder="总评会填到这里，您可以自由修改。"></textarea>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px;align-items:center">
+        <span style="font-size:13px;font-weight:700;color:var(--ink-h)">等第：</span>
+        <div class="chips" id="chipVerdict" style="flex:1">
+          <span class="chip" onclick="setVerdict(this,'优')">优</span>
+          <span class="chip" onclick="setVerdict(this,'良')">良</span>
+          <span class="chip" onclick="setVerdict(this,'合格')">合格</span>
+          <span class="chip" onclick="setVerdict(this,'待提高')">待提高</span>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <span style="font-size:12.5px;color:var(--ink-l)">评语句式库（点击插入，可离线用）：</span>
+        <div class="chips" style="margin-top:5px" id="phraseBox"></div>
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:13px">
+        <button class="btn green" onclick="saveRecord()">💾 存入学生档案</button>
+        <button class="btn ghost small" onclick="genCommentDraft()">🪄 生成本地评语草稿</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 档案页 ============ -->
+  <div class="page" id="page-files">
+    <div class="card">
+      <h3>📁 学生作文档案</h3>
+      <p class="sub">每篇作文 + 评语自动攒在这里。换电脑 / 清缓存前请先「导出备份」。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost small" onclick="exportJSON()">⬇ 导出备份(JSON)</button>
+        <button class="btn ghost small" onclick="document.getElementById('impFile').click()">⬆ 导入备份</button>
+        <button class="btn ghost small" onclick="exportCSV()">⬇ 导出清单(CSV)</button>
+        <input type="file" id="impFile" accept=".json" style="display:none" onchange="importJSON(this)">
+      </div>
+      <div id="recList" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <!-- ============ 讲评统计 ============ -->
+  <div class="page" id="page-stats">
+    <div class="card">
+      <h3>📊 讲评统计</h3>
+      <p class="sub">从档案里的作文重新跑一遍本地引擎，汇总共性问题 —— 下一节讲评课的数据就有了。</p>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <button class="btn blue" onclick="runStats()">📊 统计全部档案</button>
+        <button class="btn ghost small" onclick="runStats(10)">最近 10 篇</button>
+        <span id="statMeta" style="font-size:12px;color:var(--ink-l)"></span>
+      </div>
+      <div id="statBody" style="margin-top:12px"></div>
+      <div id="txtOut"></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <button class="btn ghost small" onclick="copyOut()">📋 复制一页纸</button>
+        <button class="btn ghost small" onclick="dlOut()">⬇ 下载 .txt</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ 设置页 ============ -->
+  <div class="page" id="page-set">
+    <div class="card">
+      <h3>✨ AI 深度批改设置</h3>
+      <p class="sub">体检层（错字/长句/统计）<b>不需要联网</b>。深度批改（病句/偏题/评语）需要一个大模型接口：Key 只存在您自己的浏览器里，作文不经过我们任何服务器。</p>
+      <div class="row2">
+        <div style="flex:1.4">
+          <span class="lbl">服务商</span>
+          <select id="setProvider" onchange="providerChange()">
+            <option value="deepseek">DeepSeek（推荐，便宜）</option>
+            <option value="zhipu">智谱 GLM（有免费模型）</option>
+            <option value="silicon">硅基流动 SiliconFlow</option>
+            <option value="custom">自定义（OpenAI 兼容）</option>
+          </select>
+        </div>
+        <div style="flex:1">
+          <span class="lbl">模型名</span>
+          <input type="text" id="setModel" placeholder="deepseek-chat">
+        </div>
+      </div>
+      <span class="lbl">API Key <span style="font-weight:400;color:var(--ink-l)">（在服务商官网申请，存本机）</span></span>
+      <input type="password" id="setKey" placeholder="sk-……">
+      <div id="setCustom" style="display:none">
+        <span class="lbl">接口地址（OpenAI 兼容 /chat/completions 前缀）</span>
+        <input type="text" id="setBase" placeholder="https://api.xxx.com/v1">
+      </div>
+      <div class="hint">💡 浏览器直连需要服务商开放跨域：DeepSeek / 智谱 / 硅基流动均可。若学校网络屏蔽外网，可用「自定义」指向校内中转地址。<br>🔒 Key 明文保存在本机 localStorage，仅供本人浏览器使用，请勿在公用电脑上保存。</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn" onclick="saveSettings()">💾 保存 AI 设置</button>
+        <button class="btn ghost small" onclick="testAI()">🔌 测试连接</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📚 个性化</h3>
+      <span class="lbl">默认学生姓名 / 班级备注</span>
+      <input type="text" id="setDefStudent" placeholder="留空则每次手填">
+      <span class="lbl">自定义易错词对（每行一个，格式：错词→正确词）</span>
+      <textarea id="setWords" rows="4" placeholder="例：&#10;以经→已经&#10;因该→应该"></textarea>
+      <button class="btn ghost small" onclick="saveWords()" style="margin-top:9px">💾 保存词表</button>
+    </div>
+    <div class="card">
+      <h3>🗄 数据管理</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn ghost small" onclick="exportJSON()">⬇ 导出全部数据</button>
+        <button class="btn ghost small" onclick="resetAll()">🗑 清空档案（危险）</button>
+      </div>
+      <div class="hint">「导出备份」包含设置与全部档案，建议每月导出一次放 U 盘 / 网盘。</div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:26px;font-size:12px;color:var(--ink-l)">
+    AI 作文批改助手 · 单文件离线可用 · 理念：AI 是脚手架，不是监控探头，批改权永远在老师手里。
+  </div>
+</div>
+
+<!-- 记录详情弹窗 -->
+<div class="mask" id="mask" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox"></div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ================= 存储 ================= */
+var STORE_KEY = 'zuowen_v1';
+var S = null;
+function defaultState(){
+  return {
+    settings:{ provider:'deepseek', model:'deepseek-chat', apiKey:'', baseURL:'https://api.deepseek.com/v1',
+               defStudent:'', defGrade:'', words:'' },
+    records:[],
+    last:{ title:'', student:'', grade:'', text:'', task:'' }
+  };
+}
+function load(){
+  try{
+    var raw = localStorage.getItem(STORE_KEY);
+    S = raw ? Object.assign(defaultState(), JSON.parse(raw)) : defaultState();
+  }catch(e){ S = defaultState(); }
+  if(!S.settings) S.settings = defaultState().settings;
+  if(!S.records) S.records = [];
+  if(!S.last) S.last = defaultState().last;
+}
+function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(S)); }catch(e){ toast('保存失败：浏览器存储已满或不可用'); } }
+
+/* ================= 内置易错词表（整词匹配，低误报） ================= */
+var BUILTIN_WORDS = [
+  ['以经','已经'],['因该','应该'],['在见','再见'],['觉的','觉得'],['名子','名字'],
+  ['知到','知道'],['一后','以后'],['非长','非常'],['自几','自己'],['己经','已经'],
+  ['克苦','刻苦'],['历害','厉害'],['经长','经常'],['一真','一直'],['做业','作业'],
+  ['坐位','座位'],['工课','功课'],['在次','再次'],['一便','一遍'],['成攻','成功'],
+  ['坚难','艰难'],['立既','立即'],['目地','目的'],['非常常','非常'],['迷路','迷路'],
+  ['辛福','幸福'],['勇赶','勇敢'],['永敢','勇敢'],['真棒棒','真棒'],['喝彩','喝彩']
+].filter(function(a){return a[0]!==a[1];});
+
+/* 的/地/得 状态词 + 动作词（防误报白名单策略） */
+var ADV = ['高兴','开心','快乐','兴奋','激动','紧张','害怕','勇敢','认真','仔细','努力','慢慢','轻轻','静静','飞快','偷偷','大声','小声','悄悄','狠狠','紧紧','甜甜','高高','深深','好好','早早','满满','乖乖','美美','安安静静','开开心心','高高兴兴','认认真真','急急忙忙','生气','伤心','难过','委屈','着急','得意','骄傲','自豪','轻松','舒服','愉快','喜悦','连忙','赶紧','迅速','缓缓','温柔','使劲','拼命','不断','不停','呼呼','哗哗','沙沙','啪啪','咚咚','隆隆','呜呜','咕噜咕噜','扑通']; 
+var ACT = ['跑','跳','笑','哭','喊','叫','唱','说','讲','读','写','走','看','玩','做','吃','喝','睡','坐','站','听','飞','响','转','流','爬','画','放','洗','扫','开','关','抓','摸','拉','推','拍','抱','踢','踏','追','赶','游','逛','流着','走过','笑着','跑了','跳着','唱起','写起','说起','做起了','跑起来','跳起来','笑起来','哭起来','说道','喊道','叫到','回答道','挥了挥','点了点头']; 
+function isAdvHit(tail){ return ACT.some(function(a){ return tail.indexOf(a)===0; }); }
+function isDegHit(tail){ return DEG.some(function(d){ return tail.indexOf(d)===0; }); }
+var ACT = ['跑','跳','笑','哭','喊','叫','唱','说','讲','读','写','走','看','玩','做','吃','喝','睡','坐','站','听','飞','响','转','流','爬','画','放','洗','扫','开','关','抓','摸','拉','推','拍','抱','踢','踏','追','赶','游','逛','流着','走过','笑着','跑了','跳着','唱起','写起','说起','做起了','跑起来','跳起来','笑起来','哭起来','说道','喊道','叫到','回答道','挥了挥','点了点头'];
+var VERBS = ['跑','走','跳','飞','玩','做','写','读','唱','吃','长','变','说','笑','哭','闹','睡','坐','站','等','洗','画','打','放','干','学','教','练','演','讲'];
+var DEG = ['很','真','太','非常','特别','十分','不','多','快','慢','好','开心','高兴','漂亮','整齐','认真','仔细','香','甜','美','快活','起劲'];
+var EMO = ['害怕','紧张','激动','高兴','兴奋','委屈','骄傲','自豪','惊喜','惊讶','生气','难过','伤心','温暖','感动','幸福','开心','快乐','着急','忐忑','后悔','惭愧','不好意思','美滋滋'];
+var GOOD_WORDS = ['像','好像','仿佛','如同','宛如','犹如','就像','似的'];
+
+/* ================= 本地体检引擎 ================= */
+function customWords(){
+  var out = [];
+  var t = (S.settings.words||'').split(/\n/);
+  t.forEach(function(line){
+    var m = line.split(/→|->|=>/);
+    if(m.length===2 && m[0].trim() && m[1].trim()) out.push([m[0].trim(), m[1].trim()]);
+  });
+  return out;
+}
+/* 按句末标点切分，返回带绝对起止的片段数组 */
+function cutBy(text, sep){
+  var re = new RegExp('[^'+sep+']+['+sep+']|['+sep+']|[^'+sep+']+$','g');
+  var out = [], m;
+  while((m = re.exec(text)) !== null){
+    out.push({s:m[0], start:m.index, end:m.index+m[0].length});
+  }
+  return out;
+}
+function scan(text){
+  var issues = [];
+  if(!text) return issues;
+  /* 1. 易错词（内置+自定义）——每一处都记录 */
+  var pairs = BUILTIN_WORDS.concat(customWords());
+  pairs.forEach(function(p){
+    var bad = p[0], good = p[1];
+    if(!bad) return;
+    var re = new RegExp(escapeReg(bad),'g'), m;
+    while((m = re.exec(text)) !== null){
+      issues.push({id:0, type:'错别字', quote:bad, fix:good,
+        why:'疑似同音/形近字写错，建议改为「'+good+'」。核对后请老师定夺。', pos:m.index});
+    }
+  });
+  /* 2. 长句串（一逗到底）——先定范围，后面亮点要让路 */
+  var longRanges = [];
+  cutBy(text, '。！？!?…；;\n').forEach(function(c){
+    var commas = (c.s.match(/[，,、]/g)||[]).length;
+    if(commas >= 5 && c.s.replace(/[，,、\s]/g,'').length >= 20){
+      issues.push({id:0, type:'标点', quote:c.s.replace(/\n/g,'').slice(0,46), pos:c.start,
+        why:'一口气连用了 '+commas+' 个逗号（一逗到底）。在一个意思说完的地方用句号或分号断开，节奏会更清楚。'});
+      longRanges.push(c);
+    }
+  });
+  /* 3. 的/地/得 提示（白名单启发，仅供提醒） */
+  ADV.forEach(function(adv){
+    var re = new RegExp(escapeReg(adv)+'的','g'), m;
+    while((m = re.exec(text)) !== null){
+      var tail = text.slice(m.index+m[0].length, m.index+m[0].length+6);
+      if(isAdvHit(tail)){
+        var q = text.slice(m.index, m.index+m[0].length+tail.split(/[，。！？\n；、 ]/)[0].length).slice(0,8);
+        issues.push({id:0, type:'表达', quote:q, fix:adv+'地',
+          why:'「'+adv+'」修饰后面的动作，动词前一般用「地」；若后面接名词性内容则保留「的」。请核对。', pos:m.index});
+      }
+    }
+  });
+  VERBS.forEach(function(v){
+    var re = new RegExp(escapeReg(v)+'的','g'), m;
+    while((m = re.exec(text)) !== null){
+      var tail = text.slice(m.index+m[0].length, m.index+m[0].length+4);
+      if(isDegHit(tail)){
+        issues.push({id:0, type:'表达', quote:(m[0]+tail.slice(0,3)),
+          fix:v+'得', why:'动词「'+v+'」后的补充说明（怎么样）一般用「得」，如「跑得快」。', pos:m.index});
+      }
+    }
+  });
+  /* 4. 亮点候选（本地启发）——避开被长句串覆盖的整句，避免双重标注 */
+  var n = 0;
+  cutBy(text, '。！？!?…\n').forEach(function(sn){
+    var s = sn.s.trim(); if(s.length < 10 || n>=5) return;
+    var inLong = longRanges.some(function(lr){ return sn.start>=lr.start && sn.end<=lr.end; });
+    var hit = false;
+    if(GOOD_WORDS.some(function(w){ return s.indexOf(w)>=0; })) hit = true;
+    if(!hit && s.indexOf('！')>=0 && EMO.some(function(e){ return s.indexOf(e)>=0; })) hit = true;
+    if(!hit && EMO.filter(function(e){ return s.indexOf(e)>=0; }).length>=2) hit = true;
+    if(hit){ n++; issues.push({id:0, type:'亮点', quote:s.slice(0,50), pos:sn.start,
+      why:'这段有画面 / 有真实心情，写得好！建议在旁边画波浪线夸一夸。', whole:true, sStart:sn.start, sEnd:sn.end}); }
+  });
+  /* 编号（非亮点按位置排，亮点放最后） */
+  var words = issues.filter(function(i){return i.type!=='亮点';}).sort(function(a,b){return a.pos-b.pos;});
+  var goods = issues.filter(function(i){return i.type==='亮点';});
+  var all = words.concat(goods);
+  all.forEach(function(i,idx){ i.id = idx+1; });
+  return all;
+}
+function stats(text){
+  var noWs = text.replace(/\s/g,'');
+  var chars = noWs.length;
+  var sents = (text.match(/[^。！？!?…；;\n][。！？!?…；;\n]/g)||[]).length;
+  if(text && !/[。！？!?…；;\n]$/.test(text)) sents++;
+  var paras = text.split(/\n+/).filter(function(p){return p.trim();}).length;
+  return {chars:chars, sents:sents||1, paras:paras||1};
+}
+function escapeReg(s){ return s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'); }
+function mkId(arr){ return (arr.length+1); }
+
+/* ================= 渲染 ================= */
+var LAST_ISSUES = [];
+var LAST_TEXT = '';
+var LAST_STATS = null;
+var CUR_VERDICT = '良';
+
+function runCheck(){
+  var text = document.getElementById('inText').value.trim();
+  if(!text){ toast('请先粘贴或输入作文正文'); return; }
+  S.last.title = document.getElementById('inTitle').value.trim();
+  S.last.student = document.getElementById('inStudent').value.trim();
+  S.last.grade = document.getElementById('inGrade').value;
+  S.last.task = document.getElementById('inTask').value.trim();
+  S.last.text = text; save();
+  LAST_TEXT = text;
+  LAST_ISSUES = scan(text);
+  LAST_STATS = stats(text);
+  document.getElementById('resCard').style.display = 'block';
+  document.getElementById('aiArea').innerHTML = '';
+  document.getElementById('inComment').value = '';
+  renderRes();
+  renderPaper();
+  renderIssues('全部');
+  document.getElementById('resCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function renderRes(){
+  var st = LAST_STATS, is = LAST_ISSUES;
+  var wordN = is.filter(function(i){return i.type==='错别字';}).length;
+  var longN = is.filter(function(i){return i.type==='标点';}).length;
+  var deN = is.filter(function(i){return i.type==='表达';}).length;
+  var goodN = is.filter(function(i){return i.type==='亮点';}).length;
+  document.getElementById('ovBar').innerHTML =
+    '<span class="o">字数 <b>'+st.chars+'</b></span>'+
+    '<span class="o">段落 <b>'+st.paras+'</b></span>'+
+    '<span class="o">句子 <b>'+st.sents+'</b></span>'+
+    (wordN?'<span class="o hot">疑似错字 <b>'+wordN+'</b></span>':'<span class="o">疑似错字 <b>0</b> 🎉</span>')+
+    (longN?'<span class="o hot">长句串 <b>'+longN+'</b></span>':'<span class="o">长句串 <b>0</b></span>')+
+    (deN?'<span class="o" style="border-color:rgba(230,126,34,.4)">的/地/得 <b style="color:var(--amber)">'+deN+'</b></span>':'')+
+    (goodN?'<span class="o" style="border-color:rgba(200,144,0,.4)">亮点候选 <b style="color:var(--gold)">'+goodN+'</b></span>':'');
+}
+function renderPaper(){
+  var text = LAST_TEXT;
+  var box = document.getElementById('paperBox');
+  if(!text){ box.innerHTML = '<p class="empty">还没有作文。先在上方录入～</p>'; return; }
+  var html = '';
+  cutBy(text, '。！？!?…\n').forEach(function(sn){
+    var s = sn.s; if(!s.trim()) return;
+    var local = LAST_ISSUES.filter(function(i){ return !i.whole && i.pos>=sn.start && i.pos<sn.end; });
+    var wholeGood = LAST_ISSUES.find(function(i){ return i.whole && i.sStart===sn.start; });
+    var localGood = LAST_ISSUES.find(function(i){ return i.whole && i.sStart===sn.start && local.length===0; });
+    var parts = '', prev = 0;
+    local.forEach(function(iss){
+      var at = iss.pos - sn.start;
+      parts += escHtml(s.slice(prev, at));
+      var cl = iss.type==='错别字'?'flag-word':iss.type==='表达'?'flag-de':iss.type==='标点'?'flag-long':'flag-good';
+      parts += '<span class="w '+cl+'" onclick="focusIssue('+iss.id+')">'+escHtml(iss.quote)+'<span class="no">'+iss.id+'</span></span>';
+      prev = at + iss.quote.length;
+    });
+    if(parts){
+      if(prev < s.length) parts += escHtml(s.slice(prev));
+    } else if(wholeGood){
+      /* 整句亮点（句内无其它标注时才金底） */
+      parts = '<span class="w flag-good" onclick="focusIssue('+wholeGood.id+')">'+escHtml(s.trim())+'<span class="no">✦</span></span>';
+    } else {
+      parts = escHtml(s);
+    }
+    html += '<p class="p">'+parts+'</p>';
+  });
+  if(!html) html = '<p class="empty">没有可显示的正文</p>';
+  box.innerHTML = html;
+}
+var curTab = '全部';
+function renderIssues(tab){
+  curTab = tab || '全部';
+  var list = LAST_ISSUES.filter(function(i){
+    if(curTab==='全部') return true;
+    if(curTab==='错字') return i.type==='错别字';
+    if(curTab==='标点') return i.type==='标点';
+    if(curTab==='表达') return i.type==='表达';
+    if(curTab==='亮点') return i.type==='亮点';
+    return true;
+  });
+  var colors = {错别字:'#D9534F', 标点:'#3A8FD6', 表达:'#E67E22', 亮点:'#C89000'};
+  var tabsHtml = ['全部','错字','标点','表达','亮点'].map(function(t){
+    return '<span class="chip'+(curTab===t?' on':'')+'" onclick="renderIssues(\''+t+'\')">'+t+'</span>';
+  }).join('');
+  var items = list.map(function(iss){
+    if(iss.type==='亮点'){
+      return '<div class="issue"><span class="it" style="background:var(--gold)">亮点</span><div class="ib">'+
+        '<div class="quote">✦ '+escHtml(iss.quote)+'</div><div class="why">'+escHtml(iss.why)+'</div></div></div>';
+    }
+    return '<div class="issue"><span class="it" style="background:'+colors[iss.type]+'">'+iss.type+'</span><div class="ib">'+
+      '<div class="quote">“'+escHtml(iss.quote)+'”'+(iss.fix?' → 建议 <b>'+escHtml(iss.fix)+'</b>':'')+'</div>'+
+      '<div class="why">'+escHtml(iss.why)+'</div></div></div>';
+  }).join('');
+  var wrap = document.getElementById('issueWrap');
+  if(!wrap){
+    wrap = document.createElement('div'); wrap.id = 'issueWrap';
+    document.getElementById('resCard').insertBefore(wrap, document.getElementById('aiArea'));
+  }
+  wrap.innerHTML = '<div class="res-tabs" style="margin-top:12px">'+tabsHtml+'</div><div id="issueBox">'+
+    (items || '<div class="none">✅ 这一类没有问题，或没有可展示的内容</div>')+'</div>';
+}
+function focusIssue(id){
+  if(id<=0){ toast('亮点句已标出（金色），可在下方列表复制到评语'); return; }
+  var found = null;
+  document.querySelectorAll('#paperBox .w').forEach(function(el){
+    var no = el.querySelector('.no');
+    if(no && no.textContent===String(id) && !found) found = el;
+  });
+  if(found){
+    found.scrollIntoView({behavior:'smooth', block:'center'});
+    found.style.outline='3px solid var(--accent)';
+    setTimeout(function(){ found.style.outline=''; }, 1400);
+  }
+}
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ================= AI 深度批改 ================= */
+var PROVIDERS = {
+  deepseek:{ base:'https://api.deepseek.com/v1', model:'deepseek-chat' },
+  zhipu:{ base:'https://open.bigmodel.cn/api/paas/v4', model:'glm-4-flash' },
+  silicon:{ base:'https://api.siliconflow.cn/v1', model:'Qwen/Qwen2.5-7B-Instruct' },
+  custom:{ base:'', model:'' }
+};
+function providerChange(){
+  var p = document.getElementById('setProvider').value;
+  document.getElementById('setCustom').style.display = p==='custom' ? 'block':'none';
+  var def = PROVIDERS[p];
+  if(def && def.model && p!=='custom') document.getElementById('setModel').value = def.model;
+  if(p==='custom' && !document.getElementById('setBase').value) document.getElementById('setBase').value = 'https://api.xxx.com/v1';
+  if(p==='custom' && !document.getElementById('setModel').value) document.getElementById('setModel').value = 'your-model';
+}
+function aiConfigTip(){ toast('体检不联网；深度批改请到 ⚙设置 填写大模型 API Key'); }
+function aiDeep(){
+  if(!LAST_TEXT){ toast('请先「开始体检」'); return; }
+  var st = S.settings;
+  if(!st.apiKey){ toast('请先到 ⚙ 设置 填写 API Key（或自定义中转地址）'); return; }
+  document.getElementById('btnAI').disabled = true;
+  var html = '<div class="ai-loading"><span class="spin"></span>AI 正在通读批改（病句·偏题·评语）… 约 15–40 秒，请稍候</div>';
+  document.getElementById('aiArea').innerHTML = html;
+  var text = LAST_TEXT;
+  var task = document.getElementById('inTask').value.trim() || '（无特别要求）';
+  var title = document.getElementById('inTitle').value.trim() || '（无题）';
+  var grade = document.getElementById('inGrade').value || '小学';
+  var local = LAST_ISSUES.filter(function(i){return i.type!=='亮点';}).slice(0,12)
+    .map(function(i){ return '【'+i.type+'】“'+i.quote+'”→建议:'+(i.fix||'')+'；'+i.why; }).join('\n');
+  var sys = '你是一位经验丰富、说话温和具体、精通小学语文教学与统编教材的语文教师。批改权永远属于老师，你只提供专业建议与依据，绝不武断贴标签。';
+  var prompt = '【作文题目】'+title+'\n【年级】'+grade+'\n【本次习作要求】'+task+'\n【本地机器初筛结果（仅参考）】\n'+(local||'（无）')+'\n【学生作文全文】\n'+text+
+    '\n\n请输出严格 JSON（不要输出其它任何文字），格式：\n'+
+    '{"issues":[{"type":"病句|用词|标点|结构|内容","quote":"原文片段(不超过40字)","fix":"怎么改","why":"为什么(一句话，说给老师听)"}],'+'"goods":["写得好的一句话(2-3条,引用原文)"],"comment":"总评(120字内：先说2个真实优点，再给1个最重要的改进建议，最后一句鼓励；不空话不套话)","improve":"最重要的一处改进(一句话,具体可操作)","level":"优|良|合格|待提高","sick":"全班都容易犯的1个语言毛病(如有)"}'+
+    '\n注意：只对确定的问题给建议，拿不准的不要列；issues 最多 8 条。';
+  fetchChat(sys, prompt, function(ok, msg){
+    document.getElementById('btnAI').disabled = false;
+    if(!ok){ document.getElementById('aiArea').innerHTML = '<div class="none">❌ AI 调用失败：'+escHtml(msg)+'</div>'; return; }
+    renderAI(msg);
+  });
+}
+function fetchChat(sys, user, cb){
+  var st = S.settings;
+  var body = { model: st.model, messages:[{role:'system',content:sys},{role:'user',content:user}], temperature:0.4, max_tokens:1600 };
+  var url = (st.baseURL||PROVIDERS[st.provider].base||'').replace(/\/$/,'') + '/chat/completions';
+  fetch(url, {
+    method:'POST',
+    headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+(st.apiKey||'') },
+    body: JSON.stringify(body)
+  }).then(function(r){
+    if(!r.ok) return r.json().then(function(e){ throw new Error((e&&e.error&&(e.error.message||JSON.stringify(e.error)))||('HTTP '+r.status)); }).catch(function(e){ if(e instanceof Error) throw e; throw new Error('HTTP '+r.status); });
+    return r.json();
+  }).then(function(d){
+    var content = d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content || '';
+    cb(true, content);
+  }).catch(function(e){ cb(false, e && e.message ? e.message : String(e)); });
+}
+function renderAI(raw){
+  var data = null;
+  try{
+    var m = raw.match(/\{[\s\S]*\}/);
+    data = m ? JSON.parse(m[0]) : null;
+  }catch(e){ data = null; }
+  var box = document.getElementById('aiArea');
+  if(!data){
+    box.innerHTML = '<div class="card" style="background:var(--accent-l);border-color:rgba(216,90,48,.25)">'+
+      '<h3 style="font-size:14.5px">🤖 AI 返回内容（未按格式解析，已原样显示）</h3>'+
+      '<div class="plain">'+escHtml(raw)+'</div></div>';
+    return;
+  }
+  var colors = {病句:'#D9534F', 用词:'#E67E22', 标点:'#3A8FD6', 结构:'#8C6FD8', 内容:'#2E9E5B'};
+  var iss = (data.issues||[]).map(function(x){
+    var c = colors[x.type]||'#8A7A8E';
+    return '<div class="issue"><span class="it" style="background:'+c+'">'+escHtml(x.type||'建议')+'</span><div class="ib">'+
+      '<div class="quote">“'+escHtml(x.quote||'')+'”'+(x.fix?' → <b>'+escHtml(x.fix)+'</b>':'')+'</div>'+
+      (x.why?'<div class="why">'+escHtml(x.why)+'</div>':'')+'</div></div>';
+  }).join('');
+  var goods = (data.goods||[]).map(function(g){ return '<li>'+escHtml(g)+'</li>'; }).join('');
+  var comment = data.comment || '';
+  var improve = data.improve || '';
+  var level = data.level || '';
+  if(level && ['优','良','合格','待提高'].indexOf(level)>=0) setVerdict(null, level);
+  box.innerHTML = '<div class="card ai-out" style="background:var(--accent-l);border-color:rgba(216,90,48,.28);margin-top:10px">'+
+    '<h3 style="font-size:14.5px">🤖 AI 深度批改结果 <span class="ver" style="font-size:9px">建议仅供参考</span></h3>'+
+    '<div class="res-tabs" style="margin-top:8px"><span class="chip on">逐条建议 '+(data.issues||[]).length+' 条</span></div>'+
+    (iss||'<div class="none">未发现确定性问题（老师可放心）</div>')+
+    '<div class="verdict-card"><b style="font-size:13px">🌟 AI 认为写得好的：</b><ul style="margin:4px 0;padding-left:18px">'+goods+'</ul></div>'+
+    (data.sick?'<div class="hint">🧩 可能全班共性的毛病：'+escHtml(data.sick)+'（可带去讲评课）</div>':'')+
+    (improve?'<div class="hint" style="border-left:3px solid var(--accent)"><b>✏️ 最重要的改进：</b>'+escHtml(improve)+'</div>':'')+
+    '</div>';
+  if(comment) document.getElementById('inComment').value = comment;
+  window._aiLevel = level;
+}
+function setVerdict(el, v){
+  CUR_VERDICT = v;
+  document.querySelectorAll('#chipVerdict .chip').forEach(function(c){ c.classList.remove('on'); });
+  if(el) el.classList.add('on');
+  else {
+    document.querySelectorAll('#chipVerdict .chip').forEach(function(c){ if(c.textContent===v) c.classList.add('on'); });
+  }
+  renderPhrases();
+}
+function renderPhrases(){
+  var p = PHRASES[CUR_VERDICT] || [];
+  document.getElementById('phraseBox').innerHTML = p.map(function(x){
+    return '<span class="chip" onclick="insertPhrase(this)">'+escHtml(x.slice(0,12))+'…</span>';
+  }).join('');
+}
+
+/* ================= 评语库 ================= */
+var PHRASES = {
+  '优':['🌟 这篇作文结构清楚、细节生动，看得出你用心观察了。','📌 好词好句真不少，老师都想给你画满波浪线。','✨ 你的进步老师看在眼里，继续保持这份认真！'],
+  '良':['📝 事情写清楚了，如果能再多一点“当时的动作和想法”，画面会更生动。','🌱 结构没问题，试着把最精彩的部分写得更长一些。','👍 语句通顺，错别字也少了，继续加油！'],
+  '合格':['✏️ 按老师说的“先想再写”，把一件事的前因后果理清楚，下次会更好。','📖 多读多积累，好词好句会自己跑到你笔下来。','💪 大胆写、放开写，写错了不怕，老师陪你改。'],
+  '待提高':['🤗 别灰心，把这篇没写完/没写清楚的地方补一补，就是进步。','🌟 先定一个小目标：每天写 2 句“今天最难忘的事”。','📝 老师相信你，下篇我们一起把它写得明明白白。']
+};
+function renderPhrases(){
+  var p = PHRASES[CUR_VERDICT] || [];
+  document.getElementById('phraseBox').innerHTML = p.map(function(x){
+    return '<span class="chip" onclick="insertPhrase(this)">'+escHtml(x.slice(0,12))+'…</span>';
+  }).join('');
+}
+function insertPhrase(el){
+  var txt = (PHRASES[CUR_VERDICT]||[])[Array.prototype.indexOf.call(document.querySelectorAll('#phraseBox .chip'), el)];
+  var ta = document.getElementById('inComment');
+  ta.value = (ta.value?ta.value+'\n':'') + txt;
+  toast('已插入评语句式，可继续修改');
+}
+function genCommentDraft(){
+  var st = LAST_STATS, is = LAST_ISSUES;
+  if(!st){ toast('请先开始体检'); return; }
+  var wordN = is.filter(function(i){return i.type==='错别字';}).length;
+  var longN = is.filter(function(i){return i.type==='标点';}).length;
+  var good = is.filter(function(i){return i.type==='亮点';}).map(function(i){return i.quote;});
+  var d = '【本地数据草稿 · 请老师补充润色】\n';
+  d += '本篇共 '+st.chars+' 字，分 '+st.paras+' 段，写清楚了一件事。';
+  if(good.length) d += '其中“'+good[0]+'”写得很生动。';
+  d += '\n优点①：______（老师补充）\n优点②：______\n改进：';
+  if(wordN) d += '注意 '+wordN+' 处同音字；';
+  if(longN) d += '有几处“一逗到底”，试着用句号断句；';
+  if(!wordN && !longN) d += '本次没有发现明显字词标点问题，主要在______（结构/细节/详略）上再下功夫。';
+  d += '\n结尾鼓励：______';
+  document.getElementById('inComment').value = d;
+  toast('已生成本地评语草稿');
+}
+
+/* ================= 存档 ================= */
+function saveRecord(){
+  var text = (document.getElementById('inText').value||'').trim();
+  var comment = document.getElementById('inComment').value.trim();
+  if(!text){ toast('没有正文可存'); return; }
+  var st = LAST_STATS || stats(text);
+  var iss = LAST_TEXT===text ? LAST_ISSUES : scan(text);
+  var rec = {
+    id: Date.now(),
+    t: new Date().toISOString().slice(0,16).replace('T',' '),
+    title: document.getElementById('inTitle').value.trim() || '（无题）',
+    student: document.getElementById('inStudent').value.trim() || S.settings.defStudent || '未署名',
+    grade: document.getElementById('inGrade').value || S.settings.defGrade || '',
+    text: text,
+    chars: st.chars,
+    errN: iss.filter(function(i){return i.type==='错别字';}).length,
+    comment: comment,
+    verdict: CUR_VERDICT,
+    aiLevel: window._aiLevel || ''
+  };
+  S.records.unshift(rec);
+  save();
+  toast('已存入档案 💾（当前共 '+S.records.length+' 篇）');
+  document.getElementById('cntRec').textContent = '('+S.records.length+')';
+  clearRes();
+}
+function clearRes(){
+  document.getElementById('inComment').value='';
+  window._aiLevel='';
+  CUR_VERDICT='良';
+  document.querySelectorAll('#chipVerdict .chip').forEach(function(c){ c.classList.remove('on'); });
+  setVerdict(document.querySelector('#chipVerdict .chip:nth-child(2)'), '良');
+}
+
+/* ================= 档案 ================= */
+function renderRecs(){
+  var list = document.getElementById('recList');
+  var recs = S.records;
+  var colors = {优:'#C89000', 良:'#2E9E5B', 合格:'#3A8FD6', 待提高:'#D9534F'};
+  document.getElementById('cntRec').textContent = recs.length ? '('+recs.length+')' : '';
+  if(!recs.length){ list.innerHTML = '<div class="none">还没有存档作文。去「✍️ 批改」批一篇，点「存入学生档案」吧～</div>'; return; }
+  list.innerHTML = recs.map(function(r,i){
+    return '<div class="rec" onclick="openRec('+i+')">'+
+      '<div class="ra"><div class="rt">'+escHtml(r.title)+' <span style="font-weight:400;color:var(--ink-l);font-size:12px">· '+escHtml(r.student)+(r.grade?' · '+escHtml(r.grade):'')+'</span></div>'+
+      '<div class="rm">'+escHtml((r.text||'').replace(/\s/g,'').slice(0,60))+'… · '+r.chars+'字 · 错字'+r.errN+' · '+r.t+'</div></div>'+
+      '<span class="lv '+r.verdict+'">'+r.verdict+'</span>'+
+      '<button class="del" onclick="event.stopPropagation();delRec('+i+')">✕</button></div>';
+  }).join('');
+}
+function openRec(i){
+  var r = S.records[i]; if(!r) return;
+  var box = document.getElementById('modalBox');
+  box.innerHTML = '<button class="close-x" onclick="closeModal()">✕</button>'+
+    '<h3>📄 '+escHtml(r.title)+' <span style="font-size:12px;color:var(--ink-l)">'+escHtml(r.student)+' · '+r.t+' · '+r.chars+'字</span></h3>'+
+    '<div class="paper" style="font-size:15px;line-height:30px">'+escHtml(r.text).replace(/\n/g,'</p><p class="p">').split('</p><p class="p">').map(function(x,i){ return i?('<p class="p">'+x+'</p>'):x; }).join('').replace(/^/, '<p class="p">').replace(/$/, '</p>').replace(/<p class="p"><\/p>/g,'')+'</div>'+
+    (r.comment?'<div class="card" style="background:var(--accent-l);border-color:rgba(216,90,48,.2);box-shadow:none;margin-top:12px"><b>📝 评语（'+r.verdict+'）</b><div class="plain" style="border:none;background:transparent;padding:4px 0">'+escHtml(r.comment)+'</div></div>':'')+
+    '<div style="display:flex;gap:8px;margin-top:12px"><button class="btn ghost small" onclick="printRec('+i+')">🖨 打印这篇</button></div>';
+  openModal();
+}
+function printRec(i){
+  var r = S.records[i]; if(!r) return;
+  var html = '<div style="text-align:center;padding:10px"><h2 style="margin:4px 0">'+escHtml(r.title)+'</h2>'+
+    '<div style="color:#666">'+escHtml(r.student)+(r.grade?' · '+escHtml(r.grade):'')+' · '+r.t+' · '+r.chars+' 字</div></div>'+
+    '<div style="white-space:pre-wrap;line-height:1.9">'+escHtml(r.text)+'</div>'+
+    (r.comment?'<hr><b>总评（'+r.verdict+'）：</b><br><div style="white-space:pre-wrap">'+escHtml(r.comment)+'</div>':'');
+  var w = window.open('','_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>打印</title><style>body{font-family:"SimSun",serif;max-width:720px;margin:24px auto;padding:0 18px;color:#222}pre{font-family:inherit}</style></head><body>'+html+'</body></html>');
+  w.document.close(); w.focus(); setTimeout(function(){ w.print(); }, 250);
+}
+function delRec(i){
+  if(!confirm('确定删除这篇存档？')) return;
+  S.records.splice(i,1); save(); renderRecs(); toast('已删除');
+}
+function exportJSON(){
+  download('作文批改助手-备份-'+new Date().toISOString().slice(0,10)+'.json', JSON.stringify(S,null,1));
+}
+function exportCSV(){
+  var rows = [['时间','题目','学生','年级','字数','错字数','等第','评语']];
+  S.records.forEach(function(r){
+    rows.push([r.t, r.title, r.student, r.grade||'', r.chars, r.errN, r.verdict, (r.comment||'').replace(/\n/g,' ')]);
+  });
+  download('作文批改清单.csv', '\ufeff'+rows.map(function(a){return a.map(function(x){return '"'+String(x).replace(/"/g,'""')+'"';}).join(',');}).join('\n'));
+}
+function importJSON(input){
+  var f = input.files && input.files[0]; if(!f) return;
+  var rd = new FileReader();
+  rd.onload = function(e){
+    try{
+      var d = JSON.parse(e.target.result);
+      if(d && d.records){ S = Object.assign(defaultState(), d); if(!S.settings) S.settings=defaultState().settings; save(); renderRecs(); toast('导入成功，共 '+S.records.length+' 篇'); }
+      else throw new Error('格式不对');
+    }catch(err){ toast('导入失败：不是有效的备份文件'); }
+    input.value='';
+  };
+  rd.readAsText(f);
+}
+function download(name, txt){
+  try{
+    if(window.URL && URL.createObjectURL){
+      var a = document.createElement('a');
+      var blob = new Blob([txt], {type:'text/plain;charset=utf-8'});
+      a.href = URL.createObjectURL(blob); a.download = name;
+      document.body.appendChild(a); a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+    } else { throw new Error('no-blob'); }
+  }catch(e){
+    var a2 = document.createElement('a');
+    a2.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(txt);
+    a2.download = name; a2.click();
+  }
+  toast('已导出：'+name);
+}
+
+/* ================= 讲评统计 ================= */
+function runStats(limit){
+  var recs = S.records;
+  if(limit) recs = recs.slice(0, limit);
+  var body = document.getElementById('statBody');
+  if(!recs.length){ body.innerHTML = '<div class="none">档案里还没有作文，先批几篇存档再来统计。</div>'; document.getElementById('txtOut').style.display='none'; return; }
+  var wordMap = {}, longN = 0, deN = 0, charsSum = 0, errSum = 0;
+  var goods = [];
+  var sentences = 0;
+  recs.forEach(function(r){
+    var iss = scan(r.text||'');
+    var st = stats(r.text||'');
+    charsSum += st.chars; sentences += st.sents;
+    iss.forEach(function(i){
+      if(i.type==='错别字'){ wordMap[i.quote]=(wordMap[i.quote]||0)+1; errSum++; }
+      if(i.type==='标点') longN++;
+      if(i.type==='表达') deN++;
+      if(i.type==='亮点') goods.push(i.quote);
+    });
+  });
+  var top = Object.keys(wordMap).sort(function(a,b){return wordMap[b]-wordMap[a];}).slice(0,10);
+  var avgC = Math.round(charsSum/recs.length);
+  document.getElementById('statMeta').textContent = '（统计 '+recs.length+' 篇，平均 '+avgC+' 字）';
+  var html = '<div class="ov">'+
+    '<span class="o">统计篇数 <b>'+recs.length+'</b></span>'+
+    '<span class="o">平均字数 <b>'+avgC+'</b></span>'+
+    '<span class="o hot">疑似错字 <b>'+errSum+'</b></span>'+
+    '<span class="o hot">长句串 <b>'+longN+'</b></span>'+
+    '<span class="o">的/地/得 <b>'+deN+'</b></span></div>';
+  html += '<b style="font-size:14px">🔴 高频疑似错词 TOP10</b>';
+  html += top.length
+    ? '<table class="mini"><tr><th>#</th><th>错词</th><th>出现</th><th>建议改为</th></tr>'+top.map(function(w,i){
+        var pair = BUILTIN_WORDS.concat(customWords()).filter(function(p){return p[0]===w;})[0];
+        return '<tr><td>'+(i+1)+'</td><td><b style="color:var(--red)">'+escHtml(w)+'</b></td><td>'+wordMap[w]+' 次</td><td>'+escHtml(pair?pair[1]:'？')+'</td></tr>';
+      }).join('')+'</table>'
+    : '<div class="none" style="margin-top:8px">没有发现高频错词，真棒 🎉</div>';
+  html += '<b style="font-size:14px;display:block;margin-top:13px">🔵 讲评要点</b><ul style="margin:6px 0 0;padding-left:19px;font-size:13px">'+
+    (longN?'<li>有 '+longN+' 处“一逗到底”长句——这节讲评可以专门练“断句”。</li>':'<li>断句总体干净，没有明显“一逗到底”。</li>')+
+    (deN?'<li>出现 '+deN+' 处“的/地/得”提示，可做一次专项小练。</li>':'<li>“的/地/得”没有集中问题。</li>')+
+    (top.length?'<li>错得最多的字是「'+top[0]+'」（'+wordMap[top[0]]+' 次），全班一起纠正记忆。</li>':'')+
+    '</ul>';
+  if(goods.length){
+    html += '<b style="font-size:14px;display:block;margin-top:13px">🌟 值得朗读的句子（来自学生作文）</b><ul style="margin:6px 0 0;padding-left:19px;font-size:13px;color:var(--ink-l)">'+
+      goods.slice(0,8).map(function(g){ return '<li>“'+escHtml(g)+'”</li>'; }).join('')+'</ul>';
+  }
+  body.innerHTML = html;
+  /* 生成一页纸文本 */
+  var t = '【作文讲评课一页纸】 统计 '+recs.length+' 篇 · 平均 '+avgC+' 字\n\n';
+  t += '一、高频错词 TOP'+Math.min(top.length,8)+'：\n';
+  if(top.length) top.slice(0,8).forEach(function(w,i){
+    var pair = BUILTIN_WORDS.concat(customWords()).filter(function(p){return p[0]===w;})[0];
+    t += (i+1)+'. '+w+'（'+wordMap[w]+'次）→ 正确：'+(pair?pair[1]:'？')+'\n';
+  }); else t += '（无）\n';
+  t += '\n二、共性语言问题：\n'+(longN?'· 长句“一逗到底” '+longN+' 处，练断句\n':'· 断句总体干净\n')+(deN?'· 的/地/得 提示 '+deN+' 处，做专项小练\n':'');
+  t += '\n三、值得朗读：\n'+(goods.length?goods.slice(0,5).map(function(g){return '· “'+g+'”';}).join('\n'):'（待补充）')+'\n';
+  t += '\n四、本课三个重点（老师定）：\n1. ______\n2. ______\n3. ______\n';
+  var out = document.getElementById('txtOut');
+  out.textContent = t; out.style.display = 'block';
+  window._outText = t;
+}
+function copyOut(){ if(window._outText){ copyText(window._outText); } else toast('先点统计'); }
+function dlOut(){ if(window._outText) download('讲评一页纸.txt', window._outText); else toast('先点统计'); }
+function copyText(txt){
+  var done = function(){ toast('已复制到剪贴板 📋'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done).catch(function(){ fb(txt); done(); }); }
+  else { fb(txt); done(); }
+}
+function fb(txt){ var ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); }
+
+/* ================= 设置 ================= */
+function loadSettingsUI(){
+  var st = S.settings;
+  document.getElementById('setProvider').value = st.provider || 'deepseek';
+  document.getElementById('setModel').value = st.model || PROVIDERS[st.provider||'deepseek'].model;
+  document.getElementById('setKey').value = st.apiKey || '';
+  document.getElementById('setBase').value = st.baseURL || '';
+  document.getElementById('setDefStudent').value = st.defStudent || '';
+  document.getElementById('setWords').value = st.words || '';
+  providerChange();
+}
+function saveSettings(){
+  var st = S.settings;
+  st.provider = document.getElementById('setProvider').value;
+  st.model = document.getElementById('setModel').value.trim() || PROVIDERS[st.provider].model;
+  st.apiKey = document.getElementById('setKey').value.trim();
+  st.baseURL = document.getElementById('setBase').value.trim();
+  st.defStudent = document.getElementById('setDefStudent').value.trim();
+  S.settings = st; save(); toast('设置已保存');
+}
+function saveWords(){
+  S.settings.words = document.getElementById('setWords').value;
+  save(); toast('词表已保存');
+}
+function testAI(){
+  var st = S.settings;
+  if(!st.apiKey){ toast('先填 API Key'); return; }
+  toast('测试中…');
+  fetchChat('你是测试助手，只回复两个字：正常。', '请回复"正常"', function(ok,msg){
+    if(ok){ toast('✅ 连接正常，AI 可用'); }
+    else toast('❌ 连接失败：'+msg.slice(0,60));
+  });
+}
+function resetAll(){
+  if(!confirm('确定清空全部档案与设置？此操作不可恢复（建议先导出备份）')) return;
+  S = defaultState(); localStorage.removeItem(STORE_KEY); save();
+  renderRecs(); loadSettingsUI(); clearRes();
+  document.getElementById('resCard').style.display='none';
+  toast('已清空');
+}
+
+/* ================= 导航 & 杂项 ================= */
+function goTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.toggle('on', t.dataset.tab===name); });
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('on'); });
+  document.getElementById('page-'+name).classList.add('on');
+  if(name==='files') renderRecs();
+  if(name==='stats') renderRecs();
+  if(name==='set') loadSettingsUI();
+  if(name==='batch') renderPhrases();
+  window.scrollTo({top:0});
+}
+function openModal(){ document.getElementById('mask').classList.add('on'); }
+function closeModal(){ document.getElementById('mask').classList.remove('on'); }
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(t._h); t._h = setTimeout(function(){ t.classList.remove('on'); }, 2200);
+}
+function fillDemo(){
+  document.getElementById('inTitle').value = '那次玩得真高兴';
+  document.getElementById('inStudent').value = '';
+  document.getElementById('inText').value =
+    '星期天，妈妈带我去公园玩，我高兴极了。公园里的花开得很漂亮，红的、黄的、紫的，像一张彩色的大地毯。\n' +
+    '我先玩滑梯。滑梯很高很高，我站在上面腿都发抖了，但是我闭上眼睛，还是永敢地滑了下去，风在耳边呼呼的响，真刺激呀！\n' +
+    '后来我们又去划船，小船摇呀摇，湖水清清亮亮的，我看见自己的影子在水里荡来荡去，好像在对我笑，我心里美滋滋的，真舍不得离开。\n' +
+    '那天我玩得真高兴。回家的路上，我一直跟妈妈说：下次还要来！';
+  toast('已填入示例作文，点「开始体检」试试');
+}
+function clearText(){
+  document.getElementById('inTitle').value='';
+  document.getElementById('inStudent').value='';
+  document.getElementById('inTask').value='';
+  document.getElementById('inText').value='';
+  document.getElementById('resCard').style.display='none';
+  document.getElementById('inComment').value='';
+  toast('已清空');
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeModal(); });
+
+/* ============ boot ============ */
+load();
+save();  /* 首访即落库，保证存储键 zuowen_v1 存在 */
+renderPhrases();
+setVerdict(null, '良');
+(function(){
+  var lv = S.last || {};
+  if(lv.title) document.getElementById('inTitle').value = lv.title;
+  if(lv.text) document.getElementById('inText').value = lv.text;
+  if(lv.grade) document.getElementById('inGrade').value = lv.grade;
+  if(lv.student) document.getElementById('inStudent').value = lv.student;
+})();
+</script>
+</body>
+</html>
