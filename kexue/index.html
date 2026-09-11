@@ -10,7 +10,7 @@
 
 <meta name="theme-color" content="#FFD3E0">
 
-<title>科学工作台 · 教科版教案（全册52份）</title>
+<title>dada · 个人效率工作台</title>
 
 <style>
 
@@ -1484,6 +1484,8 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;min-width:480px}
 
   <button class="nav-item" data-page="lessons"><span class="ic">📒</span>教案库</button>
 
+  <button class="nav-item" data-page="demos"><span class="ic">🔬</span>互动演示</button>
+
   <button class="nav-item" data-page="schedule"><span class="ic">🔔</span>课程表</button>
 
   <button class="nav-item" data-page="students"><span class="ic">🐰</span>学生追踪</button>
@@ -1510,7 +1512,7 @@ table.tbl{width:100%;border-collapse:collapse;font-size:.88rem;min-width:480px}
 
     <button class="settings-btn" onclick="openSettings()">⚙️ 设置</button>
 
-    <div class="ver" title="版本">v1.0</div>
+    <div class="ver" title="版本">v1.4</div>
 
   </div>
 
@@ -1556,7 +1558,7 @@ function load(){
 
   try{
 
-    const raw = localStorage.getItem('kexue_v1');
+    const raw = localStorage.getItem('miffyWorkbench_v1');
 
     if(raw){
 
@@ -1588,11 +1590,11 @@ function load(){
 
   S.profile = Object.assign(d.profile, S.profile);
 
-  // 品牌迁移：旧本地数据里遗留的"米菲"标题一律替换为"科学工作台"
+  // 品牌迁移：旧本地数据里遗留的"米菲"标题一律替换为"dada 工作台"
 
   if(S.profile && S.profile.title && String(S.profile.title).indexOf('米菲')>-1){
 
-    S.profile.title = '科学工作台';
+    S.profile.title = 'dada 工作台';
 
   }
 
@@ -1612,7 +1614,7 @@ function save(){
 
   try{
 
-    localStorage.setItem('kexue_v1', JSON.stringify(S));
+    localStorage.setItem('miffyWorkbench_v1', JSON.stringify(S));
 
   }catch(e){
 
@@ -1708,7 +1710,7 @@ function showBanner(text){
 
   if(window.Notification && Notification.permission==='granted'){
 
-    try{ new Notification('科学工作台 💗', {body:text, icon:IMG_MASCOT}); }catch(_){}
+    try{ new Notification('dada 工作台 💗', {body:text, icon:IMG_MASCOT}); }catch(_){}
 
   }
 
@@ -1740,7 +1742,7 @@ function readFileAsDataURL(file){
 
 /* ============== 状态默认值 ============== */
 
-const STORE_KEY = 'kexue_v1';
+const STORE_KEY = 'miffyWorkbench_v1';
 
 let S = {};
 
@@ -1942,7 +1944,7 @@ function renderPages(){
 
         ${stickers}
 
-        ${id==='home' ? `<div class="cover-edit"><button type="button" title="更换首页封面" onclick="pickCover(event)">🖼️ 换封面</button>${S.profile.homeCover?`<button type="button" class="ghost" title="恢复默认封面" onclick="resetCover(event)">恢复</button>`:''}</div>` : ''}
+        ${id==='home' ? `<div class="cover-edit"><button type="button" title="更换首页封面" onclick="pickCover(event)">🖼️ 换封面</button>${S.profile.homeCover?`<button type="button" class="ghost" title="恢复默认dada封面" onclick="resetCover(event)">恢复</button>`:''}</div>` : ''}
 
       </div>
 
@@ -4058,7 +4060,7 @@ function renderDigest(art){
 
     if(art.notes[i]){
 
-      html += '<div class="annot"><div class="who">'+bunnyHeadSVG('#FFC2D4',15)+' 科学批注 · '+escapeHtml(art.notes[i].t)+'</div><div>'+escapeHtml(art.notes[i].d)+'</div></div>';
+      html += '<div class="annot"><div class="who">'+bunnyHeadSVG('#FFC2D4',15)+' dada批注 · '+escapeHtml(art.notes[i].t)+'</div><div>'+escapeHtml(art.notes[i].d)+'</div></div>';
 
     }
 
@@ -4750,13 +4752,13 @@ function applyProfile(){
 
   const t = document.getElementById('brandTitle');
 
-  if(t) t.innerHTML = escapeHtml(S.profile.title||'科学工作台') + ' <span class="pen">✏️</span>';
+  if(t) t.innerHTML = escapeHtml(S.profile.title||'dada 工作台') + ' <span class="pen">✏️</span>';
 
   const s = document.getElementById('brandSub');
 
   if(s) s.textContent = S.profile.sub||'老师的小助手';
 
-  document.title = (S.profile.title||'科学工作台') + ' · 科学工作台';
+  document.title = (S.profile.title||'dada 工作台') + ' · 个人效率工作台';
 
 }
 
@@ -5020,7 +5022,7 @@ window.onAvatarPicked = function(ev){
 
 window.resetAvatar = function(){
 
-  S.profile.avatar = ''; save(); applyProfile(); toast('已恢复默认头像');
+  S.profile.avatar = ''; save(); applyProfile(); toast('已恢复默认dada头像');
 
 };
 
@@ -5080,7 +5082,7 @@ window.resetCover = function(ev){
 
   if(ev) ev.stopPropagation();
 
-  S.profile.homeCover = ''; save(); renderPages(); switchPage(S.activePage); applyProfile(); toast('已恢复默认封面');
+  S.profile.homeCover = ''; save(); renderPages(); switchPage(S.activePage); applyProfile(); toast('已恢复默认dada封面');
 
 };
 
@@ -5094,7 +5096,7 @@ window.editBrandName = function(){
 
       <label class="lbl">工作台名字</label>
 
-      <input class="inp" id="pfTitle" value="${escapeHtml(S.profile.title)}" maxlength="20" placeholder="比如：科学工作台">
+      <input class="inp" id="pfTitle" value="${escapeHtml(S.profile.title)}" maxlength="20" placeholder="比如：dada 工作台">
 
       <label class="lbl">副标题（一句话介绍）</label>
 
@@ -5116,7 +5118,7 @@ window.editBrandName = function(){
 
 window.saveProfile = function(){
 
-  S.profile.title = (document.getElementById('pfTitle').value||'').trim() || '科学工作台';
+  S.profile.title = (document.getElementById('pfTitle').value||'').trim() || 'dada 工作台';
 
   S.profile.sub = (document.getElementById('pfSub').value||'').trim() || '老师的小助手';
 
@@ -5147,7 +5149,6 @@ function renderSchedule(box){
         <button class="btn sm b-cream" onclick="exportCls()">📤 导出 CSV</button>
 
         <button class="btn sm b-ghost" onclick="openEdit('classMulti',null)">⚡ 批量粘贴</button>
-        <button class="btn sm b-blue" onclick="openEdit('classCfg',null)">⚙ 作息时间</button>
 
       </div>
 
@@ -5173,19 +5174,11 @@ function renderSchedule(box){
 
 
 
-/* ── 作息配置：点「⚙ 作息时间」可自定义，存在本机 ── */
-const CLS_DEF = { days: ['一','二','三','四','五'], periods: ['第1节','第2节','第3节','第4节','第5节','第6节','第7节','第8节'], times: ['08:00','08:50','09:50','10:40','11:30','13:30','14:20','15:10'] };
-function clsCfg(){
-  var c = S.class.cfg;
-  if(!c || !c.periods || !c.periods.length) c = S.class.cfg = {days:CLS_DEF.days.slice(), periods:CLS_DEF.periods.slice(), times:CLS_DEF.times.slice()};
-  if(!c.days || !c.days.length) c.days = CLS_DEF.days.slice();
-  if(!c.times) c.times = [];
-  while(c.times.length < c.periods.length) c.times.push('');
-  return c;
-}
-function clsDays(){ return clsCfg().days; }
-function clsPeriods(){ return clsCfg().periods; }
-function clsTimes(){ return clsCfg().times; }
+const CLS_DAYS = ['一','二','三','四','五'];
+
+const CLS_PERIODS = ['第1节','第2节','第3节','第4节','第5节','第6节','第7节','第8节'];
+
+const CLS_TIMES = ['08:00','08:50','09:50','10:40','11:30','13:30','14:20','15:10'];
 
 
 
@@ -5193,20 +5186,19 @@ function drawClsGrid(){
 
   const g = document.getElementById('clsGrid');
 
-  g.style.gridTemplateColumns = '70px repeat(' + clsDays().length + ',1fr)';
   let html = '<div class="h">节次</div>';
 
-  clsDays().forEach((d,i)=>{ html += `<div class="h">星期${d}</div>`; });
+  CLS_DAYS.forEach((d,i)=>{ html += `<div class="h">星期${d}</div>`; });
 
   const now = new Date();
 
   const curDay = now.getDay(); // 0-6
 
-  for(let p=0;p<clsPeriods().length;p++){
+  for(let p=0;p<CLS_PERIODS.length;p++){
 
-    html += `<div class="h">${clsPeriods()[p]}<br><small style="font-size:.65rem;color:var(--ink-l)">${clsTimes()[p]}</small></div>`;
+    html += `<div class="h">${CLS_PERIODS[p]}<br><small style="font-size:.65rem;color:var(--ink-l)">${CLS_TIMES[p]}</small></div>`;
 
-    for(let d=0;d<clsDays().length;d++){
+    for(let d=0;d<5;d++){
 
       const item = S.class.items.find(x => x.day===d && x.period===p);
 
@@ -5244,7 +5236,7 @@ function drawTodayCls(){
 
   const curDay = new Date().getDay();
 
-  if(curDay<1 || curDay>clsDays().length){
+  if(curDay<1 || curDay>5){
 
     document.getElementById('todayClassList').innerHTML = `<div class="empty"><span class="pic">🌙</span>今天是周末，休息一下吧</div>`;
 
@@ -5274,13 +5266,13 @@ function drawTodayCls(){
 
   function inPeriod(p){
 
-    const t = clsTimes()[p] || '00:00';
+    const t = CLS_TIMES[p] || '00:00';
 
     const [h,m] = t.split(':').map(Number);
 
     const start = h*60+m;
 
-    const next = p+1<clsTimes().length ? (parseInt(clsTimes()[p+1].split(':')[0])*60 + parseInt(clsTimes()[p+1].split(':')[1])) : (start+50);
+    const next = p+1<CLS_TIMES.length ? (parseInt(CLS_TIMES[p+1].split(':')[0])*60 + parseInt(CLS_TIMES[p+1].split(':')[1])) : (start+50);
 
     return nowMin>=start && nowMin<next;
 
@@ -5298,11 +5290,11 @@ function drawTodayCls(){
 
       <div class="it-main">
 
-        <div class="it-title">${escapeHtml(it.name||'')} <span class="badge blue">${clsPeriods()[it.period]||''}</span> ${active?'<span class="badge mint">进行中</span>':''}</div>
+        <div class="it-title">${escapeHtml(it.name||'')} <span class="badge blue">${CLS_PERIODS[it.period]||''}</span> ${active?'<span class="badge mint">进行中</span>':''}</div>
 
         <div class="it-sub">
 
-          <span>⏰ ${clsTimes()[it.period]||''}</span>
+          <span>⏰ ${CLS_TIMES[it.period]||''}</span>
 
           ${it.room?`<span>📍 ${escapeHtml(it.room)}</span>`:''}
 
@@ -5324,11 +5316,11 @@ window.exportCls = function(){
 
   let csv = '星期,节次,时间,科目,教室\n';
 
-  const dayName = clsDays();
+  const dayName = ['一','二','三','四','五'];
 
   for(const it of S.class.items.sort((a,b)=>(a.day-b.day)||(a.period-b.period))){
 
-    csv += `星期${dayName[it.day]},${clsPeriods()[it.period]},${clsTimes()[it.period]},${(it.name||'').replace(/,/g,'，')},${(it.room||'').replace(/,/g,'，')}\n`;
+    csv += `星期${dayName[it.day]},${CLS_PERIODS[it.period]},${CLS_TIMES[it.period]},${(it.name||'').replace(/,/g,'，')},${(it.room||'').replace(/,/g,'，')}\n`;
 
   }
 
@@ -7706,7 +7698,7 @@ window.openEdit = function(type, a, b){
 
         <select class="inp" id="clsDay">
 
-          ${clsDays().map((d,i)=>`<option value="${i}" ${item && item.day===i?'selected':''}>星期${d}</option>`).join('')}
+          ${CLS_DAYS.map((d,i)=>`<option value="${i}" ${item && item.day===i?'selected':''}>星期${d}</option>`).join('')}
 
         </select>
 
@@ -7714,7 +7706,7 @@ window.openEdit = function(type, a, b){
 
         <select class="inp" id="clsPeriod">
 
-          ${clsPeriods().map((p,i)=>`<option value="${i}" ${item && item.period===i?'selected':''}>${p}（${clsTimes()[i]}）</option>`).join('')}
+          ${CLS_PERIODS.map((p,i)=>`<option value="${i}" ${item && item.period===i?'selected':''}>${p}（${CLS_TIMES[i]}）</option>`).join('')}
 
         </select>
 
@@ -7733,36 +7725,11 @@ window.openEdit = function(type, a, b){
           ${item?`<button class="btn danger" onclick="delCls('${item.id}')">删除</button>`:''}
 
           <button class="btn b-blue" onclick="saveCls('${item?item.id:''}')">保存</button>
+
         </div>`
+
     });
-  } else if(type==='classCfg'){
-    const c = clsCfg();
-    const WEEK = ['一','二','三','四','五','六','日'];
-    showModal({
-      title: '⚙ 作息时间设置',
-      bodyHtml: `
-        <p style="color:var(--ink-l);font-size:.85rem;margin:0 0 12px">改节次名称和上课时间。已排的课会自动跟着平移，不会丢。</p>
-        <label class="lbl">上课日</label>
-        <div id="cfgDays" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">
-          ${WEEK.map((d,i)=>`<label style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:.85rem;cursor:pointer"><input type="checkbox" value="${i}" ${c.days.indexOf(d)>=0?'checked':''}> 周${d}</label>`).join('')}
-        </div>
-        <label class="lbl">节次与时间</label>
-        <div id="cfgRows" style="display:flex;flex-direction:column;gap:6px">
-          ${c.periods.map((p,i)=>`<div style="display:flex;gap:6px;align-items:center">
-            <input class="inp" data-pname value="${escapeHtml(p)}" placeholder="节次名称" style="flex:1">
-            <input class="inp" data-ptime type="time" value="${escapeHtml(c.times[i]||'')}" style="width:112px">
-            <button class="btn xs b-ghost" onclick="this.parentNode.remove()">✕</button>
-          </div>`).join('')}
-        </div>
-        <div style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn sm b-mint" onclick="addCfgRow()">+ 加一节</button>
-          <button class="btn sm b-ghost" onclick="resetCfg()">↺ 恢复默认</button>
-        </div>
-        <div style="margin-top:14px;display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn b-ghost" onclick="closeModal()">取消</button>
-          <button class="btn b-blue" onclick="saveClsCfg()">保存</button>
-        </div>`
-    });
+
   } else if(type==='classMulti'){
 
     showModal({
@@ -8199,8 +8166,9 @@ window.bulkImportCls = function(){
 
     const day = +m[1]-1, period = +m[2]-1;
 
-if(day<0 || day>=clsDays().length) continue;
-    if(period<0 || period>=clsPeriods().length) continue;
+    if(day<0 || day>4) continue;
+
+    if(period<0 || period>7) continue;
 
     S.class.items = S.class.items.filter(x => !(x.day===day && x.period===period));
 
@@ -8216,52 +8184,6 @@ if(day<0 || day>=clsDays().length) continue;
 
   toast('✅ 已导入');
 
-};
-
-window.addCfgRow = function(){
-  const box = document.getElementById('cfgRows');
-  if(!box) return;
-  const d = document.createElement('div');
-  d.style.cssText = 'display:flex;gap:6px;align-items:center';
-  d.innerHTML = '<input class="inp" data-pname placeholder="节次名称" style="flex:1">'
-    + '<input class="inp" data-ptime type="time" style="width:112px">'
-    + '<button class="btn xs b-ghost" onclick="this.parentNode.remove()">✕</button>';
-  box.appendChild(d);
-};
-
-window.resetCfg = function(){
-  S.class.cfg = {days:CLS_DEF.days.slice(), periods:CLS_DEF.periods.slice(), times:CLS_DEF.times.slice()};
-  save(); closeModal(); drawClsGrid();
-  toast('↺ 已恢复默认作息（课程安排保留）');
-};
-
-window.saveClsCfg = function(){
-  const WEEK = ['一','二','三','四','五','六','日'];
-  const dayBox = document.getElementById('cfgDays');
-  const rowBox = document.getElementById('cfgRows');
-  if(!dayBox || !rowBox) return;
-  const days = Array.prototype.slice.call(dayBox.querySelectorAll('input:checked')).map(function(x){ return +x.value; });
-  const names = Array.prototype.slice.call(rowBox.querySelectorAll('[data-pname]')).map(function(x){ return x.value.trim(); });
-  const times = Array.prototype.slice.call(rowBox.querySelectorAll('[data-ptime]')).map(function(x){ return x.value; });
-  if(!days.length) return toast('至少选一个上课日');
-  const keep = [];
-  names.forEach(function(n,i){ if(n) keep.push({n:n, t:times[i]||''}); });
-  if(!keep.length) return toast('至少保留一个节次');
-  days.sort(function(a,b){ return a-b; });
-  const oldP = clsPeriods().slice();
-  const oldD = clsDays().slice();
-  const newDays = days.map(function(i){ return WEEK[i]; });
-  // 已排的课按「星期名 / 节次名」重新映射，对不上就夹到最接近的一格
-  S.class.items.forEach(function(it){
-    const di = newDays.indexOf(oldD[it.day]);
-    it.day = di>=0 ? di : Math.min(it.day, newDays.length-1);
-    const pi = keep.findIndex(function(k){ return k.n===oldP[it.period]; });
-    it.period = pi>=0 ? pi : Math.min(it.period, keep.length-1);
-  });
-  S.class.items = S.class.items.filter(function(it){ return it.day < newDays.length && it.period < keep.length; });
-  S.class.cfg = {days:newDays, periods:keep.map(function(k){return k.n;}), times:keep.map(function(k){return k.t;})};
-  save(); closeModal(); drawClsGrid();
-  toast('✅ 作息已更新');
 };
 
 
@@ -8664,7 +8586,7 @@ window.importClsCsv = function(){
 
     const day = +m[1]-1, period = +m[2]-1;
 
-    if(day<0||day>=clsDays().length||period<0||period>=clsPeriods().length) continue;
+    if(day<0||day>4||period<0||period>7) continue;
 
     S.class.items = S.class.items.filter(x => !(x.day===day && x.period===period));
 
@@ -8970,7 +8892,7 @@ window.exportData = function(){
 
   a.href = url;
 
-  a.download = '科学工作台_备份_'+ymdhms().replace(/[: ]/g,'-')+'.json';
+  a.download = 'dada 工作台_备份_'+ymdhms().replace(/[: ]/g,'-')+'.json';
 
   document.body.appendChild(a);
 
@@ -9268,7 +9190,7 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
 /* ==========================================================
 
-   科学老师增补包 v1.0（在原 科学工作台基础上叠加，不改动原代码）
+   科学老师增补包 v1.0（在原 dada 工作台基础上叠加，不改动原代码）
 
    1) 新增「教案库」页面（教科版 2024 新教材 四上+五上）
 
@@ -11510,6 +11432,86 @@ function sciInjectPanel(box){
   };
 })();
 
+
+
+
+/* ================= v1.4 互动演示页 ================= */
+
+/* ---------- 1. 注册「互动演示」页面 ---------- */
+(function(){
+  if(PAGES.indexOf('demos')<0){
+    const i = PAGES.indexOf('lessons');
+    if(i>=0) PAGES.splice(i+1,0,'demos'); else PAGES.push('demos');
+  }
+})();
+PAGE_META.demos = {t:'互动演示', s:'可投屏的交互实验，先预演再动手 🔬', tag:'Demo', em:'🔬'};
+if(typeof CARD_IMG_POS!=='undefined') CARD_IMG_POS.demos = 'center 38%';
+
+/* ---------- 2. 演示内容源（内嵌，离线可用） ---------- */
+const SCI_DEMO_SOURCES = {};
+SCI_DEMO_SOURCES.friction = "<!DOCTYPE html>\n<html lang=\"zh-CN\" data-page-node-id=\"D4fn9SDseDPJJgR0t0waGE\">\n<head data-page-node-id=\"AjkaPCaL7me3c45GOTN9Ig\">\n<meta charset=\"UTF-8\" data-page-node-id=\"ft9y21JlhyiFOOvCZUeDBP\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\" data-page-node-id=\"REiokytUXEZtsVvEmVXeuW\">\n<title>运动与摩擦力 · 交互实验室<\/title>\n<style>\n  *{box-sizing:border-box}\n  body{background:#FFF8EE;color:#3D2E20;margin:0;padding:18px;font-family:\"PingFang SC\",\"Microsoft YaHei\",\"SimHei\",sans-serif}\n  .wrap{max-width:1080px;margin:0 auto}\n  h1{font-size:27px;margin:4px 0 10px}\n  h1 .accent{color:#E4573D}\n  .question{background:#F7C948;border-radius:12px;padding:10px 16px;font-size:19px;font-weight:600;line-height:1.5}\n  svg#scene{width:100%;background:#FDF3E3;border-radius:14px;display:block;margin-top:12px;border:2px solid #EFE2CE}\n  .panel{display:flex;gap:16px;flex-wrap:wrap;align-items:center;background:#fff;border:2px solid #EFE2CE;border-radius:14px;padding:12px 16px;margin-top:12px}\n  .lbl{font-size:17px;font-weight:700;margin-right:6px}\n  .surface-btn{font-size:16px;padding:8px 13px;border-radius:10px;border:2px solid #D8C9B4;background:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:7px}\n  .surface-btn .dot{width:14px;height:14px;border-radius:4px;display:inline-block;border:1px solid rgba(0,0,0,.15)}\n  .surface-btn.sel{background:#E4573D;border-color:#E4573D;color:#fff}\n  .stepper button{font-size:20px;font-weight:800;width:40px;height:40px;border-radius:10px;border:2px solid #D8C9B4;background:#fff;cursor:pointer}\n  .stepper span{display:inline-block;min-width:64px;text-align:center;font-size:19px;font-weight:700}\n  button.primary{font-size:18px;font-weight:700;padding:10px 20px;border-radius:12px;border:none;background:#2F7FB5;color:#fff;cursor:pointer}\n  button.primary:disabled{background:#A9C4D6;cursor:not-allowed}\n  button.ghost{font-size:17px;padding:9px 16px;border-radius:12px;border:2px solid #D8C9B4;background:#fff;cursor:pointer}\n  .readout{margin-left:auto;text-align:center;background:#FFF6F0;border:2px solid #F2CDBE;border-radius:12px;padding:4px 18px}\n  .readout .lbl{font-size:14px;color:#8A6A44}\n  #reading{font-size:42px;font-weight:800;color:#B3402A;line-height:1;font-family:Consolas,monospace}\n  .readout .unit{font-size:17px;color:#8A6A44;font-weight:700}\n  .hint{margin-top:10px;background:#FFF3C9;border:2px dashed #E0B23C;border-radius:10px;padding:9px 14px;font-size:17px}\n  table{width:100%;border-collapse:collapse;margin-top:12px;background:#fff;border-radius:12px;overflow:hidden}\n  th,td{border:1px solid #E8DCCE;padding:7px 10px;font-size:16px;text-align:center}\n  th{background:#F4E8D8}\n  tr.new{background:#FFF0C2;font-weight:700}\n  .conclusion{margin-top:12px;background:#F7C948;border-radius:12px;padding:12px 16px;font-size:18px;font-weight:700;line-height:1.5}\n  .footnote{margin-top:8px;font-size:13px;color:#9A8468}\n<\/style>\n<\/head>\n<body data-page-node-id=\"27vVECUNU1m3AcqtSEk6cB\">\n<div class=\"wrap\" data-page-node-id=\"A89CmhbeJENu6ZuIHKApeH\">\n  <h1 data-page-node-id=\"fFV1cq1Cag6u85SpgN7Plq\">运动与摩擦力 · <span class=\"accent\" data-page-node-id=\"j8Zy6UYlTfnMudRwWJag4K\">交互实验室<\/span><\/h1>\n  <div class=\"question\" data-page-node-id=\"TZQY7AHE2EvcDgQMd7Kt6i\">核心问题：匀速拉动时，测力计读数 ＝ 摩擦力。表面越粗糙、木块越重，读数会怎样变化？动手试试！<\/div>\n\n  <svg id=\"scene\" viewBox=\"0 0 1000 400\" aria-label=\"测力计拉动木块的摩擦力演示场景\" data-page-node-id=\"l5Sb8ivzGLB8sSjvrCA3pE\">\n    <defs data-page-node-id=\"FO0E8FFH7D7BwPAyrpp85f\">\n      <marker id=\"arrR\" markerWidth=\"14\" markerHeight=\"12\" refX=\"10\" refY=\"5\" orient=\"auto\" markerUnits=\"userSpaceOnUse\" data-page-node-id=\"EDv9xGmdFVPz4jbDfBEMzC\">\n        <path d=\"M0,0 L12,5 L0,10 Z\" fill=\"#E4573D\" data-page-node-id=\"RljjjHe04uzN0L93phT6Lu\"/>\n      <\/marker>\n      <marker id=\"arrB\" markerWidth=\"14\" markerHeight=\"12\" refX=\"10\" refY=\"5\" orient=\"auto\" markerUnits=\"userSpaceOnUse\" data-page-node-id=\"ExFy9pnyVxMMO3EZMO4U6c\">\n        <path d=\"M0,0 L12,5 L0,10 Z\" fill=\"#2F7FB5\" data-page-node-id=\"GrFlBdicG1JcG8714O33Cp\"/>\n      <\/marker>\n    <\/defs>\n\n    <!-- 接触面（纹理由 JS 生成） -->\n    <rect id=\"surfaceRect\" x=\"0\" y=\"330\" width=\"1000\" height=\"22\" fill=\"#D7DCE2\" data-page-node-id=\"mxinL97gTFTR5XP5BIuEf2\"/>\n    <g id=\"texture\" data-page-node-id=\"KwVlF8VfK8EDpL9ADbNCnb\"><\/g>\n\n    <!-- 微观视窗：接触面放大看 -->\n    <g id=\"micro\" data-page-node-id=\"DQHQ4JZOY1GVg0zc77V7i0\">\n      <rect x=\"716\" y=\"28\" width=\"264\" height=\"160\" rx=\"12\" fill=\"#FFFFFF\" stroke=\"#D8C9B4\" stroke-width=\"2\" data-page-node-id=\"76lCO8nPFRKvdl6fTnabtR\"/>\n      <text x=\"732\" y=\"54\" font-size=\"16\" font-weight=\"700\" fill=\"#3D2E20\" data-page-node-id=\"Yr4HZAdU5PSMHXbIuxsHU0\">🔍 接触面放大看<\/text>\n      <rect id=\"baseTop\" x=\"736\" y=\"82\" width=\"224\" height=\"8\" rx=\"3\" fill=\"#B48A5E\" data-page-node-id=\"Q2Wo5XcZ7CkBRmDTvVBr9v\"/>\n      <rect id=\"baseBottom\" x=\"736\" y=\"118\" width=\"224\" height=\"8\" rx=\"3\" fill=\"#B48A5E\" data-page-node-id=\"NiObBDtcleXGHq1FVarDtE\"/>\n      <path id=\"teethTop\" fill=\"none\" stroke=\"#8A6A44\" stroke-width=\"2.5\" data-page-node-id=\"Iz3dkcTRB5bbsDbSLiXMzn\"/>\n      <path id=\"teethBottom\" fill=\"none\" stroke=\"#8A6A44\" stroke-width=\"2.5\" data-page-node-id=\"MlxnEEzI9m7AZ1vBa26IrS\"/>\n      <text x=\"732\" y=\"172\" font-size=\"13\" fill=\"#8A6A44\" data-page-node-id=\"AlJxEVVgV7CWu1CXtH63qj\">越粗糙、压得越重 → 咬合越深，摩擦力越大<\/text>\n    <\/g>\n\n    <!-- 木块组（含砝码、测力计、箭头），整体平移 -->\n    <g id=\"blockGroup\" data-page-node-id=\"4cAqIcaULy0OhTT4kZtHkD\">\n      <!-- 测力计（水平横放在木块左侧） -->\n      <text x=\"-55\" y=\"278\" font-size=\"13\" text-anchor=\"middle\" fill=\"#8A6A44\" data-page-node-id=\"A9MycWWha4DMEKzSaSNpVB\">测力计（调零后）<\/text>\n      <circle cx=\"-102\" cy=\"305\" r=\"8\" fill=\"none\" stroke=\"#2F7FB5\" stroke-width=\"3.5\" data-page-node-id=\"Ki0sErflm4uKYqxG6mPvOC\"/>\n      <rect x=\"-95\" y=\"285\" width=\"80\" height=\"40\" rx=\"6\" fill=\"#FFFFFF\" stroke=\"#2F7FB5\" stroke-width=\"2.5\" data-page-node-id=\"8xCXBBQFRZYihuX1HV3Z27\"/>\n      <g id=\"ticks\" data-page-node-id=\"zjG2wmHbQ5woVuEHvGWZzk\"><\/g>\n      <line id=\"needle\" x1=\"-88\" y1=\"290\" x2=\"-88\" y2=\"320\" stroke=\"#E4573D\" stroke-width=\"3\" data-page-node-id=\"hBCwOSm02n5FIWqqoeLSmk\"/>\n      <line x1=\"-15\" y1=\"305\" x2=\"0\" y2=\"305\" stroke=\"#5D6875\" stroke-width=\"3\" data-page-node-id=\"Wk5wQUCb3M19zQIkxXztGC\"/>\n      <!-- 木块 -->\n      <rect x=\"0\" y=\"280\" width=\"120\" height=\"50\" rx=\"4\" fill=\"#C89F6B\" stroke=\"#A5794A\" stroke-width=\"2\" data-page-node-id=\"rwJCxUq7Piq7PPNTFDP0Ae\"/>\n      <text x=\"60\" y=\"310\" font-size=\"17\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#5C4326\" data-page-node-id=\"NPJDfsdWcgvPQwRH4j7I0t\">木块<\/text>\n      <g id=\"weightsG\" data-page-node-id=\"Kp6QEmW2zo2in6EHfveQ0C\"><\/g>\n      <!-- 拉力箭头（红橙=驱动因） -->\n      <line id=\"pullArrow\" x1=\"105\" y1=\"222\" x2=\"150\" y2=\"222\" stroke=\"#E4573D\" stroke-width=\"5\" marker-end=\"url(#arrR)\" data-page-node-id=\"WscIYBawRFDmFsPTvGqt7f\"/>\n      <text id=\"pullLabel\" x=\"128\" y=\"210\" font-size=\"15\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#E4573D\" data-page-node-id=\"jcmYG4ULJjxyOMb5qyOnRr\">拉力<\/text>\n      <!-- 摩擦力箭头（青蓝=阻碍果） -->\n      <line id=\"fricArrow\" x1=\"60\" y1=\"358\" x2=\"30\" y2=\"358\" stroke=\"#2F7FB5\" stroke-width=\"5\" marker-end=\"url(#arrB)\" data-page-node-id=\"efo2sCMJZPH6cqngwC0A4S\"/>\n      <text id=\"fricLabel\" x=\"45\" y=\"378\" font-size=\"15\" font-weight=\"700\" text-anchor=\"middle\" fill=\"#2F7FB5\" data-page-node-id=\"AwTKqYYV83TlXYK7gFXp8A\">摩擦力<\/text>\n    <\/g>\n  <\/svg>\n\n  <div class=\"panel\" data-page-node-id=\"rTmeuRI2xTPx0cwCW4T2i5\">\n    <div data-page-node-id=\"2ZCjVSkFEqf1FtXf8Cs0Yi\">\n      <span class=\"lbl\" data-page-node-id=\"4Bbc2IjDOTFHDxdAImeSpB\">① 接触面<\/span>\n      <button class=\"surface-btn\" onclick=\"setSurface(0)\" data-page-node-id=\"8b6QdcAxoDprHEvTU0Uok0\"><span class=\"dot\" style=\"background:#EAD9B0\" data-page-node-id=\"wot0CbH9gaMWgtFNuHQkCK\"><\/span>光滑木板<\/button>\n      <button class=\"surface-btn sel\" onclick=\"setSurface(1)\" data-page-node-id=\"4UfBeby50obI6yxTmYEO8P\"><span class=\"dot\" style=\"background:#D7DCE2\" data-page-node-id=\"wIIAo1TlWFs0IcxoGzXFfR\"><\/span>课桌桌面<\/button>\n      <button class=\"surface-btn\" onclick=\"setSurface(2)\" data-page-node-id=\"TrgbEkQgKWt1uduiirUdg9\"><span class=\"dot\" style=\"background:#F2C4CF\" data-page-node-id=\"VZ41sx41tMMPnWY4w2Rx4S\"><\/span>毛巾<\/button>\n      <button class=\"surface-btn\" onclick=\"setSurface(3)\" data-page-node-id=\"RvXxrlMX3RyiNWArXPe2PV\"><span class=\"dot\" style=\"background:#CBA57C\" data-page-node-id=\"nH3QOKMQRhIH8vrLzJi7Ca\"><\/span>砂纸<\/button>\n    <\/div>\n    <div class=\"stepper\" data-page-node-id=\"iXATHAlgqnlKW73cdJd9r5\">\n      <span class=\"lbl\" data-page-node-id=\"ogTbvjamydFwfs7jLpCFTU\">② 砝码<\/span>\n      <button onclick=\"setWeights(-1)\" aria-label=\"减一个砝码\" data-page-node-id=\"b9iP8UpSNIXYtuReRvoKwJ\">−<\/button>\n      <span id=\"wCount\" data-page-node-id=\"20YHqCluidMXTa8a62G6ZV\">0 个<\/span>\n      <button onclick=\"setWeights(1)\" aria-label=\"加一个砝码\" data-page-node-id=\"GcGXVVgH0g3ST1E81BbGle\">＋<\/button>\n    <\/div>\n    <div data-page-node-id=\"Z8Z6EcaqN1FyWww5HkGRTT\">\n      <button id=\"pullBtn\" class=\"primary\" onclick=\"pull()\" data-page-node-id=\"vhgbOczr052mDD2uCycoLE\">▶ 匀速拉动<\/button>\n      <button class=\"ghost\" onclick=\"resetAll()\" data-page-node-id=\"Edwd6KYgCmA83DwTbwvMlK\">↺ 重置<\/button>\n    <\/div>\n    <div class=\"readout\" data-page-node-id=\"ZgOWBLHstp0b3l5kTouPdw\">\n      <div class=\"lbl\" data-page-node-id=\"rXE2gmixCe5JOSTHnQS471\">测力计读数<\/div>\n      <span id=\"reading\" data-page-node-id=\"jZ61OTcVMbZwg5TAT9ncw6\">0.0<\/span> <span class=\"unit\" data-page-node-id=\"IlAFFbJW1PzaZVibDne1Jc\">N<\/span>\n    <\/div>\n  <\/div>\n\n  <div id=\"hint\" class=\"hint\" data-page-node-id=\"nrNMqkPyc5D6F0UckEpnCy\">先选好接触面和砝码，再点「▶ 匀速拉动」，观察读数和两支箭头！<\/div>\n\n  <table data-page-node-id=\"eCEz8z1qfs3XAIA7pcrDrB\">\n    <thead data-page-node-id=\"MfY7TeYjy5wCJBj99mjzt7\"><tr data-page-node-id=\"Q6FZM0D1NGLg2uhrHutaYO\"><th style=\"width:14%\" data-page-node-id=\"KcOY510GjsB0Qq1mKzO6Dd\">次数<\/th><th style=\"width:30%\" data-page-node-id=\"IQEAuLntFibEuSLZEhjnCE\">接触面<\/th><th style=\"width:26%\" data-page-node-id=\"fU8BHDSAKY23At95Bw6jFB\">砝码<\/th><th style=\"width:30%\" data-page-node-id=\"a5JoyvOCfM9OY5rbBGCkvt\">摩擦力读数<\/th><\/tr><\/thead>\n    <tbody id=\"logBody\" data-page-node-id=\"znsiEmx02YVtKm8N3uJgnZ\"><tr id=\"logEmpty\" data-page-node-id=\"tTAdFLKNFQl2DPFHKV9anD\"><td colspan=\"4\" style=\"color:#9A8468\" data-page-node-id=\"7vlkNg70tpd93vD9fdrp2a\">还没有实验记录——拉动一次就会自动记一行<\/td><\/tr><\/tbody>\n  <\/table>\n\n  <div class=\"conclusion\" data-page-node-id=\"B90HRq1N8fu7VEHtYZ5hg5\">📌 结论：接触面越粗糙、物体越重，摩擦力越大。想让东西\"抓得牢\"就增大它（防滑条、鞋底花纹）；想让它\"滑得顺\"就减小它——判断的钥匙，就是这一格一格读出来的数据！<\/div>\n  <div class=\"footnote\" data-page-node-id=\"QWCARAUQBRatFV8ELIzdmn\">与《运动与摩擦力》教学设计配套 · 操作与课堂实验同构：先调零 → 水平匀速拉动 → 视线平齐读数。单文件离线可用，双击即开，适合教室投屏。<\/div>\n<\/div>\n\n<script>\n// ===== 教学参数（可在此调整难度/读数）=====\nvar SURFACES = [\n  { name:'光滑木板', base:0.5, color:'#EAD9B0', teeth:0 },\n  { name:'课桌桌面', base:1.0, color:'#D7DCE2', teeth:1 },\n  { name:'毛巾',     base:2.2, color:'#F2C4CF', teeth:2 },\n  { name:'砂纸',     base:3.0, color:'#CBA57C', teeth:3 }\n];\nvar W_ADD = 0.8;          // 每个砝码增加的摩擦力（N）\nvar START_X = 200, END_X = 760, SPEED = 115; // 木块位置与匀速速度\nvar MAX_ROWS = 7;\n\nvar surface = 1, weights = 0, x = START_X, curF = 0;\nvar running = false, raf = null, lastT = 0, expCount = 0;\n\nvar SVGNS = 'http://www.w3.org/2000/svg';\nfunction $(id){ return document.getElementById(id); }\nfunction el(name, attrs, parent){\n  var n = document.createElementNS(SVGNS, name);\n  for (var k in attrs) n.setAttribute(k, attrs[k]);\n  if (parent) parent.appendChild(n);\n  return n;\n}\nfunction forceVal(){ return SURFACES[surface].base + W_ADD * weights; }\n\n// ===== 测力计刻度（0~5N，初始化一次）=====\n(function buildTicks(){\n  var g = $('ticks');\n  for (var i = 0; i <= 5; i++){\n    var tx = -88 + i / 5 * 66;\n    el('line', { x1:tx, y1:287, x2:tx, y2:294, stroke:'#5D6875', 'stroke-width':1.5 }, g);\n    var t = el('text', { x:tx, y:300, 'font-size':9, 'text-anchor':'middle', fill:'#5D6875' }, g);\n    t.textContent = i;\n  }\n})();\n\n// ===== 接触面纹理 =====\nfunction drawTexture(){\n  var g = $('texture'); g.innerHTML = '';\n  var s = SURFACES[surface];\n  $('surfaceRect').setAttribute('fill', s.color);\n  var i, n;\n  if (s.teeth === 0){                       // 木板：木纹线\n    [336, 342, 348].forEach(function(y){\n      el('line', { x1:0, y1:y, x2:1000, y2:y, stroke:'#C9A96E', 'stroke-width':1.4, opacity:.8 }, g);\n    });\n  } else if (s.teeth === 1){                // 桌面：细密竖纹\n    for (i = 8; i < 1000; i += 26)\n      el('line', { x1:i, y1:333, x2:i, y2:349, stroke:'#AEB6BF', 'stroke-width':1.2 }, g);\n  } else if (s.teeth === 2){                // 毛巾：毛圈弧\n    for (i = 10; i < 1000; i += 22)\n      el('path', { d:'M' + i + ',349 q5,-10 10,0', fill:'none', stroke:'#D98CA3', 'stroke-width':2 }, g);\n  } else {                                  // 砂纸：粗砂粒\n    for (i = 8; i < 1000; i += 18)\n      el('polygon', { points:i + ',349 ' + (i + 5) + ',335 ' + (i + 10) + ',349', fill:'#A5784F' }, g);\n  }\n}\n\n// ===== 微观视窗：锯齿咬合 =====\nfunction zigzag(x0, x1, base, amp, up, parent){\n  var d = 'M' + x0 + ',' + base;\n  var peak = base + (up ? -amp : amp);\n  for (var xx = x0 + 7; xx <= x1; xx += 14){\n    d += ' L' + xx + ',' + peak + ' L' + (xx + 7) + ',' + base;\n  }\n  parent.setAttribute('d', d);\n}\nfunction drawMicro(){\n  var s = SURFACES[surface];\n  var h = 6 + s.teeth * 4;                              // 锯齿高度随粗糙度增大\n  var gap = Math.max(10, 30 - weights * 5 - s.teeth * 3); // 间距随重量/粗糙度减小\n  var yT = 100, yB = yT + gap;\n  $('baseTop').setAttribute('y', yT - 8);\n  $('baseBottom').setAttribute('y', yB);\n  zigzag(736, 960, yT, h, false, $('teethTop'));    // 上表面锯齿向下凸\n  zigzag(736, 960, yB, h, true,  $('teethBottom')); // 下表面锯齿向上凸\n}\n\n// ===== 砝码 =====\nfunction drawWeights(){\n  var g = $('weightsG'); g.innerHTML = '';\n  for (var i = 0; i < weights; i++){\n    var y = 280 - 24 * (i + 1) + 2;\n    el('rect', { x:53, y:y - 6, width:14, height:6, rx:2, fill:'#5D6875' }, g);\n    el('rect', { x:38, y:y, width:44, height:22, rx:4, fill:'#7C8899', stroke:'#5D6875', 'stroke-width':2 }, g);\n  }\n}\n\n// ===== 状态切换 =====\nfunction setSurface(i){\n  if (running) return;\n  surface = i;\n  var btns = document.querySelectorAll('.surface-btn');\n  for (var j = 0; j < btns.length; j++) btns[j].classList.toggle('sel', j === i);\n  drawTexture(); drawMicro();\n  setHint('换到「' + SURFACES[i].name + '」上了。猜一猜：读数会变大还是变小？点「▶ 匀速拉动」验证！');\n}\nfunction setWeights(d){\n  if (running) return;\n  weights = Math.min(2, Math.max(0, weights + d));\n  $('wCount').textContent = weights + ' 个';\n  drawWeights(); drawMicro();\n  setHint('木块上放了 ' + weights + ' 个砝码。猜一猜：拽住它的摩擦力会怎么变？拉一次看看！');\n}\nfunction setHint(text){ $('hint').textContent = text; }\n\n// ===== 拉动动画（匀速）=====\nfunction pull(){\n  if (running) return;\n  if (x >= END_X) x = START_X;      // 上次没重置也能直接再拉\n  curF = forceVal();\n  running = true; lastT = performance.now();\n  $('pullBtn').disabled = true; $('pullBtn').textContent = '拉动中…';\n  raf = requestAnimationFrame(step);\n}\nfunction step(t){\n  var dt = (t - lastT) / 1000; lastT = t;\n  x += SPEED * dt;\n  if (x >= END_X){ x = END_X; render(); finish(); return; }\n  render();\n  raf = requestAnimationFrame(step);\n}\nfunction finish(){\n  running = false; raf = null;\n  $('pullBtn').disabled = false; $('pullBtn').textContent = '▶ 匀速拉动';\n  logResult();\n  setHint('读数定格在 ' + curF.toFixed(1) + ' N——记住：匀速拉动时，读数就等于摩擦力！');\n}\nfunction resetAll(){\n  if (raf) cancelAnimationFrame(raf);\n  running = false; raf = null;\n  $('pullBtn').disabled = false; $('pullBtn').textContent = '▶ 匀速拉动';\n  x = START_X; curF = 0;\n  render();\n  setHint('已重置（测力计调零）。换一个条件，再做一次对比实验吧！');\n}\n\n// ===== 渲染 =====\nfunction render(){\n  $('blockGroup').setAttribute('transform', 'translate(' + x + ',0)');\n  // 指针与读数\n  var nx = -88 + curF / 5 * 66;\n  $('needle').setAttribute('x1', nx); $('needle').setAttribute('x2', nx);\n  $('reading').textContent = curF.toFixed(1);\n  // 两支箭头：匀速时等长（拉力=摩擦力）\n  var len = 30 + curF * 40;\n  $('pullArrow').setAttribute('x2', 105 + len);\n  $('pullLabel').setAttribute('x', 105 + len / 2);\n  $('fricArrow').setAttribute('x2', 60 - len);\n  $('fricLabel').setAttribute('x', 60 - len / 2);\n}\n\n// ===== 记录表 =====\nfunction logResult(){\n  expCount++;\n  var empty = $('logEmpty'); if (empty) empty.remove();\n  var tbody = $('logBody');\n  var tr = document.createElement('tr');\n  tr.className = 'new';\n  tr.innerHTML = '<td>' + expCount + '<\/td><td>' + SURFACES[surface].name +\n    '<\/td><td>' + weights + ' 个<\/td><td><b>' + curF.toFixed(1) + ' N<\/b><\/td>';\n  tbody.appendChild(tr);\n  var rows = tbody.querySelectorAll('tr');\n  for (var i = 0; i < rows.length; i++) rows[i].classList.remove('new');\n  tr.classList.add('new');\n  while (tbody.querySelectorAll('tr').length > MAX_ROWS) tbody.removeChild(tbody.firstChild);\n}\n\n// ===== 初始化 =====\ndrawTexture(); drawMicro(); drawWeights(); render();\n<\/script>\n<\/body>\n<\/html>\n";
+
+const SCI_DEMOS = [
+  {key:'friction', em:'🧲', title:'运动与摩擦力',
+   grade:'力与运动 · 摩擦力（适配教科版四上/五上相关课时）',
+   desc:'模拟课堂同款"测力计匀速拉动木块"：换接触面、加减砝码、匀速拉动，读数与拉力/摩擦力箭头实时联动，右上角微观放大镜看表面锯齿咬合。',
+   tip:'实验前全班投屏预演规范操作 → 分组动手实测 → 回来看"最粗糙+最重=最费劲"'}
+];
+
+/* ---------- 3. 全屏打开演示 ---------- */
+window.sciOpenDemo = function(key){
+  const src = SCI_DEMO_SOURCES[key];
+  if(!src) return;
+  const d = SCI_DEMOS.find(x=>x.key===key) || {title:'互动演示'};
+  const overlay = document.createElement('div');
+  overlay.id = 'sciDemoOverlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(90,74,94,.5);display:flex;align-items:center;justify-content:center;padding:1.5vh 1.5vw;';
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:relative;width:97vw;height:97vh;background:#FFFDFD;border-radius:22px;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.28);display:flex;flex-direction:column;';
+  const bar = document.createElement('div');
+  bar.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:8px 16px;background:linear-gradient(90deg,var(--pink,#FFC2D4),var(--pink-l,#FFD9E6));font-weight:bold;color:var(--ink,#5A4A5E);flex:0 0 auto;';
+  bar.innerHTML = '<span>🔬 交互演示 · ' + d.title + '</span>';
+  const closeBtn = document.createElement('button');
+  closeBtn.textContent = '✕ 关闭';
+  closeBtn.style.cssText = 'border:none;background:#FFFDFD;color:#5A4A5E;font-weight:bold;border-radius:12px;padding:6px 16px;cursor:pointer;font-size:1rem;';
+  closeBtn.onclick = function(){ overlay.remove(); };
+  bar.appendChild(closeBtn);
+  const frame = document.createElement('iframe');
+  frame.style.cssText = 'width:100%;flex:1 1 auto;border:none;display:block;background:#FFF8F0;';
+  frame.setAttribute('srcdoc', src);
+  frame.setAttribute('title', d.title);
+  wrap.appendChild(bar); wrap.appendChild(frame);
+  overlay.appendChild(wrap);
+  document.body.appendChild(overlay);
+};
+
+/* ---------- 4. 渲染互动演示页 ---------- */
+function renderDemos(box){
+  let h = '<div style="padding:6px 2px 24px">';
+  h += '<div style="font-size:.92rem;color:var(--ink-l,#8A7A8E);margin:2px 2px 14px">点击卡片全屏打开放映；全部为离线交互，无需网络，可反复操作。适合实验课前预演和课后复盘。</div>';
+  h += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">';
+  SCI_DEMOS.forEach(function(d){
+    h += '<div onclick="sciOpenDemo(\''+d.key+'\')" style="cursor:pointer;background:var(--card-bg,rgba(255,253,253,.92));border-radius:22px;padding:18px;box-shadow:var(--shadow,0 6px 0 rgba(190,120,150,.18));transition:transform .15s" onmouseover="this.style.transform=\'translateY(-4px)\'" onmouseout="this.style.transform=\'\'">'
+      + '<div style="font-size:2.2rem;line-height:1">'+d.em+'</div>'
+      + '<div style="font-weight:bold;font-size:1.08rem;color:var(--ink,#5A4A5E);margin:8px 0 4px">'+d.title+'</div>'
+      + '<div style="font-size:.78rem;color:var(--pink-d,#F79CB8);font-weight:bold;margin-bottom:8px">'+d.grade+'</div>'
+      + '<div style="font-size:.88rem;color:var(--ink-l,#8A7A8E);line-height:1.65">'+d.desc+'</div>'
+      + '<div style="margin-top:10px;font-size:.8rem;background:var(--pink-l,#FFD9E6);border-radius:12px;padding:8px 10px;color:var(--ink,#5A4A5E);line-height:1.6">💡 '+d.tip+'</div>'
+      + '<div style="margin-top:12px"><span style="display:inline-block;background:linear-gradient(90deg,var(--pink,#FFC2D4),var(--pink-l,#FFD9E6));color:#fff;font-weight:bold;border-radius:14px;padding:6px 18px;font-size:.85rem">▶ 打开演示</span></div>'
+      + '</div>';
+  });
+  h += '</div></div>';
+  box.innerHTML = h;
+}
+
+/* ---------- 5. 包装渲染分发 ---------- */
+(function(){
+  const _rpbDemo = renderPageBody;
+  renderPageBody = function(id){
+    if(id==='demos'){ renderDemos(document.getElementById('body-demos')); return; }
+    _rpbDemo(id);
+  };
+})();
 
 
 </script>
