@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>城西小学社团选课 · 家长入口</title>
+<style>
+:root{
+  --bg:#FDF6EC; --card:#fff; --line:#F0E4D4; --ink:#4A3B32; --sub:#9A8878;
+  --red:#F4696B; --green:#7EC8A9; --blue:#8FB8E8; --pink:#F7A6C1; --purple:#C9A6E8; --orange:#F5C97B;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;padding-bottom:40px;}
+.wrap{max-width:520px;margin:0 auto;padding:16px;}
+.hero{background:linear-gradient(135deg,#F4696B,#F7A6C1);border-radius:20px;color:#fff;padding:22px 20px;text-align:center;margin-bottom:16px;}
+.hero h1{font-size:21px;font-weight:700;}
+.hero p{font-size:13px;opacity:.92;margin-top:6px;}
+.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 3px 12px rgba(74,59,50,.08);margin-bottom:14px;}
+.card h2{font-size:15px;margin-bottom:12px;color:var(--ink);}
+.chips{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{padding:9px 16px;border-radius:999px;border:2px solid var(--line);background:#fff;font-size:14px;font-weight:600;color:var(--sub);cursor:pointer;}
+.chip.on{border-color:var(--red);background:#FEECEC;color:var(--red);}
+input[type=text]{width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:12px;font-size:17px;font-family:inherit;outline:none;}
+input[type=text]:focus{border-color:var(--red);}
+.btn{width:100%;padding:14px;border:none;border-radius:14px;background:var(--red);color:#fff;font-size:17px;font-weight:700;cursor:pointer;font-family:inherit;}
+.btn:active{opacity:.85;}
+.btn.green{background:var(--green);}
+.btn.ghost{background:#fff;color:var(--red);border:2px solid var(--red);font-weight:600;}
+.btn.gray{background:#F3EDE4;color:var(--sub);font-size:14px;padding:10px;}
+.banner{background:#FFF3CD;color:#8a6d1a;border-radius:12px;padding:12px 14px;font-size:14px;margin-bottom:14px;text-align:center;}
+.club{border:2px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;background:#fff;}
+.club.full{opacity:.55;}
+.club .hd{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.club .nm{font-size:16px;font-weight:700;}
+.club .meta{font-size:12.5px;color:var(--sub);margin-top:5px;line-height:1.5;}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:middle;}
+.typecolor-小百灵{background:var(--pink);} .typecolor-小健将{background:var(--green);}
+.typecolor-小创客{background:var(--blue);} .typecolor-小书虫{background:var(--purple);}
+.typecolor-小主人{background:var(--orange);}
+.qbar{height:9px;border-radius:999px;background:#F3EDE4;overflow:hidden;margin:9px 0 7px;}
+.qbar i{display:block;height:100%;border-radius:999px;}
+.qrow{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--sub);}
+.pickbtn{width:100%;padding:11px;border:none;border-radius:11px;background:var(--red);color:#fff;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-top:4px;}
+.pickbtn:disabled{background:#D8CFC4;color:#fff;cursor:not-allowed;}
+.tag{font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap;}
+.tag-ok{background:#E6F7EF;color:#2F9E6E;}
+.tag-full{background:#FDEDED;color:#D64545;}
+.tag-hot{background:#FFF0E0;color:#D07C1F;}
+.mine{background:linear-gradient(135deg,#E6F9F0,#FDF6EC);border:2px solid var(--green);border-radius:20px;padding:22px 18px;text-align:center;margin-bottom:14px;}
+.mine .who{font-size:14px;color:var(--sub);}
+.mine .clublock{margin-top:12px;}
+.mine .clublock+.clublock{border-top:1px dashed rgba(47,158,110,.35);padding-top:12px;}
+.mine .lb{font-size:13px;font-weight:700;color:#2F9E6E;letter-spacing:1px;}
+.mine .big{font-size:22px;font-weight:800;color:#2F9E6E;margin:4px 0;}
+.mine .meta{font-size:13.5px;color:var(--sub);line-height:1.7;margin-top:6px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#4A3B32;color:#fff;padding:11px 22px;border-radius:12px;font-size:14.5px;opacity:0;transition:.3s;pointer-events:none;z-index:99;max-width:86vw;text-align:center;}
+.toast.show{opacity:.95;}
+.muted{color:var(--sub);font-size:13px;text-align:center;}
+.mt{margin-top:12px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>🐰 城西小学社团选课</h1>
+    <p>2026年秋季学期 · 名额有限，先到先得</p>
+  </div>
+  <div id="app"><p class="muted">加载中…</p></div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+var app = document.getElementById("app");
+var my = null;            // {grade, cls, name}
+var config = null;        // /api/config 结果
+var pickTimer = null;     // 名额刷新定时器
+
+try { my = JSON.parse(localStorage.getItem("cx_my") || "null"); } catch(e) { my = null; }
+
+function toast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(t._tm); t._tm = setTimeout(function(){ t.classList.remove("show"); }, 2800);
+}
+function esc(x){ return String(x==null?"":x).replace(/[&<>"']/g, function(m){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]; }); }
+/* ---- 后端地址自适应 ----
+   同一份页面要能在三个地方跑：
+   1) 后端服务器上（https://api.kexvefuxi.cn/she/）→ 同源，用相对地址
+   2) dadajs.cn / github.io 静态托管 → 指向腾讯云后端
+   3) 双击本地文件打开 → 指向腾讯云后端
+   相对地址不带开头的斜杠，这样挂在 /she/ 子路径下也能正确解析。 */
+var API_ROOT = (function(){
+  if (location.protocol === "file:") return localStorage.getItem("cx_api") || "https://api.kexvefuxi.cn/she";
+  var h = location.hostname;
+  if (/(^|\.)dadajs\.cn$/i.test(h) || /\.github\.io$/i.test(h)) return "https://api.kexvefuxi.cn/she";
+  return "";
+})();
+function api(path, opt){
+  var url = API_ROOT ? (API_ROOT.replace(/\/+$/,"") + path) : path.replace(/^\//, "");
+  return fetch(url, opt).then(function(r){ return r.json(); });
+}
+
+/* ========= 第一步：选班级 + 填名字 ========= */
+function renderChoose(){
+  stopRefresh();
+  var sel = { grade:1, cls:1 };
+  var html = '';
+  if (config && !config.open) html += '<div class="banner">⏳ 选课暂未开放，请等待老师通知后再来～</div>';
+  html += '<div class="card"><h2>① 选择孩子所在年级</h2><div class="chips" id="gradeChips"></div></div>';
+  html += '<div class="card"><h2>② 选择班级</h2><div class="chips" id="clsChips"></div></div>';
+  html += '<div class="card"><h2>③ 输入孩子姓名</h2><input type="text" id="nameInput" list="rosterList" placeholder="请输入学生姓名" maxlength="12" autocomplete="off">';
+  html += '<datalist id="rosterList"></datalist>';
+  html += '<div class="muted mt">输入名字后点下方按钮，即可看到本年级可报的社团</div>';
+  html += '<div class="mt"><button class="btn" id="goBtn">进入选课 →</button></div></div>';
+  app.innerHTML = html;
+
+  var CN = {1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"};
+  function drawGrades(){
+    var g = document.getElementById("gradeChips");
+    g.innerHTML = [1,2,3,4,5,6].map(function(gr){
+      return '<button class="chip '+(sel.grade===gr?"on":"")+'" data-g="'+gr+'">'+CN[gr]+'年级</button>';
+    }).join("");
+    g.querySelectorAll(".chip").forEach(function(b){
+      b.onclick = function(){ sel.grade = +b.dataset.g; sel.cls = 1; drawGrades(); drawCls(); loadRoster(); };
+    });
+  }
+  function drawCls(){
+    var n = (config && config.classCounts[sel.grade]) || 5;
+    if (sel.cls > n) sel.cls = 1;
+    var c = document.getElementById("clsChips");
+    c.innerHTML = "";
+    for (var i=1;i<=n;i++){
+      var b = document.createElement("button");
+      b.className = "chip" + (sel.cls===i?" on":"");
+      b.textContent = CN[sel.grade]+"（"+i+"）班";
+      b.dataset.c = i;                       /* 用 dataset 传值，避免闭包共享变量 */
+      b.onclick = function(){ sel.cls = +this.dataset.c; drawCls(); loadRoster(); };
+      c.appendChild(b);
+    }
+  }
+  function loadRoster(){
+    var dl = document.getElementById("rosterList");
+    if (!dl) return;
+    dl.innerHTML = "";
+    api("/api/roster?grade="+sel.grade+"&cls="+sel.cls).then(function(r){
+      (r.names||[]).slice(0,200).forEach(function(n){
+        var o = document.createElement("option"); o.value = n; dl.appendChild(o);
+      });
+    });
+  }
+  drawGrades(); drawCls(); loadRoster();
+  document.getElementById("goBtn").onclick = function(){
+    var name = document.getElementById("nameInput").value.trim();
+    if (!/^[\u4e00-\u9fa5a-zA-Z·]{2,12}$/.test(name)) { toast("请输入正确的学生姓名"); return; }
+    my = { grade: sel.grade, cls: sel.cls, name: name };
+    localStorage.setItem("cx_my", JSON.stringify(my));
+    checkMine();
+  };
+}
+
+/* ========= 查询该学生是否已选 ========= */
+function checkMine(){
+  api("/api/my?grade="+my.grade+"&cls="+my.cls+"&name="+encodeURIComponent(my.name)).then(function(r){
+    if (r.clubs && r.clubs.length) renderMine(r);
+    else renderPick([]);
+  }).catch(function(){ app.innerHTML = '<div class="card"><p class="muted">网络开小差了，请刷新重试</p></div>'; });
+}
+
+/* ========= 选课结果页 ========= */
+function renderMine(data){
+  stopRefresh();
+  var CN = {1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"};
+  var clubs = data.clubs || [];
+  var html = '<div class="mine">';
+  html += '<div class="who">'+CN[my.grade]+'年级（'+my.cls+'）班 · '+esc(my.name)+'</div>';
+  clubs.forEach(function(c){
+    html += '<div class="clublock">';
+    html += '<div class="lb">'+(c.fixed?'您已入选':'🎉 已选')+'</div>';
+    html += '<div class="big">'+esc(c.n)+'</div>';
+    if (c.fixed) html += '<div class="tag tag-hot" style="display:inline-block">学校统一安排 · 不可自行调整</div>';
+    else if (c.cross) html += '<div class="tag tag-ok" style="display:inline-block">跨年级社团 · 不占本年级名额</div>';
+    if (c.tc) html += '<div class="meta">👨‍🏫 辅导教师：'+esc(c.tc)+'<br>📍 活动场地：'+esc(c.pl)+'</div>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  var freeOnes = clubs.filter(function(c){ return !c.fixed; });
+  if (data.canAddNormal) {
+    html += '<div class="card"><div class="muted" style="margin-bottom:10px">你还可以再选一个本年级社团</div>';
+    html += '<button class="btn green" id="moreBtn">+ 再选一个社团</button></div>';
+  } else {
+    html += '<div class="card"><p class="muted">你的社团已经确定啦，如需调整请联系老师～</p></div>';
+  }
+  html += '<div class="card">';
+  if (freeOnes.length) html += '<button class="btn gray" id="cancelBtn">取消「'+esc(freeOnes[0].n)+'」</button>';
+  html += '<div class="mt"><button class="btn gray" id="otherBtn">帮另一个孩子选课</button></div></div>';
+  app.innerHTML = html;
+
+  if (document.getElementById("moreBtn")) document.getElementById("moreBtn").onclick = function(){ renderPick(clubs); };
+  if (document.getElementById("cancelBtn")) document.getElementById("cancelBtn").onclick = function(){
+    var target = freeOnes[0];
+    if (!confirm("确定取消「"+target.n+"」吗？名额会立即释放给别人。")) return;
+    api("/api/release", {method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({grade:my.grade, cls:my.cls, name:my.name, club:target.n})})
+      .then(function(r){
+        if (r.error) { toast(r.error); return; }
+        toast("已取消，可以重新选择"); checkMine();
+      });
+  };
+  document.getElementById("otherBtn").onclick = function(){
+    localStorage.removeItem("cx_my"); my = null; renderChoose();
+  };
+}
+
+/* ========= 选课页：社团卡片列表（实时名额） ========= */
+function renderPick(mineClubs){
+  var CN = {1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"};
+  var mine = mineClubs || [];
+  var mineNames = mine.map(function(c){ return c.n; });
+  var hasOwn = mine.some(function(c){ return !c.cross; });
+  var TYPECOLOR = {小百灵:"#F7A6C1",小健将:"#7EC8A9",小创客:"#8FB8E8",小书虫:"#C9A6E8",小主人:"#F5C97B"};
+  function draw(st){
+    var html = '';
+    if (!st.open) html += '<div class="banner">⏳ 选课暂未开放，请等待老师通知～</div>';
+    html += '<div class="card"><h2>🙋 '+CN[my.grade]+'年级（'+my.cls+'）班 · '+esc(my.name)+'</h2>';
+    if (mine.length) html += '<div class="muted">已有：'+mine.map(function(c){return esc(c.n);}).join('、')+'</div>';
+    html += '<div class="muted">每人只能报一个社团，名额先到先得。名额每 5 秒自动刷新。</div></div>';
+    st.clubs.forEach(function(c){
+      var isMine = mineNames.indexOf(c.n) >= 0;
+      var q = c.q;
+      var full = (q!==null && c.used>=q);
+      var blocked = isMine || hasOwn;
+      var remain = q===null ? "不限" : (q-c.used);
+      var pct = (q===null||q===0) ? 100 : Math.min(100, Math.round(c.used/q*100));
+      var color = TYPECOLOR[c.t] || "#F4696B";
+      var tag;
+      if (isMine) tag = '<span class="tag tag-ok">已选</span>';
+      else if (full) tag = '<span class="tag tag-full">已满</span>';
+      else if (blocked) tag = '<span class="tag" style="background:#F3EDE4;color:#9A8878">不可选</span>';
+      else if (q!==null && q-c.used<=1) tag = '<span class="tag tag-hot">仅剩 1 个</span>';
+      else tag = '<span class="tag tag-ok">可报</span>';
+      var btnText, disabled;
+      if (isMine) { btnText = "取消这个社团"; disabled = false; }
+      else if (full) { btnText = "名额已满"; disabled = true; }
+      else if (blocked) { btnText = "名额已占用"; disabled = true; }
+      else { btnText = "选它！"; disabled = false; }
+      html += '<div class="club'+(full&&!isMine?" full":"")+'">';
+      html += '<div class="hd"><span class="nm"><span class="dot" style="background:'+color+'"></span>'+esc(c.n)+'</span>'+tag+'</div>';
+      html += '<div class="meta">👨‍🏫 '+esc(c.tc)+'<br>📍 '+esc(c.pl)+'（'+esc(c.note)+'）</div>';
+      html += '<div class="qbar"><i style="width:'+pct+'%;background:'+(full?"#D64545":color)+'"></i></div>';
+      html += '<div class="qrow"><span>本班名额：'+c.used+' / '+(q===null?"不限":q)+'</span><span>'+(q===null?"":"剩余 "+remain+" 个")+'</span></div>';
+      html += '<button class="pickbtn" data-club="'+esc(c.n)+'" data-mine="'+(isMine?1:0)+'" '+(disabled?"disabled":"")+'>'+btnText+'</button>';
+      html += '</div>';
+    });
+    html += '<div class="card"><button class="btn gray" id="backBtn">← 返回修改班级/姓名</button></div>';
+    app.innerHTML = html;
+    app.querySelectorAll(".pickbtn").forEach(function(b){
+      b.onclick = function(){
+        var club = b.dataset.club;
+        var isMine = b.dataset.mine === "1";
+        b.disabled = true; b.textContent = "处理中…";
+        var url = isMine ? "/api/release" : "/api/select";
+        var payload = isMine ? {grade:my.grade, cls:my.cls, name:my.name, club:club}
+                             : {grade:my.grade, cls:my.cls, name:my.name, club:club};
+        api(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)})
+        .then(function(r){
+          if (r.error) { toast(r.error); checkMine(); return; }
+          toast(r.msg || "操作成功！");
+          checkMine();
+        }).catch(function(){ toast("网络开小差了，请重试"); b.disabled=false; });
+      };
+    });
+    document.getElementById("backBtn").onclick = function(){
+      stopRefresh();
+      localStorage.removeItem("cx_my"); my = null; renderChoose();
+    };
+  }
+  function refresh(){
+    api("/api/status?grade="+my.grade+"&cls="+my.cls).then(draw);
+  }
+  refresh();
+  stopRefresh();
+  pickTimer = setInterval(refresh, 5000);
+}
+function stopRefresh(){ if (pickTimer) { clearInterval(pickTimer); pickTimer = null; } }
+
+/* ========= 启动 ========= */
+api("/api/config").then(function(c){
+  config = c;
+  if (my) checkMine(); else renderChoose();
+}).catch(function(){
+  var alt = API_ROOT ? '<p class="muted" style="margin-top:12px">如果一直连不上，请改用备用入口：<br><a href="https://api.kexvefuxi.cn/she/">https://api.kexvefuxi.cn/she/</a></p>' : '';
+  app.innerHTML = '<div class="card"><h2>😅 连不上选课服务器</h2><p class="muted">请检查手机网络后刷新重试。</p>' + alt + '</div>';
+});
+</script>
+</body>
+</html>
