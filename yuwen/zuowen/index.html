@@ -160,6 +160,13 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .ocr-prev .thumb i{position:absolute;top:2px;right:2px;width:19px;height:19px;line-height:17px;text-align:center;border-radius:50%;background:rgba(40,30,35,.6);color:#fff;font-style:normal;font-size:14px;cursor:pointer}
 input[type=file]{font-size:12.5px;padding:8px 0}
 .uns-tag{display:inline-block;background:var(--gold-l);border:1px solid var(--gold);color:#7A5A00;border-radius:6px;padding:0 6px;font-weight:700;font-size:12.5px}
+.pbar{height:10px;border-radius:999px;background:var(--line);overflow:hidden;margin-top:10px}
+.pbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#D85A30,#F79CB8);transition:width .3s}
+.bstat{display:inline-block;font-size:12px;padding:1px 9px;border-radius:999px;font-weight:700;line-height:1.6}
+.bstat.wait{background:var(--line);color:var(--ink-l)}
+.bstat.run{background:var(--accent-l);color:var(--accent-d)}
+.bstat.ok{background:#E6F5EC;color:#1F7A44}
+.bstat.bad{background:var(--red-l);color:#8E2F2C}
 .ai-out .verdict-card{margin-top:11px}
 .ed-areas{margin-top:11px}
 
@@ -285,6 +292,52 @@ table.mini th{background:var(--accent-l);color:var(--accent-d)}
         <button class="btn ghost small" onclick="fillDemo()">📋 填入示例作文</button>
         <button class="btn ghost small" onclick="clearText()">清空</button>
       </div>
+    </div>
+
+    <!-- 卡1.5 一键批改全部 -->
+    <div class="card">
+      <h3>⚡ 一键批改全部 <span class="ver" style="font-size:9.5px">批量</span></h3>
+      <p class="sub">一个班几十篇，一次贴进来、一次跑完。<b>先跑本地体检（不联网、不花钱）</b>；填了 API Key 的会接着自动跑 AI 评语，最后给出批改总表。</p>
+      <details style="margin-bottom:9px">
+        <summary style="cursor:pointer;font-size:12.5px;color:var(--ink-l)">📋 粘贴格式说明（点开看一眼，只要看一次）</summary>
+        <div class="hint" style="margin-top:7px;line-height:1.9">
+          每篇之间用一行「分隔线」隔开，<b>线上写上学生姓名</b>。下面几种写法都能认：
+          <pre style="background:var(--white);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12px;overflow:auto;margin:7px 0;line-height:1.7">===张三===
+星期天，妈妈带我去公园玩……
+（正文几段都可以）
+
+===李四===
+昨天我去了外婆家……</pre>
+          也可以写成 <code>## 张三</code>、<code>--- 张三 ---</code>、<code>【张三】</code>；<br>
+          只写一条 <code>---</code> 不带名字，会自动编号成「学生1、学生2」。
+        </div>
+      </details>
+      <span class="lbl">把多篇作文一起粘到这里</span>
+      <textarea id="bText" rows="7" placeholder="===张三===&#10;正文第一段……&#10;&#10;===李四===&#10;正文……"></textarea>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:9px">
+        <input type="file" id="bFiles" accept=".txt,.md,text/plain" multiple onchange="batchImport(this)" style="max-width:210px">
+        <span class="hint" style="margin:0">← 也可一次导入多个 txt，<b>文件名就当学生姓名</b></span>
+      </div>
+      <div class="row2" style="margin-top:10px">
+        <div><span class="lbl">题目（这一批通用）</span><input type="text" id="bTitle" placeholder="如：那次玩得真高兴"></div>
+        <div><span class="lbl">年级</span>
+          <select id="bGrade"><option value="">不限</option><option>一年级</option><option>二年级</option><option>三年级</option><option>四年级</option><option>五年级</option><option>六年级</option></select>
+        </div>
+      </div>
+      <details style="margin-top:4px"><summary style="cursor:pointer;font-size:12.5px;color:var(--ink-l)">＋ 本次习作要求（可选，AI 会对照着查偏题）</summary>
+        <textarea id="bTask" rows="2" style="margin-top:8px" placeholder="如：统编版四上第八单元——把一件事写清楚，按事情发展顺序，写出当时的心情。"></textarea>
+      </details>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:11px">
+        <button class="btn" id="btnBatch" onclick="batchRun()">⚡ 一键批改全部</button>
+        <button class="btn ghost small" onclick="batchRunLocal()">🔍 只跑本地体检（免费）</button>
+        <button class="btn ghost small" id="btnBatchStop" style="display:none" onclick="batchStop()">⏹ 停止</button>
+        <button class="btn ghost small" onclick="batchClear()">清空</button>
+      </div>
+      <div id="bProgWrap" style="display:none">
+        <div class="pbar"><i id="bProgBar"></i></div>
+        <div class="hint" id="bProgTxt" style="margin-top:7px"></div>
+      </div>
+      <div id="bSum"></div>
     </div>
 
     <!-- 卡2 本地体检结果 -->
@@ -1031,6 +1084,394 @@ function clearRes(){
   CUR_VERDICT='良';
   document.querySelectorAll('#chipVerdict .chip').forEach(function(c){ c.classList.remove('on'); });
   setVerdict(document.querySelector('#chipVerdict .chip:nth-child(2)'), '良');
+}
+
+/* ================= 一键批改全部（批量） ================= */
+var BATCH = [], BATCH_RUN = false, BATCH_STOP = false, BATCH_MODE = 'local', BATCH_DONE = false, BATCH_SAVED = 0;
+var BATCH_CONC = 2;
+
+function sepName(line){
+  if(!line || !line.trim()) return null;
+  var m;
+  if((m = line.match(/^={2,}\s*(.*?)\s*={2,}$/))) return m[1];
+  if((m = line.match(/^\s*-{3,}\s*(.*?)\s*-{2,}\s*$/))) return m[1];
+  if((m = line.match(/^#{2,4}\s*(.+?)\s*$/))) return m[1];
+  if((m = line.match(/^【\s*(.+?)\s*】\s*$/))) return m[1];
+  if(/^={3,}\s*$/.test(line) || /^\s*-{3,}\s*$/.test(line)) return '';
+  return null;
+}
+function parseBatchText(raw){
+  raw = String(raw||'').replace(/\r\n?/g,'\n');
+  if(!raw.trim()) return [];
+  var lines = raw.split('\n'), items = [], cur = null, buf = [];
+  function flush(){
+    if(!cur) return;
+    cur.text = buf.join('\n').trim();
+    if(cur.text.length >= 10) items.push(cur);
+    cur = null;
+  }
+  lines.forEach(function(line){
+    var nm = sepName(line);
+    if(nm !== null){
+      flush();
+      cur = { student: String(nm||'').replace(/^[：:、.。]\s*/,'').trim(), title:'', text:'' };
+      buf = [];
+    } else {
+      if(!cur){ cur = { student:'', title:'', text:'' }; buf = []; }
+      buf.push(line);
+    }
+  });
+  flush();
+  return items;
+}
+function readTextSmart(file, cb){
+  var r = new FileReader();
+  r.onload = function(e){
+    var s = String(e.target.result||'');
+    if(s.indexOf('\uFFFD') >= 0){
+      try{
+        var r2 = new FileReader();
+        r2.onload = function(e2){
+          try{ cb(new TextDecoder('gbk').decode(new Uint8Array(e2.target.result))); }
+          catch(err){ cb(s); }
+        };
+        r2.onerror = function(){ cb(s); };
+        r2.readAsArrayBuffer(file);
+        return;
+      }catch(err){}
+    }
+    cb(s);
+  };
+  r.onerror = function(){ cb(''); };
+  r.readAsText(file, 'UTF-8');
+}
+function batchImport(inp){
+  if(BATCH_RUN){ toast('批改进行中，请稍候'); inp.value = ''; return; }
+  var files = Array.prototype.slice.call(inp.files||[]);
+  if(!files.length) return;
+  var out = new Array(files.length), done = 0;
+  files.forEach(function(f, idx){
+    readTextSmart(f, function(txt){
+      out[idx] = { name: f.name.replace(/\.[^.]+$/,'').replace(/^(作文|习作|第\d+次)[-_—\s]*/,'').trim(), text: String(txt||'').trim() };
+      if(++done !== files.length) return;
+      var good = out.filter(function(x){ return x.text; });
+      var chunk = good.map(function(x){ return '===' + (x.name || '未署名') + '===\n' + x.text; }).join('\n\n');
+      var ta = document.getElementById('bText');
+      ta.value = (ta.value.trim() ? ta.value.replace(/\s+$/,'') + '\n\n' : '') + chunk;
+      toast('已导入 ' + good.length + ' 篇');
+      inp.value = '';
+    });
+  });
+}
+function batchClear(){
+  if(BATCH_RUN){ toast('正在批改中，请先点「停止」'); return; }
+  BATCH = []; BATCH_SAVED = 0; BATCH_STOP = false; BATCH_DONE = false;
+  document.getElementById('bText').value = '';
+  document.getElementById('bFiles').value = '';
+  document.getElementById('bSum').innerHTML = '';
+  document.getElementById('bProgWrap').style.display = 'none';
+  toast('已清空批量区');
+}
+function batchStop(){
+  if(!BATCH_RUN){ toast('当前没有在跑'); return; }
+  BATCH_STOP = true;
+  var b = document.getElementById('btnBatchStop'); if(b) b.disabled = true;
+  toast('已发出停止，等手上这几篇跑完就停');
+}
+function batchStats(){
+  var fin = 0, ok = 0, bad = 0;
+  BATCH.forEach(function(b){
+    if(b.status === 'done'){ fin++; ok++; }
+    else if(b.status === 'error'){ fin++; bad++; }
+    else if(b.status === 'checked' && BATCH_MODE === 'local'){ fin++; ok++; }
+  });
+  return { total: BATCH.length, fin: fin, ok: ok, bad: bad };
+}
+function updateBatchProg(){
+  var s = batchStats();
+  var bar = document.getElementById('bProgBar');
+  if(bar) bar.style.width = (s.total ? Math.round(s.fin / s.total * 100) : 0) + '%';
+  var t = document.getElementById('bProgTxt');
+  if(!t) return;
+  if(BATCH_MODE === 'local'){
+    t.innerHTML = '本地体检（不联网）：<b>' + s.fin + ' / ' + s.total + '</b> 篇';
+  } else {
+    t.innerHTML = (BATCH_RUN ? 'AI 批改中… ' : 'AI 批改结束 ') + '<b>' + s.fin + ' / ' + s.total + '</b> 篇' +
+      (s.bad ? '，失败 <b style="color:var(--red)">' + s.bad + '</b> 篇（可再点「一键批改全部」重跑）' : '');
+  }
+}
+
+function batchRunLocal(){ batchStart('local'); }
+function batchRun(){
+  var hasKey = !!(S.settings && S.settings.apiKey);
+  if(!hasKey){ toast('没填 API Key，这次只跑本地体检（免费、不联网）'); batchStart('local'); return; }
+  batchStart('ai');
+}
+function batchStart(mode){
+  if(BATCH_RUN){ toast('正在批改中，请稍候…'); return; }
+  var items = parseBatchText(document.getElementById('bText').value);
+  if(!items.length){ toast('没识别到作文。请用 ===姓名=== 这样的分隔线隔开每篇（点上方格式说明）'); return; }
+  if(items.length > 60 && !confirm('共识别到 ' + items.length + ' 篇，数量较多、耗时较久。确定要一起跑吗？')) return;
+  if(mode === 'ai' && !(S.settings && S.settings.apiKey)) mode = 'local';
+
+  var dTitle = document.getElementById('bTitle').value.trim();
+  var dGrade = document.getElementById('bGrade').value || S.settings.defGrade || '';
+  var dTask = document.getElementById('bTask').value.trim();
+
+  BATCH = items.map(function(it, i){
+    var b = {
+      idx: i,
+      student: it.student || ('学生' + (i + 1)),
+      title: it.title || dTitle || '（无题）',
+      grade: dGrade,
+      task: dTask,
+      text: it.text,
+      issues: [], st: null, errN: 0, longN: 0, deN: 0, unsN: 0,
+      goods: [], aiIssues: [], level: '', comment: '', improve: '',
+      status: 'pending', err: '', saved: false
+    };
+    return b;
+  });
+  BATCH_RUN = true; BATCH_STOP = false; BATCH_DONE = false; BATCH_SAVED = 0; BATCH_MODE = mode;
+
+  var bb = document.getElementById('btnBatch'); if(bb) bb.disabled = true;
+  var sb = document.getElementById('btnBatchStop'); if(sb){ sb.style.display = ''; sb.disabled = false; }
+  document.getElementById('bProgWrap').style.display = 'block';
+
+  /* 第一步：本地体检（一次全跑完，不花钱、不用网） */
+  BATCH.forEach(function(b){
+    b.issues = scan(b.text);
+    b.st = stats(b.text);
+    b.errN = b.issues.filter(function(i){ return i.type === '错别字'; }).length;
+    b.longN = b.issues.filter(function(i){ return i.type === '标点'; }).length;
+    b.deN = b.issues.filter(function(i){ return i.type === '表达'; }).length;
+    b.unsN = b.issues.filter(function(i){ return i.type === '待核对'; }).length;
+    b.goods = b.issues.filter(function(i){ return i.type === '亮点'; }).map(function(i){ return i.quote; });
+    b.status = 'checked';
+  });
+  updateBatchProg();
+  renderBatch();
+
+  if(mode === 'local'){ BATCH_RUN = false; batchFinish(false); return; }
+
+  /* 第二步：AI 逐篇（并发 BATCH_CONC，失败自动重试 1 次） */
+  var cursor = 0, active = 0;
+  function pump(){
+    if(BATCH_STOP && active === 0){ BATCH_RUN = false; batchFinish(true); return; }
+    while(!BATCH_STOP && active < BATCH_CONC && cursor < BATCH.length){
+      var b = BATCH[cursor++];
+      active++;
+      b.status = 'ai';
+      updateBatchProg(); renderBatch();
+      (function(item){
+        var tries = 0;
+        function attempt(){
+          deepOne(item, function(ok, err){
+            if(!ok && tries < 1 && !BATCH_STOP){ tries++; setTimeout(attempt, 1500); return; }
+            active--;
+            item.status = ok ? 'done' : 'error';
+            if(!ok) item.err = err || '未知错误';
+            updateBatchProg(); renderBatch();
+            if(cursor >= BATCH.length && active === 0){ BATCH_RUN = false; batchFinish(false); }
+            else pump();
+          });
+        }
+        attempt();
+      })(b);
+    }
+  }
+  pump();
+}
+function deepOne(item, cb){
+  var local = item.issues.filter(function(i){ return i.type !== '亮点' && i.type !== '待核对'; }).slice(0, 12)
+    .map(function(i){ return '【' + i.type + '】“' + i.quote + '”→建议:' + (i.fix || '') + '；' + i.why; }).join('\n');
+  var sys = '你是一位经验丰富、说话温和具体、精通小学语文教学与统编教材的语文教师。批改权永远属于老师，你只提供专业建议与依据，绝不武断贴标签。';
+  var prompt = '【作文题目】' + item.title + '\n【年级】' + (item.grade || '小学') + '\n【本次习作要求】' + (item.task || '（无特别要求）') +
+    '\n【本地机器初筛结果（仅参考）】\n' + (local || '（无）') + '\n【学生作文全文】\n' + item.text +
+    '\n\n请输出严格 JSON（不要输出其它任何文字），格式：\n' +
+    '{"issues":[{"type":"病句|用词|标点|结构|内容","quote":"原文片段(不超过40字)","fix":"怎么改","why":"为什么(一句话，说给老师听)"}],' +
+    '"goods":["写得好的一句话(2-3条,引用原文)"],' +
+    '"comment":"总评(120字内：先说2个真实优点，再给1个最重要的改进建议，最后一句鼓励；不空话不套话)",' +
+    '"improve":"最重要的一处改进(一句话,具体可操作)","level":"优|良|合格|待提高"}' +
+    '\n注意：只对确定的问题给建议，拿不准的不要列；issues 最多 8 条。';
+  fetchChat(sys, prompt, function(ok, msg){
+    if(!ok) return cb(false, msg);
+    var d = parseJSON(msg);
+    if(!d) return cb(false, 'AI 返回内容无法解析');
+    item.aiIssues = d.issues || [];
+    if(d.goods && d.goods.length) item.goods = d.goods.slice(0, 3).concat(item.goods).slice(0, 3);
+    item.comment = d.comment || '';
+    item.improve = d.improve || '';
+    item.level = (['优','良','合格','待提高'].indexOf(d.level) >= 0) ? d.level : '';
+    cb(true);
+  }, { temp: 0.4, max: 1600 });
+}
+function renderBatch(){
+  var box = document.getElementById('bSum');
+  if(!box) return;
+  if(!BATCH.length){ box.innerHTML = ''; return; }
+  var s = batchStats();
+  var note = '<div class="hint" style="margin-top:11px">' +
+    (BATCH_RUN ? '⏳ 正在跑…' : (BATCH_STOP ? '⏹ 已停止。' : '✅ 已跑完。')) +
+    ' 共 <b>' + s.total + '</b> 篇，完成 <b>' + s.fin + '</b> 篇' +
+    (s.bad ? '，失败 <b style="color:var(--red)">' + s.bad + '</b> 篇' : '') +
+    (BATCH_SAVED ? '，已存入档案 <b>' + BATCH_SAVED + '</b> 篇' : '') +
+    (BATCH_MODE === 'local' ? '。本地体检不花钱；填了 API Key 可再点「一键批改全部」补 AI 评语。' : '。') +
+    '</div>';
+  var rows = BATCH.map(function(b, i){
+    var stt = b.status === 'error' ? '<span class="bstat bad">失败</span>'
+      : b.status === 'done' ? '<span class="bstat ok">✓ 已批</span>'
+      : b.status === 'ai' ? '<span class="bstat run">AI 跑…</span>'
+      : b.status === 'checked' ? '<span class="bstat wait">已体检</span>'
+      : '<span class="bstat wait">待批</span>';
+    return '<tr onclick="openBatch(' + i + ')" style="cursor:pointer">' +
+      '<td>' + (i + 1) + '</td><td><b>' + escHtml(b.student) + '</b>' +
+      (b.unsN ? ' <span class="uns-tag" title="有拍照识别待核对的字">？' + b.unsN + '</span>' : '') + '</td>' +
+      '<td>' + (b.st ? b.st.chars : 0) + '</td>' +
+      '<td>' + (b.errN ? '<b style="color:var(--red)">' + b.errN + '</b>' : '0') + '</td>' +
+      '<td>' + (b.longN || 0) + '</td>' +
+      '<td>' + (b.level || '—') + '</td>' +
+      '<td>' + stt + '</td></tr>';
+  }).join('');
+  box.innerHTML = note +
+    '<b style="font-size:14px;display:block;margin-top:13px">📋 批改总表 <span style="font-weight:400;font-size:12px;color:var(--ink-l)">（点任意一行看这一篇的详情）</span></b>' +
+    '<table class="mini"><tr><th>#</th><th>学生</th><th>字数</th><th>错字</th><th>长句</th><th>等第</th><th>状态</th></tr>' + rows + '</table>' +
+    '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
+      '<button class="btn ghost small" onclick="batchToRecords()">💾 全部存入学生档案</button>' +
+      '<button class="btn ghost small" onclick="batchExport()">⬇ 导出批改总表 CSV</button>' +
+      '<button class="btn ghost small" onclick="goTab(\'stats\')">📊 看讲评统计</button>' +
+      '<button class="btn ghost small" onclick="batchPrintAll()">🖨 批量打印评语</button>' +
+    '</div>';
+}
+function openBatch(i){
+  var b = BATCH[i]; if(!b) return;
+  var colors = {待核对:'#BA7517', 错别字:'#D9534F', 标点:'#3A8FD6', 表达:'#E67E22', 亮点:'#C89000',
+                病句:'#D9534F', 用词:'#E67E22', 结构:'#8C6FD8', 内容:'#2E9E5B'};
+  function list(arr){
+    if(!arr || !arr.length) return '<div class="none">这类没有发现问题</div>';
+    return arr.map(function(x){
+      if(x.type === '亮点') return '<div class="issue"><span class="it" style="background:var(--gold)">亮点</span><div class="ib"><div class="quote">✦ ' + escHtml(x.quote) + '</div>' + (x.why ? '<div class="why">' + escHtml(x.why) + '</div>' : '') + '</div></div>';
+      if(x.type === '待核对'){
+        var ctx = b.text.slice(Math.max(0, (x.pos || 0) - 6), (x.pos || 0) + 8);
+        return '<div class="issue"><span class="it" style="background:#BA7517">待核对</span><div class="ib"><div class="quote">上下文：' + escHtml(ctx) + '</div><div class="why">' + escHtml(x.why || '') + '</div></div></div>';
+      }
+      return '<div class="issue"><span class="it" style="background:' + (colors[x.type] || '#8A7A8E') + '">' + escHtml(x.type) + '</span><div class="ib">' +
+        '<div class="quote">“' + escHtml(x.quote || '') + '”' + (x.fix ? ' → <b>' + escHtml(x.fix) + '</b>' : '') + '</div>' +
+        (x.why ? '<div class="why">' + escHtml(x.why) + '</div>' : '') + '</div></div>';
+    }).join('');
+  }
+  var local = b.issues.filter(function(x){ return x.type !== '亮点'; });
+  var html = '<button class="close-x" onclick="closeModal()">✕</button>' +
+    '<h3>📄 ' + escHtml(b.title) + ' <span style="font-size:12px;color:var(--ink-l)">' + escHtml(b.student) + ' · ' + (b.st ? b.st.chars : 0) + ' 字 · ' + (b.level || '未定等第') + '</span></h3>' +
+    (b.status === 'error' ? '<div class="none" style="color:var(--red)">AI 这一篇失败了：' + escHtml(b.err || '') + '</div>' : '') +
+    (b.unsN ? '<div class="hint" style="color:#8A6A00;margin-top:6px">⚠️ 正文里有 ' + b.unsN + ' 处拍照识别的 〖？〗 待核对，建议先对着照片确认。</div>' : '');
+  if(b.comment){
+    html += '<div class="card" style="background:var(--accent-l);border-color:rgba(216,90,48,.22);box-shadow:none;margin-top:10px">' +
+      '<b>🤖 AI 总评' + (b.level ? '（' + escHtml(b.level) + '）' : '') + '</b>' +
+      '<div class="plain" style="border:none;background:transparent;padding:5px 0">' + escHtml(b.comment) + '</div>' +
+      (b.improve ? '<div class="hint" style="margin:0">👉 最重要的一处改进：' + escHtml(b.improve) + '</div>' : '') +
+      '</div>';
+  }
+  if(b.goods && b.goods.length){
+    html += '<b style="display:block;margin-top:12px">🌟 值得朗读</b><ul style="margin:5px 0 0;padding-left:19px;font-size:13px">' +
+      b.goods.map(function(g){ return '<li>“' + escHtml(g) + '”</li>'; }).join('') + '</ul>';
+  }
+  html += '<b style="display:block;margin-top:13px">🔎 本地体检（离线引擎）</b><div style="margin-top:6px">' + list(local) + '</div>';
+  if(b.aiIssues && b.aiIssues.length){
+    html += '<b style="display:block;margin-top:13px">🤖 AI 逐条建议</b><div style="margin-top:6px">' + list(b.aiIssues) + '</div>';
+  }
+  html += '<div style="display:flex;gap:8px;margin-top:13px;flex-wrap:wrap">' +
+    '<button class="btn ghost small" onclick="closeModal();batchLoadToSingle(' + i + ')">✎ 拿到单篇批改区继续改</button>' +
+    '<button class="btn ghost small" onclick="batchPrintOne(' + i + ')">🖨 打印这一篇</button></div>';
+  document.getElementById('modalBox').innerHTML = html;
+  openModal();
+}
+function batchLoadToSingle(i){
+  var b = BATCH[i]; if(!b) return;
+  document.getElementById('inTitle').value = b.title === '（无题）' ? '' : b.title;
+  document.getElementById('inStudent').value = b.student.indexOf('学生') === 0 && /^学生\d+$/.test(b.student) ? '' : b.student;
+  document.getElementById('inGrade').value = b.grade || '';
+  document.getElementById('inTask').value = b.task || '';
+  document.getElementById('inText').value = b.text;
+  document.getElementById('inComment').value = b.comment || '';
+  runCheck();
+  if(b.level) setVerdict(null, b.level);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  toast('已放到单篇批改区，可继续修改');
+}
+function batchToRecords(silent){
+  var n = 0;
+  BATCH.forEach(function(b){
+    if(b.saved) return;
+    if(b.status !== 'done' && b.status !== 'checked') return;
+    S.records.unshift({
+      id: Date.now() + Math.floor(Math.random() * 100000),
+      t: new Date().toISOString().slice(0, 16).replace('T', ' '),
+      title: b.title, student: b.student, grade: b.grade || '',
+      text: b.text, chars: b.st ? b.st.chars : 0, errN: b.errN,
+      comment: b.comment || '', verdict: b.level || '', aiLevel: b.level || '',
+      batch: true
+    });
+    b.saved = true; n++;
+  });
+  if(n){
+    save();
+    document.getElementById('cntRec').textContent = '(' + S.records.length + ')';
+    BATCH_SAVED += n;
+  }
+  if(silent !== true) toast(n ? ('已存入档案 ' + n + ' 篇') : '没有新的可存档');
+  return n;
+}
+function batchFinish(stopped){
+  if(BATCH_DONE) return;
+  BATCH_DONE = true; BATCH_RUN = false;
+  var bb = document.getElementById('btnBatch'); if(bb) bb.disabled = false;
+  var sb = document.getElementById('btnBatchStop'); if(sb){ sb.style.display = 'none'; sb.disabled = false; }
+  var saved = batchToRecords(true);
+  updateBatchProg();
+  renderBatch();
+  if(saved) toast((stopped ? '已停止，' : '') + '完成 ' + batchStats().fin + ' 篇，已存入档案 ' + saved + ' 篇');
+}
+function batchExport(){
+  if(!BATCH.length){ toast('先跑一次批量批改'); return; }
+  var head = ['序号','学生','题目','字数','错别字数','长句串','待核对','等第','总评','最重要改进'];
+  var rows = BATCH.map(function(b, i){
+    return [i + 1, b.student, b.title, b.st ? b.st.chars : 0, b.errN, b.longN || 0, b.unsN || 0, b.level || '', b.comment || '', b.improve || '']
+      .map(function(v){ return '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"'; }).join(',');
+  });
+  download('作文批改总表_' + new Date().toISOString().slice(0, 10) + '.csv', '\uFEFF' + head.join(',') + '\n' + rows.join('\n'));
+}
+function batchPrintOne(i){
+  var b = BATCH[i]; if(!b) return;
+  var iss = (b.aiIssues || []).concat(b.issues.filter(function(x){ return x.type !== '亮点' && x.type !== '待核对'; }));
+  var html = '<div style="text-align:center"><h2 style="margin:4px 0">' + escHtml(b.title) + '</h2>' +
+    '<div style="color:#666">' + escHtml(b.student) + (b.grade ? ' · ' + escHtml(b.grade) : '') + ' · ' + (b.st ? b.st.chars : 0) + ' 字</div></div>' +
+    (b.comment ? '<div style="background:#FDF4F0;border-radius:8px;padding:11px 13px;margin:12px 0"><b>总评' + (b.level ? '（' + b.level + '）' : '') + '：</b><br>' + escHtml(b.comment) + '</div>' : '') +
+    (iss.length ? '<b>批改建议：</b><ol style="line-height:1.9">' + iss.map(function(x){
+        return '<li>“' + escHtml(x.quote || '') + '”' + (x.fix ? ' → ' + escHtml(x.fix) : '') + (x.why ? '（' + escHtml(x.why) + '）' : '') + '</li>';
+      }).join('') + '</ol>' : '') +
+    (b.goods && b.goods.length ? '<b>值得朗读：</b><ul>' + b.goods.map(function(g){ return '<li>“' + escHtml(g) + '”</li>'; }).join('') + '</ul>' : '');
+  var w = window.open('', '_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>评语</title><style>body{font-family:"SimSun",serif;max-width:720px;margin:24px auto;padding:0 18px;color:#222;line-height:1.85}</style></head><body>' + html + '</body></html>');
+  w.document.close(); w.focus(); setTimeout(function(){ w.print(); }, 250);
+}
+function batchPrintAll(){
+  var list = BATCH.filter(function(b){ return b.status === 'done' || b.status === 'checked'; });
+  if(!list.length){ toast('还没有批好的作文'); return; }
+  var html = list.map(function(b, i){
+    var iss = (b.aiIssues || []).concat(b.issues.filter(function(x){ return x.type !== '亮点' && x.type !== '待核对'; }));
+    return '<div style="page-break-after:always">' +
+      '<h2 style="margin:0 0 4px">' + escHtml(b.student) + '</h2>' +
+      '<div style="color:#666;margin-bottom:8px">' + escHtml(b.title) + ' · ' + (b.st ? b.st.chars : 0) + ' 字 · ' + (b.level || '未定等第') + '</div>' +
+      (b.comment ? '<p><b>总评：</b>' + escHtml(b.comment) + '</p>' : '') +
+      (iss.length ? '<p><b>建议：</b></p><ol>' + iss.map(function(x){
+        return '<li>“' + escHtml(x.quote || '') + '”' + (x.fix ? ' → ' + escHtml(x.fix) : '') + '</li>';
+      }).join('') + '</ol>' : '') +
+      '</div>';
+  }).join('');
+  var w = window.open('', '_blank');
+  w.document.write('<html><head><meta charset="utf-8"><title>批量评语</title><style>body{font-family:"SimSun",serif;max-width:720px;margin:24px auto;padding:0 18px;color:#222;line-height:1.85}</style></head><body>' + html + '</body></html>');
+  w.document.close(); w.focus(); setTimeout(function(){ w.print(); }, 400);
 }
 
 /* ================= 档案 ================= */

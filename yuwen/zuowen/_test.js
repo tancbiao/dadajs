@@ -127,7 +127,87 @@ function ok(name, cond, extra) {
   ok('旧版数据升级后补上 vision', ('vision' in w.S.settings) && w.S.settings.vision === '');
   ok('旧版数据记录未丢失', w.S.records.length === 1 && w.S.last.title === '旧');
 
-  console.log('▶ 7. 页面切换与杂项');
+  console.log('▶ 7. 一键批改全部（批量）');
+  const BT = '===张三===\n' + DEMO + '\n\n===李四===\n' + DEMO.replace('永敢', '勇敢') + '\n\n## 王五\n' + DEMO + '〖？〗';
+  const p1 = w.parseBatchText(BT);
+  ok('分隔符 ===姓名=== 解析', p1.length === 3 && p1[0].student === '张三');
+  ok('分隔符 ## 姓名 解析', p1[2] && p1[2].student === '王五');
+  ok('正文保留了换行', p1[0].text.indexOf('\n') > 0);
+  const p2 = w.parseBatchText('【小明】\n第一篇内容写得很长很长很长。\n\n--- 小红 ---\n第二篇内容写得很长很长很长。');
+  ok('【姓名】与 --- 姓名 --- 解析', p2.length === 2 && p2[0].student === '小明' && p2[1].student === '小红');
+  const p3 = w.parseBatchText('内容一写得很长很长很长很长。\n---\n内容二写得很长很长很长很长。');
+  ok('纯 --- 分隔（无名）', p3.length === 2 && p3[0].student === '');
+  ok('正文过短的不算一篇', w.parseBatchText('===甲===\n太短').length === 0);
+
+  d.getElementById('bText').value = BT;
+  d.getElementById('bTitle').value = '那次玩得真高兴';
+  d.getElementById('bGrade').value = '四年级';
+  const recBefore = w.S.records.length;
+  w.batchRunLocal();
+  ok('本地批量：识别 3 篇', w.BATCH.length === 3);
+  ok('本地批量：全部已体检', w.BATCH.every(b => b.status === 'checked'));
+  ok('本地批量：自动编号补姓名', w.BATCH[0].student === '张三');
+  ok('本地批量：统计到错别字', w.BATCH[0].errN >= 1, 'errN=' + w.BATCH[0].errN);
+  ok('本地批量：待核对被统计', w.BATCH[2].unsN === 1, 'unsN=' + w.BATCH[2].unsN);
+  ok('本地批量：总表已渲染', d.querySelectorAll('#bSum table.mini tr').length === 4);
+  ok('本地批量：进度显示 3/3', d.getElementById('bProgTxt').textContent.indexOf('3 / 3') >= 0);
+  ok('本地批量：自动存入档案 3 篇', w.S.records.length === recBefore + 3, 'records=' + w.S.records.length);
+  const before = w.S.records.length;
+  w.batchToRecords();
+  ok('重复存档不会翻倍', w.S.records.length === before);
+
+  let dl = null;
+  w.download = function (n, t) { dl = { n, t }; };
+  w.batchExport();
+  ok('导出 CSV 有表头', !!dl && dl.n.indexOf('.csv') > 0 && dl.t.indexOf('序号') >= 0);
+  ok('CSV 含 3 行数据', dl.t.split('\n').length === 4);
+
+  let aiCalls = 0, failFirst = 0;
+  w.S.settings.apiKey = 'sk-test';
+  w.fetch = function (url, opt) {
+    aiCalls++;
+    const body = JSON.parse(opt.body);
+    if (failFirst > 0) { failFirst--; return Promise.resolve({ ok: false, status: 500, json: () => Promise.resolve({ error: { message: '模拟限流' } }) }); }
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({ choices: [{ message: { content: JSON.stringify({
+      issues: [{ type: '病句', quote: '我站在上面腿都发抖了', fix: '改通顺些', why: '前后搭配不当' }],
+      goods: ['风在耳边呼呼的响'],
+      comment: '优点两个，改进一个，继续加油。',
+      improve: '把长句断开',
+      level: '良'
+    }) } }] }) });
+  };
+  d.getElementById('bText').value = BT;
+  w.batchRun();
+  const t0 = Date.now();
+  while (w.BATCH_RUN && Date.now() - t0 < 8000) await new Promise(r => setTimeout(r, 25));
+  ok('AI 批量：全部跑完', !w.BATCH_RUN && w.BATCH.length === 3);
+  ok('AI 批量：状态全为完成', w.BATCH.every(b => b.status === 'done'), w.BATCH.map(b => b.status).join(','));
+  ok('AI 批量：写回了总评', w.BATCH.every(b => (b.comment || '').length > 0));
+  ok('AI 批量：写回了等第', w.BATCH[0].level === '良');
+  ok('AI 批量：AI 建议已入库', w.BATCH[0].aiIssues.length === 1);
+  ok('AI 批量：进度条到 100%', d.getElementById('bProgBar').style.width === '100%');
+  ok('AI 批量：新增 3 篇存档', w.S.records.length === before + 3, 'records=' + w.S.records.length);
+  ok('批量存档带 batch 标记', w.S.records.filter(r => r.batch).length >= 3);
+
+  d.getElementById('bText').value = '===败一===\n' + DEMO + '\n\n===败二===\n' + DEMO;
+  aiCalls = 0; failFirst = 2;
+  w.batchRun();
+  const t1 = Date.now();
+  while (w.BATCH_RUN && Date.now() - t1 < 15000) await new Promise(r => setTimeout(r, 25));
+  ok('失败重试后仍能成功', w.BATCH.every(b => b.status === 'done'), w.BATCH.map(b => b.status + '/' + (b.err || '')).join(','));
+  ok('重试确实多调了接口', aiCalls >= 4, 'aiCalls=' + aiCalls);
+
+  d.getElementById('bText').value = BT;
+  w.batchRun();
+  w.batchStop();
+  const t2 = Date.now();
+  while (w.BATCH_RUN && Date.now() - t2 < 8000) await new Promise(r => setTimeout(r, 25));
+  ok('停止后不再跑', !w.BATCH_RUN);
+  w.batchClear();
+  ok('清空批量区', w.BATCH.length === 0 && d.getElementById('bSum').innerHTML === '');
+  ok('清空后记录仍在', w.S.records.length > 0);
+
+  console.log('▶ 8. 页面切换与杂项');
   ok('切档案页无错', (w.goTab('files'), d.getElementById('page-files').classList.contains('on')));
   ok('切设置页无错', (w.goTab('set'), true));
   ok('设置回填无错', (w.loadSettingsUI(), d.getElementById('setProvider').value === 'deepseek'));
