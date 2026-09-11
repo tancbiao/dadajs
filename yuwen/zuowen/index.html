@@ -121,6 +121,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .flag-long{background:var(--sky-l);box-shadow:0 0 0 1px rgba(58,143,214,.35)}
 .flag-de{background:var(--amber-l);box-shadow:0 0 0 1px rgba(230,126,34,.35)}
 .flag-good{background:var(--gold-l);box-shadow:0 0 0 1px rgba(200,144,0,.3)}
+.flag-uns{background:#FFF6DC;box-shadow:0 0 0 2px rgba(186,117,23,.55);color:#7A5A00;font-weight:700}
 .w .no{
   display:inline-flex;align-items:center;justify-content:center;
   min-width:15px;height:15px;border-radius:50%;color:#fff;font-size:10px;font-weight:800;
@@ -130,6 +131,7 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .flag-long .no{background:var(--sky)}
 .flag-de .no{background:var(--amber)}
 .flag-good .no{background:var(--gold)}
+.flag-uns .no{background:var(--gold)}
 .legend{display:flex;gap:10px;flex-wrap:wrap;font-size:11.5px;color:var(--ink-l);margin:8px 0 2px}
 .legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:3px;vertical-align:-1px}
 
@@ -152,6 +154,12 @@ select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,va
 .ai-loading{text-align:center;padding:18px;color:var(--ink-l);font-size:13.5px}
 .spin{display:inline-block;width:16px;height:16px;border:2.5px solid var(--accent-l);border-top-color:var(--accent);border-radius:50%;animation:sp 1s linear infinite;vertical-align:-3px;margin-right:8px}
 @keyframes sp{to{transform:rotate(360deg)}}
+.ocr-prev{display:flex;gap:9px;flex-wrap:wrap;margin-top:9px}
+.ocr-prev .thumb{position:relative;width:78px;height:78px;border-radius:10px;overflow:hidden;border:1.5px solid var(--line);background:#fff}
+.ocr-prev .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.ocr-prev .thumb i{position:absolute;top:2px;right:2px;width:19px;height:19px;line-height:17px;text-align:center;border-radius:50%;background:rgba(40,30,35,.6);color:#fff;font-style:normal;font-size:14px;cursor:pointer}
+input[type=file]{font-size:12.5px;padding:8px 0}
+.uns-tag{display:inline-block;background:var(--gold-l);border:1px solid var(--gold);color:#7A5A00;border-radius:6px;padding:0 6px;font-weight:700;font-size:12.5px}
 .ai-out .verdict-card{margin-top:11px}
 .ed-areas{margin-top:11px}
 
@@ -244,7 +252,7 @@ table.mini th{background:var(--accent-l);color:var(--accent-d)}
     <!-- 卡1 录入 -->
     <div class="card">
       <h3>📥 录入作文</h3>
-      <p class="sub">把作文本的内容打出来 / 语音转文字 / 拍照后复制文字贴进来。本地体检不联网，马上出结果。</p>
+      <p class="sub">三种录入方式任选：① 直接粘贴 / 语音转文字 ② 拍照识别（下方）③ 手动打字。<b>本地体检不联网</b>，马上出结果。</p>
       <div class="row2">
         <div><span class="lbl">题目</span><input type="text" id="inTitle" placeholder="如：那次玩得真高兴"></div>
         <div><span class="lbl">学生姓名</span><input type="text" id="inStudent" placeholder="留空则不入档案"></div>
@@ -254,6 +262,21 @@ table.mini th{background:var(--accent-l);color:var(--accent-d)}
       </div>
       <details style="margin-top:4px"><summary style="cursor:pointer;font-size:12.5px;color:var(--ink-l)">＋ 本次习作要求（可选，AI 会对照着查偏题）</summary>
         <textarea id="inTask" rows="2" style="margin-top:8px" placeholder="如：统编版四上第八单元——把一件事写清楚，按事情发展顺序，写出当时的心情。"></textarea>
+      </details>
+      <details style="margin-top:12px" id="ocrWrap">
+        <summary style="cursor:pointer;font-size:13px;font-weight:700;color:var(--accent-d)">📷 拍照识别作文本，自动转成文字</summary>
+        <div style="margin-top:10px;background:var(--accent-l);border:1px solid rgba(216,90,48,.22);border-radius:12px;padding:12px 13px">
+          <div class="hint" style="margin:0 0 9px">AI 会<b>照原样抄录</b>（学生写错的字照抄，不改），认不准的字写成 <span class="uns-tag">〖？〗</span> 并在下面列出。<b>请您只核对这几处</b>，再点「开始体检」——这样错别字才找得准。</div>
+          <span class="lbl">拍照 / 选图（最多 4 张，手机可直接调相机）</span>
+          <input type="file" id="ocrFile" accept="image/*" multiple onchange="ocrPick(this)">
+          <div class="ocr-prev" id="ocrPrev"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+            <button class="btn small" id="btnOCR" onclick="ocrRun()">🔍 开始识别</button>
+            <button class="btn ghost small" onclick="ocrClear()">清除图片</button>
+          </div>
+          <div class="hint" id="ocrMsg" style="margin-top:8px">需要先在 ⚙ 设置 里填一个<b>支持看图的模型</b>（如智谱 glm-4v-flash，免费）。没有 Key 也不影响：可用手机自带「提取文字」后粘贴。</div>
+          <div id="ocrUn" style="margin-top:8px"></div>
+        </div>
       </details>
       <span class="lbl">作文正文</span>
       <textarea id="inText" rows="10" placeholder="把作文粘贴在这里…… 支持分段。"></textarea>
@@ -355,9 +378,14 @@ table.mini th{background:var(--accent-l);color:var(--accent-d)}
           </select>
         </div>
         <div style="flex:1">
-          <span class="lbl">模型名</span>
+          <span class="lbl">模型名（批改用）</span>
           <input type="text" id="setModel" placeholder="deepseek-chat">
         </div>
+      </div>
+      <div style="margin-top:11px">
+        <span class="lbl">📷 读图模型 <span style="font-weight:400;color:var(--ink-l)">（拍照识别用，需支持视觉；留空则用上面的模型）</span></span>
+        <input type="text" id="setVision" placeholder="如 glm-4v-flash">
+        <div class="hint" id="visionTip" style="margin-top:7px"></div>
       </div>
       <span class="lbl">API Key <span style="font-weight:400;color:var(--ink-l)">（在服务商官网申请，存本机）</span></span>
       <input type="password" id="setKey" placeholder="sk-……">
@@ -407,7 +435,7 @@ var S = null;
 function defaultState(){
   return {
     settings:{ provider:'deepseek', model:'deepseek-chat', apiKey:'', baseURL:'https://api.deepseek.com/v1',
-               defStudent:'', defGrade:'', words:'' },
+               vision:'', defStudent:'', defGrade:'', words:'' },
     records:[],
     last:{ title:'', student:'', grade:'', text:'', task:'' }
   };
@@ -415,7 +443,14 @@ function defaultState(){
 function load(){
   try{
     var raw = localStorage.getItem(STORE_KEY);
-    S = raw ? Object.assign(defaultState(), JSON.parse(raw)) : defaultState();
+    var d = defaultState();
+    if(raw){
+      var p = JSON.parse(raw) || {};
+      var dset = d.settings;
+      S = Object.assign(d, p);
+      S.settings = Object.assign(dset, p.settings || {});
+      S.last = Object.assign({ title:'', student:'', grade:'', text:'', task:'' }, p.last || {});
+    } else { S = d; }
   }catch(e){ S = defaultState(); }
   if(!S.settings) S.settings = defaultState().settings;
   if(!S.records) S.records = [];
@@ -509,6 +544,14 @@ function scan(text){
       }
     }
   });
+  /* 3.5 拍照识别留下的待核对标记（〖？〗）——提醒老师先确认，再看其它建议 */
+  (function(){
+    var re = /〖？〗/g, m2;
+    while((m2 = re.exec(text)) !== null){
+      issues.push({id:0, type:'待核对', quote:'〖？〗', fix:'', pos:m2.index,
+        why:'这里拍照识别时 AI 拿不准，请对照原照片确认学生写的是什么字，改好后下面几条错字建议才准。'});
+    }
+  })();
   /* 4. 亮点候选（本地启发）——避开被长句串覆盖的整句，避免双重标注 */
   var n = 0;
   cutBy(text, '。！？!?…\n').forEach(function(sn){
@@ -593,7 +636,7 @@ function renderPaper(){
     local.forEach(function(iss){
       var at = iss.pos - sn.start;
       parts += escHtml(s.slice(prev, at));
-      var cl = iss.type==='错别字'?'flag-word':iss.type==='表达'?'flag-de':iss.type==='标点'?'flag-long':'flag-good';
+      var cl = iss.type==='错别字'?'flag-word':iss.type==='表达'?'flag-de':iss.type==='标点'?'flag-long':iss.type==='待核对'?'flag-uns':'flag-good';
       parts += '<span class="w '+cl+'" onclick="focusIssue('+iss.id+')">'+escHtml(iss.quote)+'<span class="no">'+iss.id+'</span></span>';
       prev = at + iss.quote.length;
     });
@@ -613,22 +656,30 @@ function renderPaper(){
 var curTab = '全部';
 function renderIssues(tab){
   curTab = tab || '全部';
+  if(curTab==='待核对' && !LAST_ISSUES.some(function(i){ return i.type==='待核对'; })) curTab = '全部';
   var list = LAST_ISSUES.filter(function(i){
     if(curTab==='全部') return true;
+    if(curTab==='待核对') return i.type==='待核对';
     if(curTab==='错字') return i.type==='错别字';
     if(curTab==='标点') return i.type==='标点';
     if(curTab==='表达') return i.type==='表达';
     if(curTab==='亮点') return i.type==='亮点';
     return true;
   });
-  var colors = {错别字:'#D9534F', 标点:'#3A8FD6', 表达:'#E67E22', 亮点:'#C89000'};
-  var tabsHtml = ['全部','错字','标点','表达','亮点'].map(function(t){
+  var colors = {待核对:'#BA7517', 错别字:'#D9534F', 标点:'#3A8FD6', 表达:'#E67E22', 亮点:'#C89000'};
+  var hasUns = LAST_ISSUES.some(function(i){ return i.type==='待核对'; });
+  var tabsHtml = (hasUns ? ['全部','待核对','错字','标点','表达','亮点'] : ['全部','错字','标点','表达','亮点']).map(function(t){
     return '<span class="chip'+(curTab===t?' on':'')+'" onclick="renderIssues(\''+t+'\')">'+t+'</span>';
   }).join('');
   var items = list.map(function(iss){
     if(iss.type==='亮点'){
       return '<div class="issue"><span class="it" style="background:var(--gold)">亮点</span><div class="ib">'+
         '<div class="quote">✦ '+escHtml(iss.quote)+'</div><div class="why">'+escHtml(iss.why)+'</div></div></div>';
+    }
+    if(iss.type==='待核对'){
+      var ctx = (typeof LAST_TEXT==='string' && LAST_TEXT) ? LAST_TEXT.slice(Math.max(0, iss.pos-6), iss.pos+8) : '〖？〗';
+      return '<div class="issue"><span class="it" style="background:#BA7517">待核对</span><div class="ib">'+
+        '<div class="quote">上下文：'+escHtml(ctx)+'</div><div class="why">'+escHtml(iss.why)+'</div></div></div>';
     }
     return '<div class="issue"><span class="it" style="background:'+colors[iss.type]+'">'+iss.type+'</span><div class="ib">'+
       '<div class="quote">“'+escHtml(iss.quote)+'”'+(iss.fix?' → 建议 <b>'+escHtml(iss.fix)+'</b>':'')+'</div>'+
@@ -657,12 +708,141 @@ function focusIssue(id){
 }
 function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
+/* ================= 拍照识别（视觉模型抄录） ================= */
+var OCR_IMGS = [];
+var OCR_SYS = '你是作文本的「忠实抄录员」。你的唯一任务是把照片里的手写字原样转成文字，不做任何修改、纠错或润色。';
+var OCR_PROMPT = '请把这张手写作文照片逐字转成文字。严格遵守：\n'+
+  '1.【照原样抄】学生写错的字、用错的标点，都要照原样打出来，绝对不要帮他改正——老师正要用这些错误去找错别字。\n'+
+  '2.【认不准就标】看不清、拿不准的字，在正文里写成〖？〗占位，绝不允许凭上下文猜一个通顺的字填进去。\n'+
+  '3.【保持分段】按原文分段，段与段之间用换行。\n'+
+  '4. 不要输出解释、标题、序号，不要补字、不要改标点。\n\n'+
+  '只输出如下 JSON（不要有任何其它文字）：\n'+
+  '{"text":"抄录的全文（换行用\\n，认不准的字写成〖？〗）",'+
+  '"unsure":[{"at":"该字前面的字或词","guess":"你猜可能是什么字","why":"为什么拿不准"}]}';
+
+function ocrPick(inp){
+  var files = Array.prototype.slice.call(inp.files||[]).slice(0,4);
+  if(!files.length) return;
+  OCR_IMGS = [];
+  setOcrMsg('<span class="spin"></span> 正在压缩图片…');
+  var done = 0;
+  files.forEach(function(f, idx){
+    compressImg(f, function(url){
+      OCR_IMGS[idx] = url;
+      if(++done === files.length) renderOcrPrev();
+    });
+  });
+}
+function compressImg(file, cb){
+  if(!file || !/^image\//.test(file.type)){ cb(null); return; }
+  var r = new FileReader();
+  r.onload = function(e){
+    var img = new Image();
+    img.onload = function(){
+      var max = 1500, w = img.width, h = img.height;
+      if(Math.max(w,h) > max){ var k = max/Math.max(w,h); w = Math.round(w*k); h = Math.round(h*k); }
+      try{
+        var c = document.createElement('canvas'); c.width = w; c.height = h;
+        c.getContext('2d').drawImage(img,0,0,w,h);
+        cb(c.toDataURL('image/jpeg', 0.82));
+      }catch(err){ cb(e.target.result); }
+    };
+    img.onerror = function(){ cb(null); };
+    img.src = e.target.result;
+  };
+  r.onerror = function(){ cb(null); };
+  r.readAsDataURL(file);
+}
+function renderOcrPrev(){
+  var box = document.getElementById('ocrPrev');
+  var n = 0;
+  box.innerHTML = OCR_IMGS.map(function(u,i){
+    if(!u) return '';
+    n++;
+    return '<span class="thumb"><img src="'+u+'" alt="第'+(i+1)+'张"><i onclick="ocrDel('+i+')">×</i></span>';
+  }).join('');
+  var b = document.getElementById('btnOCR');
+  if(b) b.disabled = n===0;
+  if(n) setOcrMsg('已选 <b>'+n+'</b> 张。点「开始识别」，AI 会照原样抄录（每张约 10–30 秒）。');
+}
+function ocrDel(i){ OCR_IMGS[i] = null; renderOcrPrev(); }
+function ocrClear(){
+  OCR_IMGS = [];
+  var f = document.getElementById('ocrFile'); if(f) f.value = '';
+  renderOcrPrev();
+  document.getElementById('ocrUn').innerHTML = '';
+  setOcrMsg('已清除，可重新拍照或选图。');
+}
+function setOcrMsg(h){ var el = document.getElementById('ocrMsg'); if(el) el.innerHTML = h; }
+function ocrRun(){
+  var imgs = OCR_IMGS.filter(Boolean);
+  if(!imgs.length){ toast('请先拍照或选择一张作文照片'); return; }
+  var st = S.settings;
+  if(!st.apiKey){ toast('请先到 ⚙ 设置 填写 API Key（并选一个能看图的模型）'); return; }
+  var model = (st.vision||'').trim() || st.model;
+  if(st.provider === 'deepseek' && !(st.vision||'').trim()){
+    toast('DeepSeek 没有公开视觉接口，请到 ⚙ 设置 换服务商或填「读图模型」');
+    return;
+  }
+  var btn = document.getElementById('btnOCR');
+  btn.disabled = true;
+  var parts = [], unsures = [], i = 0;
+  function step(){
+    if(i >= imgs.length){
+      var cur = (document.getElementById('inText').value||'').trim();
+      var out = parts.join('\n\n');
+      if(cur && !confirm('正文框里已经有文字了。\n点「确定」= 用识别结果替换\n点「取消」= 追加在后面')){
+        document.getElementById('inText').value = cur + '\n\n' + out;
+      } else {
+        document.getElementById('inText').value = out;
+      }
+      renderUnsure(unsures);
+      btn.disabled = false;
+      setOcrMsg('✅ 已识别 '+imgs.length+' 张，文字已填入「作文正文」框。'+
+        (unsures.length ? '请核对下方 <b>'+unsures.length+'</b> 处疑点，再点「开始体检」。' : ' AI 对全文没有拿不准的字，可直接点「开始体检」。'));
+      try{ document.getElementById('ocrWrap').open = false; }catch(e){}
+      return;
+    }
+    setOcrMsg('<span class="spin"></span> 正在识别第 '+(i+1)+' / '+imgs.length+' 张…（约 10–30 秒）');
+    fetchChat(OCR_SYS, OCR_PROMPT, function(ok, msg){
+      if(!ok){
+        btn.disabled = false;
+        setOcrMsg('❌ 识别失败：'+escHtml(msg)+'<br>若提示该模型不支持图片，请到 ⚙ 设置 改选「智谱 GLM」或填读图模型。');
+        return;
+      }
+      var d = parseJSON(msg);
+      if(d && typeof d.text === 'string'){
+        parts.push(d.text);
+        unsures = unsures.concat(d.unsure || []);
+      } else {
+        parts.push(String(msg).replace(/^```[a-z]*\s*/i,'').replace(/```\s*$/,'').trim());
+      }
+      i++; step();
+    }, { model: model, image: imgs[i], temp: 0.1, max: 3000 });
+  }
+  step();
+}
+function renderUnsure(list){
+  var box = document.getElementById('ocrUn');
+  if(!box) return;
+  if(!list.length){
+    box.innerHTML = '<div class="hint" style="color:var(--gree)">✅ AI 对全文没有拿不准的字，识别很干净。</div>';
+    return;
+  }
+  box.innerHTML = '<div class="hint" style="margin-bottom:6px;color:#8A6A00"><b>⚠️ 有 '+list.length+' 处需要您确认</b>（正文里已用 〖？〗 标出，对照照片改掉即可）：</div>'+
+    list.map(function(x){
+      return '<div class="issue"><span class="it" style="background:var(--gold)">待核对</span><div class="ib">'+
+        '<div class="quote">'+(x.at ? '「'+escHtml(x.at)+'」之后：' : '')+' 猜测 <b>'+escHtml(x.guess||'？')+'</b></div>'+
+        (x.why ? '<div class="why">'+escHtml(x.why)+'</div>' : '')+'</div></div>';
+    }).join('');
+}
+
 /* ================= AI 深度批改 ================= */
 var PROVIDERS = {
-  deepseek:{ base:'https://api.deepseek.com/v1', model:'deepseek-chat' },
-  zhipu:{ base:'https://open.bigmodel.cn/api/paas/v4', model:'glm-4-flash' },
-  silicon:{ base:'https://api.siliconflow.cn/v1', model:'Qwen/Qwen2.5-7B-Instruct' },
-  custom:{ base:'', model:'' }
+  deepseek:{ base:'https://api.deepseek.com/v1', model:'deepseek-chat', vision:'' },
+  zhipu:{ base:'https://open.bigmodel.cn/api/paas/v4', model:'glm-4-flash', vision:'glm-4v-flash' },
+  silicon:{ base:'https://api.siliconflow.cn/v1', model:'Qwen/Qwen2.5-7B-Instruct', vision:'Qwen/Qwen2.5-VL-72B-Instruct' },
+  custom:{ base:'', model:'', vision:'' }
 };
 function providerChange(){
   var p = document.getElementById('setProvider').value;
@@ -671,10 +851,20 @@ function providerChange(){
   if(def && def.model && p!=='custom') document.getElementById('setModel').value = def.model;
   if(p==='custom' && !document.getElementById('setBase').value) document.getElementById('setBase').value = 'https://api.xxx.com/v1';
   if(p==='custom' && !document.getElementById('setModel').value) document.getElementById('setModel').value = 'your-model';
+  var vEl = document.getElementById('setVision');
+  if(vEl && def && p!=='custom' && !vEl.value.trim()) vEl.value = def.vision || '';
+  var tip = document.getElementById('visionTip');
+  if(tip){
+    if(p==='deepseek') tip.innerHTML = '⚠️ DeepSeek 目前没有公开的视觉接口，<b>拍照识别</b>请把服务商改选「智谱 GLM」或「硅基流动」。';
+    else if(p==='zhipu') tip.innerHTML = '💡 智谱 <b>glm-4v-flash</b> 目前免费，最适合老师批量用。';
+    else if(p==='silicon') tip.innerHTML = '💡 硅基流动的 <b>Qwen2.5-VL</b> 系列看图效果好，单价低。';
+    else tip.innerHTML = '💡 填任意 OpenAI 兼容格式的视觉模型名即可。';
+  }
 }
 function aiConfigTip(){ toast('体检不联网；深度批改请到 ⚙设置 填写大模型 API Key'); }
 function aiDeep(){
   if(!LAST_TEXT){ toast('请先「开始体检」'); return; }
+  if(LAST_TEXT.indexOf('〖？〗') >= 0 && !confirm('正文里还有 〖？〗 没有核对的字。\n建议先\"开始体检\"，在「待核对」里对照照片改掉，AI 批改才准。\n仍要继续吗？')) return;
   var st = S.settings;
   if(!st.apiKey){ toast('请先到 ⚙ 设置 填写 API Key（或自定义中转地址）'); return; }
   document.getElementById('btnAI').disabled = true;
@@ -697,9 +887,16 @@ function aiDeep(){
     renderAI(msg);
   });
 }
-function fetchChat(sys, user, cb){
+function parseJSON(raw){ try{ var m = String(raw).match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; }catch(e){ return null; } }
+function fetchChat(sys, user, cb, opt){
   var st = S.settings;
-  var body = { model: st.model, messages:[{role:'system',content:sys},{role:'user',content:user}], temperature:0.4, max_tokens:1600 };
+  opt = opt || {};
+  var model = (opt.model || st.model || '').trim();
+  var content = opt.image
+    ? [{ type:'text', text:user }, { type:'image_url', image_url:{ url:opt.image } }]
+    : user;
+  var body = { model: model, messages:[{role:'system',content:sys},{role:'user',content:content}],
+               temperature: opt.temp!=null ? opt.temp : 0.4, max_tokens: opt.max || 1600 };
   var url = (st.baseURL||PROVIDERS[st.provider].base||'').replace(/\/$/,'') + '/chat/completions';
   fetch(url, {
     method:'POST',
@@ -991,6 +1188,7 @@ function loadSettingsUI(){
   document.getElementById('setModel').value = st.model || PROVIDERS[st.provider||'deepseek'].model;
   document.getElementById('setKey').value = st.apiKey || '';
   document.getElementById('setBase').value = st.baseURL || '';
+  document.getElementById('setVision').value = st.vision || '';
   document.getElementById('setDefStudent').value = st.defStudent || '';
   document.getElementById('setWords').value = st.words || '';
   providerChange();
@@ -1001,6 +1199,7 @@ function saveSettings(){
   st.model = document.getElementById('setModel').value.trim() || PROVIDERS[st.provider].model;
   st.apiKey = document.getElementById('setKey').value.trim();
   st.baseURL = document.getElementById('setBase').value.trim();
+  st.vision = document.getElementById('setVision').value.trim();
   st.defStudent = document.getElementById('setDefStudent').value.trim();
   S.settings = st; save(); toast('设置已保存');
 }
@@ -1069,6 +1268,8 @@ load();
 save();  /* 首访即落库，保证存储键 zuowen_v1 存在 */
 renderPhrases();
 setVerdict(null, '良');
+renderOcrPrev();
+loadSettingsUI();
 (function(){
   var lv = S.last || {};
   if(lv.title) document.getElementById('inTitle').value = lv.title;

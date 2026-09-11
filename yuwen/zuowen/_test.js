@@ -83,7 +83,51 @@ function ok(name, cond, extra) {
   ok('统计区有内容', d.getElementById('statBody').textContent.indexOf('高频疑似错词') >= 0);
   ok('一页纸文本生成', d.getElementById('txtOut').style.display === 'block' && d.getElementById('txtOut').textContent.indexOf('讲评课一页纸') >= 0);
 
-  console.log('▶ 6. 页面切换与杂项');
+  console.log('▶ 6. 拍照识别模块');
+  ok('OCR 函数已挂载', typeof w.ocrRun === 'function' && typeof w.compressImg === 'function' && typeof w.renderUnsure === 'function' && typeof w.ocrClear === 'function');
+  ok('初始「开始识别」按钮禁用', d.getElementById('btnOCR').disabled === true);
+  ok('读图模型预设存在', w.PROVIDERS.zhipu.vision === 'glm-4v-flash' && ('vision' in w.S.settings));
+  ok('提示词要求照抄错字', w.OCR_PROMPT.indexOf('照原样') >= 0 && w.OCR_PROMPT.indexOf('〖？〗') >= 0);
+
+  const unsIssues = w.scan('今天真高兴〖？〗我玩得很开心，心里美滋滋的。');
+  ok('〖？〗被识别为待核对', unsIssues.some(i => i.type === '待核对'));
+  d.getElementById('inText').value = DEMO + '〖？〗';
+  w.runCheck();
+  const chips = Array.prototype.slice.call(d.querySelectorAll('#issueWrap .chip')).map(c => c.textContent);
+  ok('出现「待核对」tab', chips.indexOf('待核对') >= 0, 'chips=' + chips.join('/'));
+  ok('正文渲染待核对标注', d.querySelectorAll('#paperBox .flag-uns').length >= 1);
+  w.renderIssues('待核对');
+  ok('筛选后只显示待核对', d.querySelectorAll('#issueBox .issue').length === 1);
+  w.renderIssues('全部');
+  d.getElementById('inText').value = DEMO;
+  w.runCheck();
+  const chips2 = Array.prototype.slice.call(d.querySelectorAll('#issueWrap .chip')).map(c => c.textContent);
+  ok('无待核对时不显示该 tab', chips2.indexOf('待核对') < 0);
+
+  w.renderUnsure([{ at: '公园', guess: '圆', why: '笔画不清' }]);
+  ok('待核对清单渲染', d.getElementById('ocrUn').textContent.indexOf('圆') >= 0);
+  w.renderUnsure([]);
+  ok('无待核对时提示干净', d.getElementById('ocrUn').textContent.indexOf('没有拿不准') >= 0);
+
+  let captured = null;
+  w.fetch = function (url, opt) { captured = { url: url, body: JSON.parse(opt.body) }; return Promise.resolve({ ok: true, json: () => Promise.resolve({ choices: [{ message: { content: '{"text":"好的","unsure":[]}' } }] }) }); };
+  await new Promise(res => { w.fetchChat('sys', 'user', function () { res(); }, { image: 'data:image/jpeg;base64,AAA', model: 'glm-4v-flash' }); });
+  const mc = captured.body.messages[1].content;
+  ok('图片请求为多模态数组', Array.isArray(mc) && mc[0].type === 'text' && mc[1].type === 'image_url' && mc[1].image_url.url.indexOf('data:image') === 0);
+  ok('图片请求用读图模型', captured.body.model === 'glm-4v-flash');
+  await new Promise(res => { w.fetchChat('sys', 'user', function () { res(); }, {}); });
+  ok('纯文本请求仍为字符串', typeof captured.body.messages[1].content === 'string');
+
+  d.getElementById('setVision').value = 'glm-4v-flash';
+  w.saveSettings();
+  ok('读图模型已持久化', w.S.settings.vision === 'glm-4v-flash');
+
+  w.localStorage.setItem('zuowen_v1', JSON.stringify({ settings: { provider: 'deepseek', model: 'deepseek-chat', apiKey: '', baseURL: '', defStudent: '', defGrade: '', words: '' }, records: [{ a: 1 }], last: { title: '旧' } }));
+  w.load();
+  ok('旧版数据升级后补上 vision', ('vision' in w.S.settings) && w.S.settings.vision === '');
+  ok('旧版数据记录未丢失', w.S.records.length === 1 && w.S.last.title === '旧');
+
+  console.log('▶ 7. 页面切换与杂项');
   ok('切档案页无错', (w.goTab('files'), d.getElementById('page-files').classList.contains('on')));
   ok('切设置页无错', (w.goTab('set'), true));
   ok('设置回填无错', (w.loadSettingsUI(), d.getElementById('setProvider').value === 'deepseek'));
