@@ -212,6 +212,10 @@ a.link{color:var(--accent-d)}
 table.mini{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
 table.mini th,table.mini td{border:1px solid var(--line);padding:6px 9px;text-align:left}
 table.mini th{background:var(--accent-l);color:var(--accent-d)}
+/* 批改失败的行：整行标红并置顶，一眼看出哪几篇要重跑 */
+table.mini tr.rowfail td{background:var(--red-l)}
+table.mini tr.rowfail td:first-child{color:var(--red);font-weight:800}
+table.mini tr.rowfail:hover td{background:#FBD9D7}
 @media(max-width:640px){
   body{font-size:15px}
   .paper{font-size:15.5px;padding:12px 13px}
@@ -1088,6 +1092,7 @@ function clearRes(){
 
 /* ================= 一键批改全部（批量） ================= */
 var BATCH = [], BATCH_RUN = false, BATCH_STOP = false, BATCH_MODE = 'local', BATCH_DONE = false, BATCH_SAVED = 0;
+var BATCH_SCOPE = null;   /* 本轮实际在跑的篇目（补跑失败时是子集），仅用于进度显示 */
 var BATCH_CONC = 2;
 
 function sepName(line){
@@ -1165,7 +1170,7 @@ function batchImport(inp){
 }
 function batchClear(){
   if(BATCH_RUN){ toast('正在批改中，请先点「停止」'); return; }
-  BATCH = []; BATCH_SAVED = 0; BATCH_STOP = false; BATCH_DONE = false;
+  BATCH = []; BATCH_SAVED = 0; BATCH_STOP = false; BATCH_DONE = false; BATCH_SCOPE = null;
   document.getElementById('bText').value = '';
   document.getElementById('bFiles').value = '';
   document.getElementById('bSum').innerHTML = '';
@@ -1178,17 +1183,18 @@ function batchStop(){
   var b = document.getElementById('btnBatchStop'); if(b) b.disabled = true;
   toast('已发出停止，等手上这几篇跑完就停');
 }
-function batchStats(){
+function scopeStats(list){
   var fin = 0, ok = 0, bad = 0;
-  BATCH.forEach(function(b){
+  (list || []).forEach(function(b){
     if(b.status === 'done'){ fin++; ok++; }
     else if(b.status === 'error'){ fin++; bad++; }
     else if(b.status === 'checked' && BATCH_MODE === 'local'){ fin++; ok++; }
   });
-  return { total: BATCH.length, fin: fin, ok: ok, bad: bad };
+  return { total: (list || []).length, fin: fin, ok: ok, bad: bad };
 }
+function batchStats(){ return scopeStats(BATCH); }
 function updateBatchProg(){
-  var s = batchStats();
+  var s = scopeStats(BATCH_SCOPE || BATCH);
   var bar = document.getElementById('bProgBar');
   if(bar) bar.style.width = (s.total ? Math.round(s.fin / s.total * 100) : 0) + '%';
   var t = document.getElementById('bProgTxt');
@@ -1197,7 +1203,7 @@ function updateBatchProg(){
     t.innerHTML = '本地体检（不联网）：<b>' + s.fin + ' / ' + s.total + '</b> 篇';
   } else {
     t.innerHTML = (BATCH_RUN ? 'AI 批改中… ' : 'AI 批改结束 ') + '<b>' + s.fin + ' / ' + s.total + '</b> 篇' +
-      (s.bad ? '，失败 <b style="color:var(--red)">' + s.bad + '</b> 篇（可再点「一键批改全部」重跑）' : '');
+      (s.bad ? '，失败 <b style="color:var(--red)">' + s.bad + '</b> 篇（可点「🔁 只重跑失败的」）' : '');
   }
 }
 
@@ -1255,11 +1261,34 @@ function batchStart(mode){
   if(mode === 'local'){ BATCH_RUN = false; batchFinish(false); return; }
 
   /* 第二步：AI 逐篇（并发 BATCH_CONC，失败自动重试 1 次） */
+  runAIBatch(BATCH);
+}
+/* 只补跑失败的几篇：不碰已经批好的，省时间也省钱 */
+function batchRetryFailed(){
+  if(BATCH_RUN){ toast('正在批改中，请稍候…'); return; }
+  if(!(S.settings && S.settings.apiKey)){ toast('没填 API Key，跑不了 AI 评语。去「⚙ 设置」填一个'); return; }
+  var bad = BATCH.filter(function(b){ return b.status === 'error'; });
+  if(!bad.length){ toast('没有失败的篇目 ✓'); return; }
+  BATCH_MODE = 'ai';
+  bad.forEach(function(b){ b.err = ''; b.status = 'checked'; });
+  renderBatch();
+  runAIBatch(bad);
+}
+/* 通用：只对 list 里的篇目跑 AI 评语，其它篇目原样不动 */
+function runAIBatch(list){
+  if(!list || !list.length) return;
+  BATCH_RUN = true; BATCH_STOP = false; BATCH_DONE = false; BATCH_SCOPE = list;
+  var bb = document.getElementById('btnBatch'); if(bb) bb.disabled = true;
+  var sb = document.getElementById('btnBatchStop'); if(sb){ sb.style.display = ''; sb.disabled = false; }
+  document.getElementById('bProgWrap').style.display = 'block';
+  updateBatchProg(); renderBatch();
+
   var cursor = 0, active = 0;
+  function finish(){ BATCH_RUN = false; BATCH_SCOPE = null; batchFinish(BATCH_STOP); }
   function pump(){
-    if(BATCH_STOP && active === 0){ BATCH_RUN = false; batchFinish(true); return; }
-    while(!BATCH_STOP && active < BATCH_CONC && cursor < BATCH.length){
-      var b = BATCH[cursor++];
+    if(BATCH_STOP && active === 0){ finish(); return; }
+    while(!BATCH_STOP && active < BATCH_CONC && cursor < list.length){
+      var b = list[cursor++];
       active++;
       b.status = 'ai';
       updateBatchProg(); renderBatch();
@@ -1272,7 +1301,7 @@ function batchStart(mode){
             item.status = ok ? 'done' : 'error';
             if(!ok) item.err = err || '未知错误';
             updateBatchProg(); renderBatch();
-            if(cursor >= BATCH.length && active === 0){ BATCH_RUN = false; batchFinish(false); }
+            if(cursor >= list.length && active === 0) finish();
             else pump();
           });
         }
@@ -1317,14 +1346,29 @@ function renderBatch(){
     (s.bad ? '，失败 <b style="color:var(--red)">' + s.bad + '</b> 篇' : '') +
     (BATCH_SAVED ? '，已存入档案 <b>' + BATCH_SAVED + '</b> 篇' : '') +
     (BATCH_MODE === 'local' ? '。本地体检不花钱；填了 API Key 可再点「一键批改全部」补 AI 评语。' : '。') +
-    '</div>';
-  var rows = BATCH.map(function(b, i){
-    var stt = b.status === 'error' ? '<span class="bstat bad">失败</span>'
+    '</div>' +
+    /* 失败置顶提示：只在跑完后排序，跑动中保持原序，避免行来回跳 */
+    (!BATCH_RUN && s.bad ? '<div class="hint" style="margin-top:5px;color:var(--red)">⚠ 已把失败的 <b>' + s.bad +
+      '</b> 篇排到最前（红色行）。序号仍是原来的顺序号，方便对照你贴进来的先后；点下方「🔁 只重跑失败的」可只补跑这几篇。</div>' : '');
+
+  var order = BATCH.map(function(b, i){ return i; });
+  if(!BATCH_RUN){
+    order.sort(function(a, b){
+      var fa = BATCH[a].status === 'error' ? 0 : 1;
+      var fb = BATCH[b].status === 'error' ? 0 : 1;
+      return fa - fb || (a - b);
+    });
+  }
+  var rows = order.map(function(i){
+    var b = BATCH[i];
+    var fail = b.status === 'error';
+    var stt = fail ? '<span class="bstat bad">失败</span>'
       : b.status === 'done' ? '<span class="bstat ok">✓ 已批</span>'
       : b.status === 'ai' ? '<span class="bstat run">AI 跑…</span>'
       : b.status === 'checked' ? '<span class="bstat wait">已体检</span>'
       : '<span class="bstat wait">待批</span>';
-    return '<tr onclick="openBatch(' + i + ')" style="cursor:pointer">' +
+    return '<tr class="' + (fail ? 'rowfail' : '') + '" onclick="openBatch(' + i + ')" style="cursor:pointer"' +
+      (fail ? ' title="这篇没批上：' + escHtml(b.err || '未知错误') + '。可点下方「只重跑失败的」补跑"' : '') + '>' +
       '<td>' + (i + 1) + '</td><td><b>' + escHtml(b.student) + '</b>' +
       (b.unsN ? ' <span class="uns-tag" title="有拍照识别待核对的字">？' + b.unsN + '</span>' : '') + '</td>' +
       '<td>' + (b.st ? b.st.chars : 0) + '</td>' +
@@ -1337,6 +1381,8 @@ function renderBatch(){
     '<b style="font-size:14px;display:block;margin-top:13px">📋 批改总表 <span style="font-weight:400;font-size:12px;color:var(--ink-l)">（点任意一行看这一篇的详情）</span></b>' +
     '<table class="mini"><tr><th>#</th><th>学生</th><th>字数</th><th>错字</th><th>长句</th><th>等第</th><th>状态</th></tr>' + rows + '</table>' +
     '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">' +
+      (s.bad && !BATCH_RUN ? '<button class="btn ghost small" style="color:var(--red);border-color:rgba(217,83,79,.45)" ' +
+        'onclick="batchRetryFailed()">🔁 只重跑失败的 ' + s.bad + ' 篇</button>' : '') +
       '<button class="btn ghost small" onclick="batchToRecords()">💾 全部存入学生档案</button>' +
       '<button class="btn ghost small" onclick="batchExport()">⬇ 导出批改总表 CSV</button>' +
       '<button class="btn ghost small" onclick="goTab(\'stats\')">📊 看讲评统计</button>' +

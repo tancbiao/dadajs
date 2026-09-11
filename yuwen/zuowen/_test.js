@@ -197,6 +197,46 @@ function ok(name, cond, extra) {
   ok('失败重试后仍能成功', w.BATCH.every(b => b.status === 'done'), w.BATCH.map(b => b.status + '/' + (b.err || '')).join(','));
   ok('重试确实多调了接口', aiCalls >= 4, 'aiCalls=' + aiCalls);
 
+  /* ---- 失败篇目：标红 + 置顶 + 只重跑失败的 ---- */
+  d.getElementById('bText').value = '===败一===\n' + DEMO + '\n\n===败二===\n' + DEMO;
+  failFirst = 999;                                   // 一直失败，制造真正的「失败篇目」
+  w.batchRun();
+  const t3 = Date.now();
+  while (w.BATCH_RUN && Date.now() - t3 < 20000) await new Promise(r => setTimeout(r, 25));
+  ok('失败场景：两篇都是 error', w.BATCH.every(b => b.status === 'error'), w.BATCH.map(b => b.status).join(','));
+  ok('失败场景：错误原因已记录', w.BATCH.every(b => (b.err || '').length > 0));
+  ok('失败场景：失败行加 rowfail 类', d.querySelectorAll('#bSum tr.rowfail').length === 2);
+  ok('失败场景：出现「只重跑失败的」按钮',
+     [].slice.call(d.querySelectorAll('#bSum button')).some(b => b.textContent.indexOf('只重跑失败的 2 篇') >= 0));
+  ok('失败场景：总表有置顶提示', d.getElementById('bSum').textContent.indexOf('已把失败的') >= 0);
+  ok('失败场景：失败的不入档案', w.BATCH.every(b => b.saved !== true));
+
+  const beforeRetry = w.S.records.length; aiCalls = 0; failFirst = 0;
+  w.batchRetryFailed();
+  const t4 = Date.now();
+  while (w.BATCH_RUN && Date.now() - t4 < 20000) await new Promise(r => setTimeout(r, 25));
+  ok('补跑：只调了 2 次接口（没重复跑成功篇目）', aiCalls === 2, 'aiCalls=' + aiCalls);
+  ok('补跑：两篇都转成功', w.BATCH.every(b => b.status === 'done'));
+  ok('补跑：失败红行已消失', d.querySelectorAll('#bSum tr.rowfail').length === 0);
+  ok('补跑：重跑按钮已收掉',
+     ![].slice.call(d.querySelectorAll('#bSum button')).some(b => b.textContent.indexOf('只重跑失败的') >= 0));
+  ok('补跑：补跑成功后才入档案', w.S.records.length === beforeRetry + 2, 'records=' + w.S.records.length);
+
+  /* 排序细节：三篇里中间一篇失败 → 应被提到第一行，序号仍是原顺序号 */
+  d.getElementById('bText').value = BT;
+  w.batchRunLocal();
+  ok('排序前：3 篇已体检', w.BATCH.length === 3 && w.BATCH.every(b => b.status === 'checked'));
+  w.BATCH[1].status = 'error'; w.BATCH[1].err = '模拟失败';
+  w.renderBatch();
+  const trs = d.querySelectorAll('#bSum table.mini tr');
+  ok('排序：失败行被提到第一行', trs[1].className.indexOf('rowfail') >= 0 && trs[1].children[0].textContent === '2',
+     '第一行=' + trs[1].children[0].textContent + '/' + trs[1].className);
+  ok('排序：其余行保持原顺序', trs[2].children[0].textContent === '1' && trs[3].children[0].textContent === '3');
+  ok('排序：置顶行数仍为 1', d.querySelectorAll('#bSum tr.rowfail').length === 1);
+  w.BATCH_RUN = true; w.renderBatch();
+  ok('跑动中不排序（避免行乱跳）', d.querySelectorAll('#bSum table.mini tr')[1].children[0].textContent === '1');
+  w.BATCH_RUN = false;
+
   d.getElementById('bText').value = BT;
   w.batchRun();
   w.batchStop();
