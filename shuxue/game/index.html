@@ -1,0 +1,1143 @@
+<!--
+  ═══════════════════════════════════════════════════
+  数学勇者大冒险 · 人教版五年级全学年打怪闯关
+  游戏创意：棠下镇沙富小学 杨翔龙老师
+  单文件零依赖，双击 index.html 即玩
+  教师密码默认 202609（教师区-设置 里可改）
+  加题：直接在下方 BANK 数组里照格式追加即可
+  ═══════════════════════════════════════════════════
+-->
+<!DOCTYPE html>
+<html lang="zh-CN" data-page-node-id="fkejLsYntREiGixASUfhRZ">
+<head data-page-node-id="LUgdov1n2lwDdC5lGRqBOc">
+<meta charset="UTF-8" data-page-node-id="vHMfDbeRJuZpACpB8zwl94">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" data-page-node-id="jPqP3sN5e66aIsH2EjH5dZ">
+<title>数学勇者大冒险 · 人教版五年级全学年闯关</title>
+<style>
+:root{
+  --ink:#4A4458; --ink-l:#8B84A0; --ink-h:#332E44;
+  --white:#FFFEFB; --card:rgba(255,254,251,.96);
+  --bg1:#FFF3E6; --bg2:#FFF6FA; --bg3:#EAF6FF;
+  --line:rgba(74,68,88,.13);
+  --orange:#F08A24; --orange-d:#D9711A; --orange-l:#FFF0DD;
+  --red:#E8554D; --red-l:#FDEBE9;
+  --blue:#4AA8E0; --blue-l:#E7F4FD;
+  --green:#3DBE7A; --green-l:#E7F7EF;
+  --gold:#F2B705; --gold-l:#FFF6D8;
+  --purple:#9C7BE8; --purple-l:#F1EBFD;
+  --radius:22px; --radius-s:14px;
+  --shadow:0 4px 16px rgba(130,100,80,.10);
+  --shadow-h:0 10px 30px rgba(130,100,80,.18);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:"幼圆","YouYuan","Yuanti SC","PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink); min-height:100vh; line-height:1.6;
+  background:
+    radial-gradient(1000px 560px at 6% -6%, var(--bg1) 0%, transparent 55%),
+    radial-gradient(900px 540px at 98% -2%, var(--bg2) 0%, transparent 55%),
+    radial-gradient(1000px 600px at 50% 108%, var(--bg3) 0%, transparent 55%),
+    var(--white);
+  background-attachment:fixed; padding:0 14px 70px;
+  -webkit-font-smoothing:antialiased;
+  user-select:none;
+}
+.wrap{max-width:1060px;margin:0 auto}
+button{font-family:inherit;border:none;cursor:pointer;color:inherit}
+input{font-family:inherit}
+.hidden{display:none!important}
+
+/* ===== 顶栏 ===== */
+#toolbar{position:fixed;top:0;left:0;right:0;z-index:60;display:flex;align-items:center;gap:8px;
+  padding:8px 16px;background:rgba(255,254,251,.86);backdrop-filter:blur(8px);
+  border-bottom:1px solid var(--line)}
+#tbLogo{font-weight:800;font-size:14px;color:var(--ink-h);display:flex;align-items:center;gap:6px;margin-right:auto}
+#tbLogo .lg{width:26px;height:26px;border-radius:9px;background:linear-gradient(135deg,var(--orange),var(--gold));
+  display:flex;align-items:center;justify-content:center;font-size:15px;box-shadow:var(--shadow)}
+.tbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-size:13px;
+  color:var(--ink);box-shadow:var(--shadow);transition:.15s}
+.tbtn:hover{transform:translateY(-1px);box-shadow:var(--shadow-h)}
+.tbtn.off{opacity:.5}
+.screen{display:none;max-width:1060px;margin:0 auto;padding-top:64px}
+.screen.on{display:block;animation:pop .28s ease}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ===== 通用卡片 ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:18px 20px;box-shadow:var(--shadow)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:16px;
+  padding:13px 26px;font-size:17px;font-weight:700;transition:.15s;box-shadow:0 5px 0 rgba(0,0,0,.06)}
+.btn:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.06)}
+.btn-big{font-size:20px;padding:16px 40px;border-radius:20px}
+.btn-orange{background:linear-gradient(135deg,var(--orange),#F7B14C);color:#fff}
+.btn-green{background:linear-gradient(135deg,var(--green),#63D69C);color:#fff}
+.btn-blue{background:linear-gradient(135deg,var(--blue),#79C4EF);color:#fff}
+.btn-gray{background:#ECE9F2;color:var(--ink-l)}
+.btn-red{background:linear-gradient(135deg,var(--red),#F07C74);color:#fff}
+.btn-ghost{background:transparent;box-shadow:none;border:2px dashed rgba(74,68,88,.25);color:var(--ink-l)}
+
+/* ===== 开屏 ===== */
+#boot{padding-top:70px;text-align:center}
+.hero-emoji{font-size:56px;line-height:1;margin:6px 0;display:inline-block;animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+h1.title{font-size:clamp(30px,6vw,46px);margin:6px 0 4px;color:var(--ink-h);letter-spacing:1px;font-weight:900}
+h1.title .em{background:linear-gradient(96deg,var(--orange-d),var(--red) 45%,var(--purple));-webkit-background-clip:text;background-clip:text;color:transparent}
+.subtag{color:var(--ink-l);font-size:14.5px;margin-bottom:22px}
+.subtag b{color:var(--orange-d);font-weight:700}
+.boot-card{max-width:620px;margin:0 auto 18px}
+.av-row{display:flex;gap:12px;justify-content:center;margin:16px 0 6px;flex-wrap:wrap}
+.av{border:3px solid transparent;border-radius:20px;padding:10px 12px 8px;background:var(--white);
+  box-shadow:var(--shadow);transition:.15s;font-size:13px;color:var(--ink-l);width:96px}
+.av .ic{font-size:40px;display:block;margin-bottom:2px}
+.av.on{border-color:var(--orange);background:var(--orange-l);transform:translateY(-3px)}
+.av small{display:block;font-weight:700;color:var(--ink-h)}
+.av em{font-size:11px;color:var(--ink-l);font-style:normal}
+.field{margin:14px auto;max-width:340px}
+.field input{width:100%;text-align:center;font-size:18px;padding:11px 14px;border-radius:14px;
+  border:2px solid var(--line);outline:none;background:var(--white)}
+.field input:focus{border-color:var(--orange)}
+.boot-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.boot-sub{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.linkbtn{background:none;color:var(--ink-l);font-size:13px;text-decoration:underline dotted;padding:4px}
+.linkbtn:hover{color:var(--orange-d)}
+.kv{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:18px}
+.kv .k{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:8px 14px;font-size:12.5px;color:var(--ink-l)}
+.kv .k b{color:var(--ink-h);display:block;font-size:15px}
+.notice-band{margin-top:14px;font-size:12.5px;color:var(--ink-l);background:var(--gold-l);border:1px dashed rgba(242,183,5,.5);border-radius:12px;padding:8px 14px;display:inline-block}
+
+/* ===== 玩家信息条 ===== */
+#topBar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:var(--card);border:1px solid var(--line);
+  border-radius:18px;padding:10px 18px;box-shadow:var(--shadow);margin-bottom:16px}
+#tbAv{font-size:30px}
+#tbName{font-weight:800;color:var(--ink-h);font-size:15px}
+#tbLv{font-size:11px;color:var(--orange-d);background:var(--orange-l);border-radius:999px;padding:1px 9px;font-weight:700}
+.expbar{width:90px;height:8px;background:#F0EDF5;border-radius:99px;overflow:hidden;margin-top:3px}
+.expbar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--orange),var(--gold));transition:.3s}
+#tbStats{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.tchip{background:var(--white);border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--ink-l)}
+.tchip b{color:var(--ink-h)}
+.tchip.star b{color:var(--gold)}
+.tchip.gold b{color:var(--orange-d)}
+.tchip.warn b{color:var(--red)}
+
+/* ===== 地图 ===== */
+.zone-tag{display:inline-flex;align-items:center;gap:8px;font-size:20px;font-weight:900;color:var(--ink-h);margin:22px 4px 12px}
+.zone-tag .zn{width:34px;height:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;color:#fff}
+.zone-tag small{font-weight:500;color:var(--ink-l);font-size:12.5px;margin-left:6px}
+#mapA .zn{background:linear-gradient(135deg,#F08A24,#F7B14C)}
+#mapB .zn{background:linear-gradient(135deg,#9C7BE8,#B89EF0)}
+.node-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:12px}
+.node{position:relative;background:var(--card);border:1.5px solid var(--line);border-radius:18px;padding:14px 10px 12px;
+  text-align:center;box-shadow:var(--shadow);transition:.15s;overflow:hidden}
+.node .mob{font-size:38px;display:block;line-height:1.1;transition:.2s}
+.node .no-badge{position:absolute;top:8px;left:9px;font-size:11px;font-weight:800;color:#fff;background:var(--purple);
+  border-radius:999px;padding:1px 9px}
+.node .nm{font-weight:800;color:var(--ink-h);font-size:14px;margin-top:6px}
+.node .kb{font-size:11px;color:var(--ink-l);display:block;margin-top:1px}
+.node .st{font-size:13px;margin-top:5px;letter-spacing:2px;color:#D9D5E2}
+.node.done{border-color:rgba(242,183,5,.6);background:linear-gradient(160deg,var(--gold-l),var(--card))}
+.node.done .st{color:var(--gold)}
+.node.now{border-color:var(--orange);box-shadow:0 0 0 4px rgba(240,138,36,.18)}
+.node.now .no-badge{background:var(--orange)}
+.node.locked{opacity:.62;filter:saturate(.3)}
+.node.locked .mob{opacity:.45}
+.node.locked .lk{position:absolute;top:8px;right:9px;font-size:13px}
+.node:hover{transform:translateY(-3px)}
+.node.pulse .mob{animation:bob 1.2s ease-in-out infinite}
+.map-foot{text-align:center;margin:22px 0 8px;color:var(--ink-l);font-size:13px}
+
+/* ===== 战斗 ===== */
+#battle{padding-top:64px}
+#btTop{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+#hpRow{display:flex;gap:3px;font-size:21px;background:var(--red-l);border:1px solid rgba(232,85,77,.25);border-radius:14px;padding:6px 12px}
+#hpRow .h{filter:grayscale(1) opacity(.3)}
+#hpRow .h.live{filter:none;animation:beat 1.1s ease-in-out infinite}
+@keyframes beat{0%,100%{transform:scale(1)}40%{transform:scale(1.18)}}
+#battle .qpos{margin-left:auto;font-size:14px;font-weight:800;color:var(--ink-h);background:var(--white);border:1px solid var(--line);border-radius:999px;padding:4px 14px}
+#qkind{font-size:11px;font-weight:700;color:#fff;border-radius:8px;padding:2px 9px}
+.arena{display:grid;grid-template-columns:340px 1fr;gap:14px;align-items:stretch}
+@media(max-width:860px){.arena{grid-template-columns:1fr}}
+.mon-card{position:relative;background:linear-gradient(170deg,#4C4460,#322C46);border-radius:var(--radius);
+  color:#fff;padding:20px 18px 16px;overflow:hidden;min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.mon-card::before{content:"";position:absolute;inset:0;background:radial-gradient(300px 200px at 50% -20px,rgba(242,183,5,.28),transparent 70%)}
+.mon-card .m-face{font-size:96px;line-height:1;position:relative;filter:drop-shadow(0 8px 14px rgba(0,0,0,.35));transition:.18s}
+.mon-card .m-name{position:relative;font-size:19px;font-weight:900;margin-top:8px;text-align:center}
+.mon-card .m-zone{position:relative;font-size:12px;opacity:.75;margin-top:2px;text-align:center}
+.hp-wrap{position:relative;width:100%;max-width:260px;margin-top:14px}
+.hp-label{display:flex;justify-content:space-between;font-size:11px;opacity:.8;margin-bottom:4px}
+.hp-cells{display:flex;gap:5px}
+.hcell{flex:1;height:15px;border-radius:6px;background:rgba(255,255,255,.16);transition:.25s}
+.hcell.live{background:linear-gradient(90deg,#FF7A6E,#FFB35C);box-shadow:0 0 8px rgba(255,130,100,.5)}
+.mon-card .atk{position:relative;margin-top:12px;font-size:12px;opacity:.8;display:flex;gap:12px}
+.mon-card.hit{animation:monhit .3s}
+@keyframes monhit{0%,100%{transform:translateX(0)}25%{transform:translateX(-9px)}55%{transform:translateX(7px)}80%{transform:translateX(-4px)}}
+.mon-card.defeat{animation:vanish .5s forwards}
+@keyframes vanish{0%{transform:scale(1);opacity:1}60%{transform:scale(1.12)}100%{transform:scale(.2);opacity:0}}
+.q-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;padding:22px 24px;min-height:340px}
+.q-tagbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.chip{font-size:11.5px;border-radius:999px;padding:2px 11px;font-weight:700}
+.chip.blue{background:var(--blue-l);color:var(--blue)}
+.chip.green{background:var(--green-l);color:var(--green)}
+.chip.gold{background:var(--gold-l);color:#B98A00}
+.chip.red{background:var(--red-l);color:var(--red)}
+.chip.star{background:var(--purple-l);color:var(--purple)}
+#qText{font-size:clamp(19px,2.6vw,24px);font-weight:700;color:var(--ink-h);line-height:1.55;margin:4px 0 16px}
+#opsBox{display:grid;gap:10px}
+.op{display:flex;align-items:center;gap:12px;text-align:left;background:var(--white);border:2px solid var(--line);
+  border-radius:16px;padding:12px 18px;font-size:17.5px;font-weight:600;color:var(--ink-h);transition:.13s;width:100%}
+.op .ok{flex:none;width:30px;height:30px;border-radius:10px;background:#F0EDF5;color:var(--ink-l);
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px}
+.op:hover{border-color:var(--orange);background:var(--orange-l)}
+.op.correct{border-color:var(--green);background:var(--green-l)}
+.op.correct .ok{background:var(--green);color:#fff}
+.op.wrong{border-color:var(--red);background:var(--red-l);animation:shake .3s}
+.op.wrong .ok{background:var(--red);color:#fff}
+.op.faded{opacity:.42;border-style:dashed}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-7px)}55%{transform:translateX(6px)}80%{transform:translateX(-3px)}}
+.op.ju{justify-content:center;font-size:22px;padding:18px}
+.fill-box{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:8px}
+.fill-box input{font-size:24px;text-align:center;width:190px;padding:9px;border-radius:14px;border:2px solid var(--line);outline:none;background:var(--white);font-weight:700;color:var(--ink-h)}
+.fill-box input:focus{border-color:var(--orange)}
+.combo-flag{position:fixed;top:50%;left:50%;transform:translate(-50%,-60%);z-index:90;pointer-events:none;
+  font-size:clamp(34px,6vw,58px);font-weight:900;color:var(--orange-d);text-shadow:0 3px 0 #fff,0 6px 16px rgba(240,138,36,.35);
+  opacity:0;transition:.25s}
+.combo-flag.show{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+.float-num{position:absolute;left:50%;top:34%;transform:translateX(-50%);font-size:26px;font-weight:900;color:var(--gold);
+  text-shadow:0 2px 0 rgba(0,0,0,.3);animation:floatup .9s forwards;pointer-events:none;z-index:5}
+@keyframes floatup{0%{opacity:0;transform:translate(-50%,10px) scale(.7)}18%{opacity:1;transform:translate(-50%,-6px) scale(1.15)}100%{opacity:0;transform:translate(-50%,-46px) scale(1)}}
+#explainBox{margin-top:14px;background:var(--blue-l);border-left:5px solid var(--blue);border-radius:12px;
+  padding:10px 14px;font-size:13.5px;color:#2E6D9F;display:none;line-height:1.55}
+#nextRow{display:flex;gap:10px;justify-content:center;margin-top:16px;flex-wrap:wrap}
+#giveupRow{text-align:center;margin-top:14px}
+.combo-badge{position:relative;margin-top:10px;font-size:12.5px;background:rgba(255,255,255,.14);border-radius:999px;padding:3px 13px;display:none}
+.combo-badge.on{display:inline-block}
+
+/* ===== 结算 ===== */
+.result-hero{text-align:center;padding:30px 20px 10px}
+.result-hero .big{font-size:52px}
+.star-row{margin:10px 0 4px;font-size:52px;letter-spacing:8px}
+.star-row .s{display:inline-block;opacity:.15;transform:scale(.6)}
+.star-row .s.got{opacity:1;animation:starpop .5s cubic-bezier(.2,1.6,.4,1) forwards}
+@keyframes starpop{0%{transform:scale(0) rotate(-30deg);opacity:0}60%{transform:scale(1.5) rotate(8deg);opacity:1}100%{transform:scale(1)}}
+.res-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
+.res-item{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
+.res-item .ri{font-size:24px}
+.res-item .rv{font-weight:900;color:var(--ink-h);font-size:18px}
+.res-item .rl{font-size:11.5px;color:var(--ink-l);margin-top:2px}
+#dropBox{text-align:center;background:var(--gold-l);border:2px dashed rgba(242,183,5,.55);border-radius:18px;padding:14px;margin:10px 0}
+#dropBox .dl{font-size:13px;color:#B98A00;font-weight:700}
+#dropBox .dg{font-size:34px}
+.result-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+
+/* ===== 失败 ===== */
+.fail-hero{text-align:center;padding:34px 16px 6px}
+.fail-hero .big{font-size:50px}
+
+/* ===== 排行 / 错题 / 帮助 / 教师 ===== */
+.panel-h{display:flex;align-items:center;gap:10px;margin:6px 2px 14px}
+.panel-h h2{margin:0;font-size:21px;color:var(--ink-h);font-weight:900}
+.panel-h .sub{font-size:12.5px;color:var(--ink-l)}
+.rank-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:11px 16px;margin-bottom:9px;box-shadow:var(--shadow)}
+.rank-row .no{width:30px;height:30px;flex:none;border-radius:10px;background:#F0EDF5;color:var(--ink-l);
+  display:flex;align-items:center;justify-content:center;font-weight:900}
+.rank-row:nth-child(2) .no,.rank-row:nth-child(3) .no,.rank-row:nth-child(4) .no{background:var(--gold-l);color:#B98A00}
+.rank-row .av{font-size:27px}
+.rank-row .nm{font-weight:800;color:var(--ink-h);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rank-row .mt{font-size:11px;color:var(--ink-l)}
+.wrong-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 18px;margin-bottom:10px;box-shadow:var(--shadow)}
+.wrong-card .wq{font-weight:700;color:var(--ink-h);font-size:15.5px;margin-bottom:6px}
+.wrong-card .wa{font-size:13px;color:var(--green)}
+.wrong-card .we{font-size:12.5px;color:var(--ink-l);background:var(--blue-l);border-radius:10px;padding:7px 11px;margin-top:7px}
+.wrong-card .wh{font-size:11px;color:var(--ink-l);margin-bottom:5px;display:flex;gap:6px;align-items:center}
+.help-line{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:13px 16px;margin-bottom:9px}
+.help-line .ic{font-size:26px;flex:none}
+.help-line b{color:var(--ink-h)}
+.help-line p{margin:3px 0 0;font-size:13.5px;color:var(--ink-l)}
+.stu-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:10px 15px;margin-bottom:9px;flex-wrap:wrap}
+.stu-row .av{font-size:24px}
+.stu-row .nm{font-weight:800;color:var(--ink-h);min-width:110px}
+.stu-row .mt{font-size:12px;color:var(--ink-l);display:flex;gap:12px;flex-wrap:wrap;flex:1}
+.stu-row .mt b{color:var(--ink-h)}
+.tabrow{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tab{border-radius:999px;padding:7px 18px;font-size:14px;background:var(--card);border:1.5px solid var(--line);color:var(--ink-l);font-weight:700}
+.tab.on{background:var(--orange);border-color:var(--orange);color:#fff;box-shadow:var(--shadow)}
+.quiz-item{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 16px;margin-bottom:8px;font-size:14px}
+.quiz-item .qq{color:var(--ink-h);font-weight:700}
+.quiz-item .qa{margin-top:4px;color:var(--green);font-weight:700}
+.quiz-item .qa .tag{font-size:11px;color:#fff;background:var(--green);border-radius:7px;padding:0 8px;margin-right:6px}
+.quiz-item .ex{font-size:12.5px;color:var(--ink-l);margin-top:3px}
+.quiz-item .ans-chip{display:inline-block;font-size:11px;border-radius:8px;padding:0 8px;margin-left:6px;font-weight:700}
+.chip-kind-c{background:var(--blue-l);color:var(--blue)}
+.chip-kind-j{background:var(--red-l);color:var(--red)}
+.chip-kind-f{background:var(--green-l);color:var(--green)}
+.unit-sel{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.unit-sel .tab{font-size:13px}
+.print-area{display:none}
+@media print{
+  body *{visibility:hidden!important}
+  .print-area{display:block!important;visibility:visible!important;position:absolute;left:0;top:0;width:100%}
+  .print-area .pq{background:#fff;color:#000;border:1px solid #ccc;border-radius:8px;padding:8px 12px;margin:8px 0;font-size:14px;page-break-inside:avoid}
+  .print-area .pq .q{font-weight:700}
+  .print-area .pq .o{color:#000}
+  .print-area .pq .ans{display:none}
+}
+.set-row{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:13px 16px;margin-bottom:10px;flex-wrap:wrap}
+.set-row .st{flex:1;min-width:200px}
+.set-row .st b{color:var(--ink-h);display:block;font-size:14.5px}
+.set-row .st span{font-size:12.5px;color:var(--ink-l)}
+.switch{position:relative;width:52px;height:28px;flex:none}
+.switch input{opacity:0;width:0;height:0}
+.switch i{position:absolute;inset:0;background:#DDD7E4;border-radius:99px;transition:.2s}
+.switch i::after{content:"";position:absolute;width:22px;height:22px;border-radius:50%;background:#fff;top:3px;left:3px;transition:.2s;box-shadow:0 2px 5px rgba(0,0,0,.2)}
+.switch input:checked+i{background:var(--green)}
+.switch input:checked+i::after{transform:translateX(24px)}
+.pwd-in{width:180px;text-align:center;font-size:15px;padding:6px;border-radius:10px;border:2px solid var(--line);outline:none}
+#tLogin{max-width:340px;margin:60px auto;text-align:center}
+.toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%);z-index:99;background:var(--ink-h);color:#fff;
+  border-radius:999px;padding:9px 22px;font-size:14px;box-shadow:var(--shadow-h);opacity:0;transition:.25s;pointer-events:none;white-space:nowrap}
+.toast.show{opacity:.95}
+.mask{position:fixed;inset:0;background:rgba(60,50,80,.4);z-index:70;display:flex;align-items:center;justify-content:center;padding:20px}
+.mask .card{max-width:560px;width:100%;max-height:82vh;overflow:auto}
+.modal-h{display:flex;align-items:center;margin-bottom:12px}
+.modal-h h3{margin:0;font-size:18px;color:var(--ink-h);flex:1}
+.demo-line{font-family:Consolas,monospace;font-size:11.5px;background:#F6F4F9;border:1px solid var(--line);border-radius:10px;padding:8px 10px;overflow-x:auto;color:#7A5AA0;white-space:pre}
+@media(max-width:640px){
+  .arena{grid-template-columns:1fr}
+  .mon-card{min-height:230px}
+  .mon-card .m-face{font-size:66px}
+}
+</style>
+</head>
+<body data-page-node-id="K6OZwY8h7q8QbHdTzAENRd">
+<div id="toolbar" data-page-node-id="LyNEQOkAfCoCl31DZRZcA9">
+  <div id="tbLogo" data-page-node-id="Bws578YDT2fc1cWFoIRCzS"><span class="lg" data-page-node-id="YKzCFTgJcubX3mkNkOVZz3">⚔️</span>数学勇者大冒险</div>
+  <button class="tbtn" id="btnSound" title="音效开关" data-page-node-id="8UVA29IqaQxw5j9aVeMYvT">🔊</button>
+  <button class="tbtn" id="btnFull" title="全屏" data-page-node-id="b1ywAmyVZ15wBo6Zy8QxOU">⛶</button>
+  <button class="tbtn" id="btnHome" title="回主页" data-page-node-id="5cXJt3fFy6OAXKX2DN7UYA">🏠 主页</button>
+</div>
+<div class="toast" id="toast" data-page-node-id="49Sor1dMu65Wo0YdYRoGsM"></div>
+
+<!-- ═══════════ 开屏 ═══════════ -->
+<div class="screen on" id="boot" data-page-node-id="B3wLkQnOct75EV96HJ9Cve">
+  <div class="hero-emoji" data-page-node-id="30YKsE2RFrII9X0qjyXMxa">⚔️🐉🛡️</div>
+  <h1 class="title" data-page-node-id="L0S4OqSRS8zt2S3DKgiUZ3">数学<span class="em" data-page-node-id="4Uhwu68sD14uuDe5NDZiZH">勇者</span>大冒险</h1>
+  <p class="subtag" data-page-node-id="XayAm0CnZRiaa2qpqBGCOA">答题打怪 · 点亮<b data-page-node-id="0CnuMR1xQ2oMIorw0xFkFo">人教版五年级全学年</b>15 片战场<br data-page-node-id="o5cyAb6Xqapi4edlLrZRwO">打败 15 个数学魔王，成为班级最强勇者！</p>
+  <div class="card boot-card" data-page-node-id="U0qLQboJk8Rc8RPRMrfghF">
+    <div style="font-weight:800;color:var(--ink-h)" data-page-node-id="AWk2futMmmXgnTWEHyWS1i">1️⃣ 选择你的勇者</div>
+    <div class="av-row" id="avRow" data-page-node-id="MMOHbfaih6Pn76B2HPEHSC"></div>
+    <div style="font-weight:800;color:var(--ink-h);margin-top:10px" data-page-node-id="CeBA2yahJxAzjnwYhraxfn">2️⃣ 输入你的名字</div>
+    <div class="field" data-page-node-id="yRpGNKtyCDO7frT4jafutn"><input id="inName" maxlength="8" placeholder="输入名字，如：小明" data-page-node-id="SGCBzKI2ecbiWF7gG39Mlu"></div>
+    <div class="boot-actions" data-page-node-id="CLnYtscsMZOospFTtF0AEX">
+      <button class="btn btn-orange btn-big" id="btnGo" data-page-node-id="UpWc4p0jsTGFD5PzNGvucD">🚀 开始冒险</button>
+    </div>
+    <div class="boot-sub" data-page-node-id="FOAtA0A6B7wz87Z5xC4hne">
+      <button class="linkbtn" id="btnHelp" data-page-node-id="cM5d1EAr60BF1pT0MVhHEF">📖 怎么玩</button>
+      <button class="linkbtn" id="btnRankBoot" data-page-node-id="adlDBq5DAgUK9jBqusofBt">🏆 冒险者榜</button>
+      <button class="linkbtn" id="btnWrongBoot" data-page-node-id="L5bOu6bWzTWrP2e5HlJqLF">📕 错题本</button>
+      <button class="linkbtn" id="btnTeacherBoot" data-page-node-id="y0Y18dWLXtG25wf41z3QGa">🧑‍🏫 教师入口</button>
+    </div>
+    <div class="notice-band" data-page-node-id="frFoRN5shFOMIV9OkqTqOM">💡 答错会被怪兽反击，答对会越战越勇！错过的题会自动收进<b data-page-node-id="BQK6szN7AtpFLkCTNF0CW4">错题本</b>，随时复习～</div>
+  </div>
+  <p style="text-align:center;font-size:12.5px;color:var(--ink-l);margin:14px 0 4px" data-page-node-id="G8Pmd0KdExKB4GRlBxVmVJ">💡 游戏创意：棠下镇沙富小学 杨翔龙老师 · 人教版五年级数学题库支持</p>
+  <div class="kv" data-page-node-id="UAAizaAaATAjYcd6wEHhJm">
+    <div class="k" data-page-node-id="5GGcD56ecwOKVZVAkPCTFN"><b data-page-node-id="sIcTYjJ4Bx9UxDBXhtc7aJ">15</b>大战场</div>
+    <div class="k" data-page-node-id="QWPCbjzEQAg5OCWy135XrH"><b data-page-node-id="tTAnBiOZH5gLCHfnEBT1mb">105</b>道题</div>
+    <div class="k" data-page-node-id="GLsgleLOFx7UAAFm17DSmB"><b data-page-node-id="Q8TsOSk63kW2jUDy2tzQLE">📚</b>全学年</div>
+    <div class="k" data-page-node-id="PalbTDb1TOLz83hweiMyh1"><b data-page-node-id="3y9YUXXgqpbEDO1UzMjdHC">⭐</b>三星闯关</div>
+  </div>
+</div>
+
+<!-- ═══════════ 地图 ═══════════ -->
+<div class="screen" id="map" data-page-node-id="nvK1Xf8jDnHFZivaA9p9bo">
+  <div id="topBar" data-page-node-id="1m5Ng1gCQNea2MngDfW5hM"></div>
+  <div class="zone-tag" id="mapA" data-page-node-id="1BoAY0FKjtDFhpmv5ESERi"><span class="zn" data-page-node-id="J93AJIFEXsALxsBLTj56Q1">🌾</span>上册 · 清风草原<small data-page-node-id="TBVEHAyp5d3CryqjxW7JMm">人教版五年级上册 · 第1-7单元</small></div>
+  <div class="node-grid" id="nodeA" data-page-node-id="XfqCMSt1uPUWGymgn8deH8"></div>
+  <div class="zone-tag" id="mapB" data-page-node-id="koVQ0ZYShsNivJYSBfaS7a"><span class="zn" data-page-node-id="G81xhSmmOCbNnjvlysoksp">⛰️</span>下册 · 秘境山脉<small data-page-node-id="1hIGbcEG6UbnPENF8D6cT2">人教版五年级下册 · 第8-15单元</small></div>
+  <div class="node-grid" id="nodeB" data-page-node-id="Lee1TdAe7FIbHjicJ2rn99"></div>
+  <p class="map-foot" data-page-node-id="AefChVid19aHSuiUwlmY2w">💬 通关当前战场，才能挑战下一片战场 · 星数是你的荣誉勋章</p>
+</div>
+
+<!-- ═══════════ 战斗 ═══════════ -->
+<div class="screen" id="battle" data-page-node-id="b8wZCgLDQpCV6lM0utN1Ow">
+  <div id="btTop" data-page-node-id="Ghz8VzcOOsocmeVU7WItgT">
+    <span id="hpRow" data-page-node-id="gFgnUJByqqBfktOEBLEgAj"></span>
+    <button class="tbtn" id="btnGiveUp" data-page-node-id="huA4K6XhyKaXzbHoM2ycqY">🏃 撤退</button>
+    <span class="qpos" id="qpos" data-page-node-id="LTl7koDM2jvhekRBj6939u">第 1 / 7 题</span>
+  </div>
+  <div class="arena" data-page-node-id="zTKbZyRRG5XvvR9Hqv7o81">
+    <div class="mon-card" id="monCard" data-page-node-id="SIqCG8N0ZRMqtJCNAgyq7r">
+      <div class="m-face" id="monFace" data-page-node-id="JHwlWwvmticdQCiCkoziNq">👾</div>
+      <div class="m-name" id="monName" data-page-node-id="G7IrigpMx3N3TIGzW7hVh8">数学魔王</div>
+      <div class="m-zone" id="monZone" data-page-node-id="hvWKAUCY4CPKFJOsfXeQwS">第 1 战场</div>
+      <div class="hp-wrap" data-page-node-id="SFPRDMcvqOUjkBPMwGscFd">
+        <div class="hp-label" data-page-node-id="Itj48HwGrpbD2brj3enFxT"><span data-page-node-id="GIU1URg6xiTsbGUb9ZZnLo">❤️ 怪兽血量</span><span id="monHpNum" data-page-node-id="4POHC2dqN19dR75KvZhYAY">7 / 7</span></div>
+        <div class="hp-cells" id="monHp" data-page-node-id="nw1e3YXmhcIa2SYVObIfrC"></div>
+      </div>
+      <div class="atk" data-page-node-id="uGFIluwXwACG6rDAJ804PK"><span data-page-node-id="G6G0AkggZs7Cf3ZLeVJD0J">🐾 答错反伤 1❤️</span><span data-page-node-id="xJ68LdiHSLFZdDtpTyD7Ob">⚡ 连击第7题暴击×2</span></div>
+      <span class="combo-badge" id="comboBadge" data-page-node-id="tRmDUpEEMr4s9mjQxnxJV1">🔥 连击</span>
+    </div>
+    <div class="q-card" data-page-node-id="xPEWiAl9IPzc3pWyH1UqiY">
+      <div class="q-tagbar" data-page-node-id="Ert0vfTipnuS5sdFSBQLq4">
+        <span id="qkind" style="background:var(--blue)" data-page-node-id="4hjzPLfrDPeSjvIQfR2wRs">选择题</span>
+        <span class="chip star" id="qtag" data-page-node-id="qxqkC40GFzhXgZGuTyC8cq">考点</span>
+        <span class="chip gold" id="qstar" data-page-node-id="26F89B5eZIfluDs9hTF0vz">难度</span>
+        <span class="chip green" id="comboInfo" style="margin-left:auto" data-page-node-id="1oxMkYRHDKxEMpG1eLohZK">🔥 连击 ×0</span>
+      </div>
+      <div id="qText" data-page-node-id="g1F1NxLebAZGkdzoDLflCj">题目加载中…</div>
+      <div id="opsBox" data-page-node-id="7fIliNRBAmCJ1S8XXFCFw6"></div>
+      <div id="fillBox" class="fill-box hidden" data-page-node-id="m764XqLUc95lZDIOmQ4Yzv">
+        <input id="fillIn" type="text" inputmode="decimal" placeholder="输入答案" data-page-node-id="zKt3fcGxHoJG0mMrTKGeO0">
+        <button class="btn btn-blue" id="fillGo" data-page-node-id="GPFen5WVuRrz2xG68cUAQ7">提交 ✓</button>
+      </div>
+      <div id="explainBox" data-page-node-id="2hv067FC2ceNkOsOLm4C76"></div>
+      <div id="nextRow" data-page-node-id="RnrERHITeGLTwF6fLJQKBw"></div>
+      <div id="giveupRow" data-page-node-id="RnK0qZdLQAjbHKBN2zfaAe"><button class="linkbtn" id="btnAbandon" data-page-node-id="kEF8Uqk0XsJXjWza5qjUaD">放弃本战场（不保存）</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 结算 ═══════════ -->
+<div class="screen" id="result" data-page-node-id="GnH9S0rs4oyjpEY2l48Y97">
+  <div class="card" style="max-width:640px;margin:6px auto" data-page-node-id="GjtCGYJnEiPGbcEsGjoOsB">
+    <div class="result-hero" data-page-node-id="qBB9uG3GbZB1mbfTDkAq1t">
+      <div class="big" id="resBig" data-page-node-id="2WzqfzRudXMm4MO4EPeXbL">🎉</div>
+      <div style="font-size:22px;font-weight:900;color:var(--ink-h);margin-top:4px" id="resTitle" data-page-node-id="QVDmZm4sZRBf2BUDC8XD07">胜利！</div>
+      <div style="color:var(--ink-l);font-size:14px" id="resSub" data-page-node-id="Fr3SClQ0pSbnqeVCkHMTDn"></div>
+      <div class="star-row" id="starRow" data-page-node-id="lhetAWcp3peDOz5trMjzaH"><span class="s" data-page-node-id="rjjI7w0pBN1nwpss29xsv6">⭐</span><span class="s" data-page-node-id="YmoGBad9gncpEb7SQnnmIq">⭐</span><span class="s" data-page-node-id="wUbdRwiHZb6iblcLWlEHL5">⭐</span></div>
+    </div>
+    <div class="res-grid" data-page-node-id="yn3mZbjzRbon6XjFA3aqmL">
+      <div class="res-item" data-page-node-id="IhSVAjULfnzOTYl6nmZJhu"><div class="ri" data-page-node-id="Q5YZDfJSw8vhXwxUcICCMZ">⚔️</div><div class="rv" id="rErr" data-page-node-id="QA7xcKpNBC36ThMsVMVFaD">0</div><div class="rl" data-page-node-id="Qxy6vQ6HkVsjW2WsA8VilN">答错次数</div></div>
+      <div class="res-item" data-page-node-id="JBxL2PfydOuWsMzQGwBZHB"><div class="ri" data-page-node-id="PAFv4AfU3wlUPpGsaehhwo">✨</div><div class="rv" id="rExp" data-page-node-id="rTWM5qBXfi7loWSnd8JmA4">+0</div><div class="rl" data-page-node-id="K0U8KbCTSSUBwAhMLf7Xh9">经验</div></div>
+      <div class="res-item" data-page-node-id="irBXSZw8MHO1ZbFtcACpWp"><div class="ri" data-page-node-id="o5XQsXbghcxhQ0OoHnyIOd">🪙</div><div class="rv" id="rGold" data-page-node-id="3DEjySgJp7copeH4763IEc">+0</div><div class="rl" data-page-node-id="CWrhLRaxGGhUbs12FOuXHr">金币</div></div>
+      <div class="res-item" data-page-node-id="wcQ66s5XKaPKgtaSI9ZQhr"><div class="ri" data-page-node-id="dyx3myPOtaeubkkkufc7Pd">🏅</div><div class="rv" id="rTitle" data-page-node-id="cMD3GOYeoRv2utz3hnWlBU">-</div><div class="rl" data-page-node-id="WbzjIVt29wxgCZczgZ5x6B">获得称号</div></div>
+    </div>
+    <div id="dropBox" data-page-node-id="vrwH0JWC7IS1dMX0yZEERX"></div>
+    <div id="wrongTips" data-page-node-id="An79QApMGcUICYM5N3ekpZ"></div>
+    <div class="result-actions" data-page-node-id="7XXAAL9SagPTJSDd6KKxr5">
+      <button class="btn btn-blue" id="btnNext" data-page-node-id="nmkFoqIYUy7X3yU2TfximW">⏭️ 下一片战场</button>
+      <button class="btn btn-orange" id="btnRetry" data-page-node-id="HlVTYCAWKps3b3xugttqgE">🔁 再来一次</button>
+      <button class="btn btn-gray" id="btnBackMap" data-page-node-id="BtiP8L3Xa6NMutbXI2PQtD">🗺️ 回地图</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 失败 ═══════════ -->
+<div class="screen" id="fail" data-page-node-id="z41nQBW2dYmttlBUgnp1Bg">
+  <div class="card" style="max-width:520px;margin:6px auto" data-page-node-id="Pyut82KJEaBK8gIHEaNmEG">
+    <div class="fail-hero" data-page-node-id="tFB2Mcj2VFuHABIWmvvY6Z">
+      <div class="big" data-page-node-id="jZKuyrTzVTvBsLcwkX7lmz">💔</div>
+      <div style="font-size:21px;font-weight:900;color:var(--ink-h);margin-top:4px" id="failTitle" data-page-node-id="SeLlgElV0xjpiu0SiDBckp">被怪兽打败了…</div>
+      <p style="color:var(--ink-l);font-size:13.5px" id="failSub" data-page-node-id="LxEWGTNvQY6PTPCJkCm9g7">别灰心！错过的题都记在错题本里，看了解析再战一次！</p>
+    </div>
+    <div id="failWrong" data-page-node-id="G4yxoY3oiwrGZPkQBsYFtK"></div>
+    <div class="result-actions" data-page-node-id="SvT3HEjcAYIKIicUmgja9J">
+      <button class="btn btn-orange" id="btnRetryF" data-page-node-id="cyfbZRCjCxf2oHcFbQB3cb">⚔️ 再战一次</button>
+      <button class="btn btn-gray" id="btnBackMapF" data-page-node-id="L0DizJ2k8bzdfhKGXF3OoO">🗺️ 回地图</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ 排行榜 ═══════════ -->
+<div class="screen" id="rank" data-page-node-id="I2JDkvPfsCq2lf7Go8sdVb">
+  <div class="panel-h" data-page-node-id="gRnJlZjny5lMlEafFmcWtn"><button class="tbtn" onclick="goScreen('map')" data-page-node-id="30GuPSUW9aL13CcrRYnca0">⬅️ 返回</button>
+    <h2 data-page-node-id="fRVMAjCJuFBjnkOf2FRfMk">🏆 冒险者榜</h2><span class="sub" data-page-node-id="KXkNVnZemRDU1VtqwJXUL2">本机全部勇者，按星星总数排序</span></div>
+  <div id="rankBox" data-page-node-id="miYjlF7gmBVloI1fkLkB8W"></div>
+</div>
+
+<!-- ═══════════ 错题本 ═══════════ -->
+<div class="screen" id="wrong" data-page-node-id="OAe8hlrRvW4KtSj3XopNCA">
+  <div class="panel-h" data-page-node-id="XIF9hfiw2D1FGF1hOMogLx"><button class="tbtn" onclick="goScreen('map')" data-page-node-id="YV5ZSuzOIUASMy8nRto3Gx">⬅️ 返回</button>
+    <h2 data-page-node-id="ytWdabKtJGdoEgPq2EqtUc">📕 错题本</h2><span class="sub" data-page-node-id="vUWh3PNonvo8TxmDbe8fd4">答错的题都在这里，复习会帮你变强</span></div>
+  <div id="wrongReviewBtn" data-page-node-id="VUBQ7ktAg5vTCvjPXvf2so"></div>
+  <div id="wrongBox" data-page-node-id="tGoFZDMZAN2z1RONL3EeXQ"></div>
+</div>
+
+<!-- ═══════════ 玩法说明 ═══════════ -->
+<div class="screen" id="help" data-page-node-id="CQr6x0HTQisWB3j3jxqlET">
+  <div class="panel-h" data-page-node-id="e3htG7e79xVwwHA2oDvkWg"><button class="tbtn" onclick="goScreen('map')" data-page-node-id="5BRDyfKDww7mfcZkgDd4SE">⬅️ 返回</button>
+    <h2 data-page-node-id="QrddDXDZGTkNXDoMgKGEpq">📖 怎么玩</h2></div>
+  <div class="help-line" data-page-node-id="qUGQ6cV8ChCRIV1QAxne0p"><span class="ic" data-page-node-id="KYbjOdJqlUCfGWyesyr9zR">🎮</span><div data-page-node-id="pETKUg8kHi3xmQtoBtCPMa"><b data-page-node-id="r9xd1EDcrhRrQg18y9OrLV">冒险规则</b><p data-page-node-id="OvLT5fFXI8dJ6r3kHMUEJK">每个战场对应人教版数学一个单元。答对 1 题，怪兽掉血 1 格；连续答对会攒"连击"，第 7 题终极挑战命中暴击 2 格。答错会被怪兽反击，扣掉勇者 1 颗❤️。</p></div></div>
+  <div class="help-line" data-page-node-id="jeBwSt646S18DOJxITDQtS"><span class="ic" data-page-node-id="WelbsEImuGmeLAiJZdkkIq">❤️</span><div data-page-node-id="1sOGfYxVdosnROse1IjssG"><b data-page-node-id="9pivY73YlgSzaxdkUpqEIM">生命与失败</b><p data-page-node-id="spY0geTyCjzFucOwbmG2JI">勇者有 5 颗❤️。答错 5 次就会战败——不过别怕，战败不丢进度，看过解析后随时能再战。</p></div></div>
+  <div class="help-line" data-page-node-id="rsx0TunwDwozl7dQebQwC2"><span class="ic" data-page-node-id="fhVAdJKwDIhKMD69cEo1ef">⭐</span><div data-page-node-id="afzaVitaGDlzEIDAuCGBkJ"><b data-page-node-id="kICN4DhuVFiLygr5Ycnu9B">星级评定</b><p data-page-node-id="vsbvvHexyVZtn5w85qpwKy">一次通关零答错 = ⭐⭐⭐（完美无伤）！错 1-2 题 = ⭐⭐，错 3 题以上也能拿 ⭐。想拿三星就要全对哦。</p></div></div>
+  <div class="help-line" data-page-node-id="rVvJHhThXNYNYsNBApZKlt"><span class="ic" data-page-node-id="DNvi4AZZ9PKGfBmKX7kETZ">📕</span><div data-page-node-id="k9xwjLXJL025XLbgHMYu77"><b data-page-node-id="L99GUSn920pdrGR8AdZleJ">错题本</b><p data-page-node-id="70co6TLqqCWh6Vc9Hz5oUQ">答错的每一题都会带解析收进错题本。答对就毕业，答错会继续陪你练，直到你真正学会。</p></div></div>
+  <div class="help-line" data-page-node-id="DS1lZAf8V4EgK443QReMF7"><span class="ic" data-page-node-id="NVunCXblyeds36ddJ2BTgH">👥</span><div data-page-node-id="byXTCH72ymokUDR5uNe0sH"><b data-page-node-id="Vk68XTjF2gzcFRE6mTkr7f">班级对战</b><p data-page-node-id="tBIxi7gr13IAxcaDaIvEX5">同一个班里，每个同学都可以用自己名字登录冒险，星星与进度都留在本机上，全班一起冲击冒险者榜第一名！</p></div></div>
+  <div class="help-line" data-page-node-id="GFejIbVe27HGBcW6mxjTuY"><span class="ic" data-page-node-id="Iers8tZQErcqqyQIupLl5e">📚</span><div data-page-node-id="8xAea0DmT2dwSJFu3CqwOe"><b data-page-node-id="fLuoi4BL4dhzEP38PLSi6m">题库怎么来</b><p data-page-node-id="NIiQvfPjPkfhAiKLCd1j5H">内置人教版五年级全学年 15 个单元 105 道题，覆盖上册和下册全部知识点，和课本同步。</p></div></div>
+  <div class="help-line" data-page-node-id="qkGC5HpSDmEnNyQbVCdIVZ"><span class="ic" data-page-node-id="1H7kdq1sWzBkiWCu1bj6s6">🌟</span><div data-page-node-id="fP9GKN9XY7rKEC0rToSjfs"><b data-page-node-id="zGW7c4tEOIpPShImOdGKaR">创意致谢</b><p data-page-node-id="bMDwYhmSoP3cy7D0TgDyrS">本游戏创意来自<b data-page-node-id="rDPiQKwF38EP8Rw9z8dX3f">棠下镇沙富小学杨翔龙老师</b>——"把爱玩游戏的劲头，引到数学学习上"。</p></div></div>
+</div>
+
+<!-- ═══════════ 教师区 ═══════════ -->
+<div class="screen" id="teacher" data-page-node-id="BSF2JFvL2SmfGr39kaVvai">
+  <div id="tLogin" class="card" data-page-node-id="GhrjIs4oHFSqMaCAES6ioh">
+    <div style="font-size:42px" data-page-node-id="mBmTKniJ2RpqdJ7qI4z2Uu">🧑‍🏫</div>
+    <h2 style="color:var(--ink-h);margin:6px 0" data-page-node-id="YcGEXJb39XEtEFgQp14que">教师入口</h2>
+    <p style="font-size:12.5px;color:var(--ink-l)" data-page-node-id="539UWwpnVjXe1rFTfyliAG">查看全班学生进度、错题统计与题库。密码默认 202609（可在设置里修改）。</p>
+    <div class="field" data-page-node-id="mCTovmWqPfqiLtVc5JDo2T"><input id="inPwd" type="password" placeholder="输入教师密码" style="width:180px" data-page-node-id="xkYgjC8PlF2NQUWHcUdAxw"></div>
+    <button class="btn btn-orange" id="btnPwdGo" style="margin-top:6px" data-page-node-id="PBs7QOlOU1tc2IDw0sKtrZ">进入</button>
+    <div style="margin-top:14px" data-page-node-id="9pS4ao8vzt87dnMmqIXE1p"><button class="linkbtn" onclick="goScreen('boot')" data-page-node-id="CG7fWXlBTLK3nkIJLlcM9Q">⬅️ 返回主页</button></div>
+  </div>
+  <div id="tPanel" class="hidden" data-page-node-id="EgUv6ZAREDs13VB1lLyGWH">
+    <div class="panel-h" data-page-node-id="pFFu93UUh8pCoBxmCZYEJH"><button class="tbtn" id="btnTExit" data-page-node-id="K584U5MZypc57AK7opfrmh">⬅️ 退出</button>
+      <h2 data-page-node-id="z2eLtIBx2K2JzuXSFGCCiE">🧑‍🏫 教师工作台</h2></div>
+    <div class="tabrow" data-page-node-id="TZ4kVboJk3xVgNPKcGoAZB">
+      <button class="tab on" data-ttab="quiz" onclick="tTab('quiz',this)" data-page-node-id="hj7YZCF8rP2mc3nedSgN6v">📚 题库总览</button>
+      <button class="tab" data-ttab="stu" onclick="tTab('stu',this)" data-page-node-id="4VjtPNnZbz1qzmc0AGbs8G">👦👧 学生数据</button>
+      <button class="tab" data-ttab="set" onclick="tTab('set',this)" data-page-node-id="h4UKhmB6E243K0RJwHNG5P">⚙️ 设置</button>
+    </div>
+    <div id="tQuiz" class="ttab" data-page-node-id="Fe3BN2MU3Ust9wuBTlM66a">
+      <div class="unit-sel" id="unitSel" data-page-node-id="febVEww2uXuh2SAzLvpClx"></div>
+      <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap" data-page-node-id="q7pDQXEaaOJp9pOg5ASt3a">
+        <button class="btn btn-green" id="btnPrint" data-page-node-id="NQBQXgibyidjz4A2slonyh">🖨️ 打印本单元（当练习卷）</button>
+        <span style="font-size:12px;color:var(--ink-l);align-self:center" id="quizCount" data-page-node-id="yZHkl3n2mLuuiAcGRRxvip"></span>
+      </div>
+      <div id="quizList" data-page-node-id="XsDsLGZmzyOKw7lKS7bIx5"></div>
+    </div>
+    <div id="tStu" class="ttab hidden" data-page-node-id="a6TufROayln34Hg6FVthSD"></div>
+    <div id="tSet" class="ttab hidden" data-page-node-id="z6ElhZBYXHOboj5jJ7SDfi"></div>
+  </div>
+</div>
+
+<!-- 打印容器 -->
+<div class="print-area" id="printArea" data-page-node-id="xHkMLB8ZQDUXQ1M2XytuNC"></div>
+<div class="mask hidden" id="mask" data-page-node-id="1Z1SWILvBCjGDFzbc7TzQ0"><div class="card" id="maskCard" data-page-node-id="gSBYeEwzkPRLicawRCTvEy"></div></div>
+
+<script>
+'use strict';
+/* ═══════════════ 题库数据 ═══════════════
+   每关（战场）= 一个单元：
+   { no, name, sub, monster, mname, items:[ {t:'c'|'j'|'f', q, ops?, a, tag, hard, ex} ] }
+   t:'c'选择题(ops四选项,a为正确下标) / 'j'判断(a=1对0错) / 'f'填空(a为答案字符串)
+   hard:0基础 1进阶 2终极   ex:解析 */
+var BANK=[
+{"no":1,"zone":"上","name":"小数乘法","sub":"人教版五年级上册 · 第1单元","monster":"🦠","mname":"黏液怪 · 乘法大魔王","title":"乘法小猎手","items":[
+{"t":"c","q":"0.3 × 4 = ？","ops":["1.2","12","0.12","1.02"],"a":0,"tag":"小数乘整数","hard":0,"ex":"0.3×4：先算3×4=12，两个因数中共1位小数，从右往左数1位点小数点 → 1.2"},
+{"t":"c","q":"2.5 × 0.4 = ？","ops":["10","1","0.1","0.01"],"a":1,"tag":"小数乘小数","hard":0,"ex":"25×4=100，因数中共2位小数 → 1.00，即 1"},
+{"t":"c","q":"1.5 × 3 表示什么意思？","ops":["3个1.5相加的和","1.5个3相加","3的1.5倍的一半","1.5+3"],"a":0,"tag":"小数乘法的意义","hard":0,"ex":"小数乘整数，就表示几个相同加数连加：1.5×3 就是 3 个 1.5 相加"},
+{"t":"c","q":"0.06 × 0.5 = ？","ops":["0.3","0.03","3","0.003"],"a":1,"tag":"小数乘小数","hard":1,"ex":"6×5=30，因数中共3位小数，30补足3位是0.030 → 0.03"},
+{"t":"j","q":"一个数（0除外）乘大于1的小数，积一定比原来的数大。","a":1,"tag":"积与因数的关系","hard":1,"ex":"乘大于1的数越乘越大，乘小于1的数越乘越小，乘1不变。记住要说“0除外”哦"},
+{"t":"c","q":"3.6 × 1.2 的积是几位小数？","ops":["一位小数","两位小数","三位小数","四位小数"],"a":1,"tag":"确定积的小数位数","hard":1,"ex":"3.6是1位小数，1.2是1位小数，共2位。算一算：3.6×1.2=4.32，正是两位"},
+{"t":"f","q":"【终极挑战】巧算：2.5 × 1.6 = ？","a":"4","tag":"小数乘法巧算","hard":2,"ex":"2.5×4=10 是黄金搭档！1.6=4×0.4，所以 2.5×4×0.4=10×0.4=4"}
+]},
+{"no":2,"zone":"上","name":"位置（数对）","sub":"人教版五年级上册 · 第2单元","monster":"🗺️","mname":"迷宫守卫 · 坐标幽灵","title":"坐标领航员","items":[
+{"t":"c","q":"数对 (3, 5) 中的 5 表示什么？","ops":["第5列","第5行","第3行","第53行"],"a":1,"tag":"数对的含义","hard":0,"ex":"数对表示位置时：先写列，后写行。(3,5) 表示第3列、第5行"},
+{"t":"c","q":"小军坐在第4列、第2行，用数对表示是？","ops":["(4,2)","(2,4)","(4,4)","(2,2)"],"a":0,"tag":"用数对表示位置","hard":0,"ex":"列在前、行在后：第4列第2行 → (4,2)"},
+{"t":"c","q":"点 A 在数对 (2,3) 的位置，向右平移2格后是？","ops":["(4,3)","(2,5)","(5,2)","(0,3)"],"a":0,"tag":"数对与平移","hard":1,"ex":"向右平移，列数增加、行数不变：2+2=4 → (4,3)"},
+{"t":"j","q":"数对 (6,1) 和 (1,6) 表示的是同一个位置。","a":0,"tag":"数对的顺序","hard":1,"ex":"顺序不同位置就不同！(6,1) 是第6列第1行，(1,6) 是第1列第6行"},
+{"t":"c","q":"王芳坐第3列第4行，李丽坐第3列第2行。谁和王芳在同一列？","ops":["李丽","王芳自己","都在第3列，是同一列的同学","都不在同一列"],"a":0,"tag":"数对与位置关系","hard":1,"ex":"同一列 → 第一个数相同。李丽(3,2)和王芳(3,4)第一个数都是3，同一列"},
+{"t":"c","q":"明明在教室的数对位置是 (x, 6)，那么明明一定坐在——","ops":["第6列","第6行","第x行","随便哪里"],"a":1,"tag":"数对的规律","hard":2,"ex":"第二个数是行，x不确定但行一定是第6行。同一行的同学数对第二个数都相同"},
+{"t":"c","q":"【终极挑战】点 A(2,5) 先向右平移3格，再向上平移1格，新位置的数对是？","ops":["(5,6)","(5,4)","(2,6)","(4,6)"],"a":0,"tag":"数对与平移综合","hard":2,"ex":"右移3格：列 2+3=5；上移1格：行 5+1=6 → (5,6)"}
+]},
+{"no":3,"zone":"上","name":"小数除法","sub":"人教版五年级上册 · 第3单元","monster":"🧙","mname":"除法巫师 · 老法师","title":"除法神算子","items":[
+{"t":"c","q":"1.2 ÷ 4 = ？","ops":["0.3","3","0.03","30"],"a":0,"tag":"小数除以整数","hard":0,"ex":"12÷4=3，商3，点小数点 → 0.3"},
+{"t":"c","q":"3.6 ÷ 0.9 = ？","ops":["4","0.4","40","0.04"],"a":0,"tag":"除数是小数的除法","hard":0,"ex":"商不变规律：被除数和除数同时×10 → 36÷9=4"},
+{"t":"j","q":"计算 2.4 ÷ 0.6 时，可以转化成 24 ÷ 6 来算，结果不变。","a":1,"tag":"商不变规律","hard":0,"ex":"被除数和除数同时扩大相同的倍数(0除外)，商不变"},
+{"t":"c","q":"用竖式计算 9.8 ÷ 0.7，第一步应该转化成——","ops":["98 ÷ 7","9.8 ÷ 7","98 ÷ 0.7","0.98 ÷ 7"],"a":0,"tag":"除数化整数","hard":1,"ex":"把除数0.7变成整数7，小数点向右移1位，被除数9.8也要跟着变成98"},
+{"t":"f","q":"12.5 ÷ 0.5 = ？","a":"25","tag":"小数除法口算","hard":1,"ex":"同时×10 → 125÷5=25"},
+{"t":"j","q":"小数除以小数，商一定比被除数小。","a":0,"tag":"商与被除数关系","hard":1,"ex":"不一定！比如 3.6÷0.9=4，商4比被除数3.6还大。除数小于1时，商会变大"},
+{"t":"f","q":"【终极挑战】2.8 ÷ 0.35 = ？","a":"8","tag":"除数是小数的除法","hard":2,"ex":"同时×100 → 280÷35=8"}
+]},
+{"no":4,"zone":"上","name":"可能性","sub":"人教版五年级上册 · 第4单元","monster":"🎲","mname":"幸运精灵 · 骰子小妖","title":"幸运星探员","items":[
+{"t":"c","q":"盒子里放着3个红球和2个白球（除颜色外完全相同），任意摸一个，摸到什么球的可能性大？","ops":["红球","白球","一样大","不可能摸到红球"],"a":0,"tag":"可能性的大小","hard":0,"ex":"数量多的可能性大：红球3个＞白球2个 → 摸到红球可能性大"},
+{"t":"c","q":"转盘上一半是红色一半是蓝色，指针停在两种颜色的可能性——","ops":["红色大","蓝色大","相等","无法比较"],"a":2,"tag":"可能性相等","hard":0,"ex":"面积各占一半，可能性就相等"},
+{"t":"j","q":"掷一枚硬币，正面朝上和反面朝上的可能性相等。","a":1,"tag":"等可能性","hard":0,"ex":"只有两种等可能的结果，各占一半"},
+{"t":"c","q":"盒子里只有6个红球，任意摸一个，( )摸到红球。","ops":["可能","一定","不可能","偶尔"],"a":1,"tag":"确定事件","hard":1,"ex":"盒子里全是红球，摸出的一定是红球，这是确定事件"},
+{"t":"c","q":"掷骰子，掷出“6点”和掷出“1点”的可能性——","ops":["6点大","1点大","相等","无法比较"],"a":2,"tag":"公平性判断","hard":1,"ex":"每个点数出现的可能性都一样，这个游戏规则是公平的"},
+{"t":"c","q":"掷骰子，掷出的点数大于3的，一共有几种可能？","ops":["2种","3种","4种","6种"],"a":1,"tag":"列举可能结果","hard":1,"ex":"大于3的点数是4、5、6，共3种"},
+{"t":"j","q":"【终极挑战】从写着1~9的九张卡片中任意抽一张，抽到奇数的可能性比抽到偶数的可能性大。","a":1,"tag":"可能性综合","hard":2,"ex":"1~9中奇数有1,3,5,7,9共5张，偶数只有4张 → 奇数可能性大"}
+]},
+{"no":5,"zone":"上","name":"简易方程","sub":"人教版五年级上册 · 第5单元","monster":"🔐","mname":"方程锁匠 · 密码大师","title":"方程破译者","items":[
+{"t":"c","q":"字母式 a × 3 可以简写成？","ops":["3a","a3","a+3","3+a"],"a":0,"tag":"用字母表示数","hard":0,"ex":"字母和数相乘，省略乘号，数要写在字母前面：a×3=3a"},
+{"t":"c","q":"下面哪个式子是方程？","ops":["5x > 3","x + 2 = 8","9 − 3 = 6","x + 5"],"a":1,"tag":"方程的意义","hard":0,"ex":"方程=含有未知数的等式。x+2=8既有未知数又是等式，两个条件缺一不可"},
+{"t":"f","q":"解方程：x + 5 = 12，x = ？","a":"7","tag":"解方程","hard":0,"ex":"等式两边同时减5：x=12−5=7"},
+{"t":"c","q":"解方程 3x = 18，x 等于？","ops":["6","15","54","21"],"a":0,"tag":"解方程","hard":0,"ex":"等式两边同时除以3：x=18÷3=6"},
+{"t":"c","q":"x = 3 是下面哪个方程的解？","ops":["2x + 1 = 7","3x − 3 = 9","x + 2 = 6","5x = 20"],"a":0,"tag":"检验方程的解","hard":1,"ex":"把x=3代入检验：2×3+1=7 ✓ 正好等于7，所以是它的解"},
+{"t":"j","q":"等式的两边同时乘同一个数，等式仍然成立。","a":1,"tag":"等式的性质","hard":1,"ex":"这是等式的性质2，天平两边同时放大相同的倍数，天平依然平衡"},
+{"t":"f","q":"【终极挑战】解方程：2x − 6 = 10，x = ？","a":"8","tag":"解方程综合","hard":2,"ex":"两边同时加6：2x=16，再同时除以2：x=8"}
+]},
+{"no":6,"zone":"上","name":"多边形的面积","sub":"人教版五年级上册 · 第6单元","monster":"🟦","mname":"变形怪 · 图形切割者","title":"图形面积师","items":[
+{"t":"c","q":"平行四边形的底是6cm，高是4cm，面积是？","ops":["24 cm²","20 cm²","12 cm²","10 cm²"],"a":0,"tag":"平行四边形面积","hard":0,"ex":"平行四边形面积=底×高：6×4=24 cm²"},
+{"t":"c","q":"三角形的底是8cm，高是5cm，面积是？","ops":["40 cm²","20 cm²","13 cm²","26 cm²"],"a":1,"tag":"三角形面积","hard":0,"ex":"三角形面积=底×高÷2：8×5÷2=20 cm²，别忘了除以2！"},
+{"t":"c","q":"梯形的上底3cm、下底5cm、高4cm，面积是？","ops":["16 cm²","32 cm²","8 cm²","15 cm²"],"a":0,"tag":"梯形面积","hard":1,"ex":"梯形面积=(上底+下底)×高÷2：(3+5)×4÷2=16 cm²"},
+{"t":"j","q":"两个面积相等的三角形，一定能拼成一个平行四边形。","a":0,"tag":"图形拼组","hard":1,"ex":"必须是两个完全相同的三角形才能拼成平行四边形，面积相等还不够"},
+{"t":"c","q":"一个三角形和一个平行四边形等底等高，三角形的面积是平行四边形的——","ops":["一半","2倍","相等","3倍"],"a":0,"tag":"面积关系","hard":1,"ex":"等底等高时，平行四边形面积=底×高，三角形=底×高÷2，正好是一半"},
+{"t":"f","q":"一块平行四边形菜地，底10米，高6米，面积是多少平方米？（只填数字）","a":"60","tag":"解决实际问题","hard":1,"ex":"10×6=60（平方米）"},
+{"t":"f","q":"【终极挑战】梯形上底2cm、下底6cm、高5cm，面积是多少平方厘米？（只填数字）","a":"20","tag":"梯形面积综合","hard":2,"ex":"(2+6)×5÷2=8×5÷2=20 cm²"}
+]},
+{"no":7,"zone":"上","name":"植树问题","sub":"人教版五年级上册 · 第7单元 数学广角","monster":"🌳","mname":"树人长老 · 森林卫士","title":"植树小园丁","items":[
+{"t":"c","q":"在一条30米的小路一旁栽树，每隔5米栽一棵（两端都栽），一共要栽几棵？","ops":["6棵","7棵","5棵","8棵"],"a":1,"tag":"两端都栽","hard":0,"ex":"两端都栽：棵数=间隔数+1。30÷5=6个间隔，6+1=7棵"},
+{"t":"c","q":"在周长60米的圆形花坛边摆花盆，每隔6米摆一盆，一共要摆几盆？","ops":["10盆","11盆","9盆","12盆"],"a":0,"tag":"封闭图形植树","hard":1,"ex":"封闭图形（首尾相接）：棵数=间隔数。60÷6=10盆"},
+{"t":"c","q":"两座楼房之间相距20米，每隔4米种一棵树（两端都不栽），能种几棵？","ops":["4棵","5棵","6棵","3棵"],"a":0,"tag":"两端不栽","hard":1,"ex":"两端不栽：棵数=间隔数−1。20÷4=5个间隔，5−1=4棵"},
+{"t":"c","q":"时钟4时敲4下，6秒敲完；那么8时敲8下，需要几秒？（每两下间隔相同）","ops":["14秒","12秒","16秒","10秒"],"a":0,"tag":"间隔问题","hard":1,"ex":"敲4下有3个间隔：6÷3=2秒/间隔。敲8下有7个间隔：7×2=14秒"},
+{"t":"j","q":"在周长200米的环形跑道上栽树，每隔10米栽一棵，正好能栽20棵。","a":1,"tag":"封闭图形植树","hard":1,"ex":"封闭图形棵数=间隔数：200÷10=20棵，正确"},
+{"t":"c","q":"小明从1楼上到3楼用了24秒（每层用时相同），照这样他从1楼上到6楼要用多少秒？","ops":["60秒","72秒","48秒","54秒"],"a":0,"tag":"楼梯间隔问题","hard":2,"ex":"1楼到3楼是2个间隔：24÷2=12秒/层。1楼到6楼是5个间隔：5×12=60秒"},
+{"t":"c","q":"【终极挑战】在48米的公路一旁栽树，每隔8米栽一棵（两端都栽），一共要栽几棵？","ops":["6棵","7棵","5棵","8棵"],"a":1,"tag":"植树问题综合","hard":2,"ex":"48÷8=6个间隔，两端都栽要加1：6+1=7棵"}
+]},
+
+{"no":8,"zone":"下","name":"观察物体","sub":"人教版五年级下册 · 第1单元","monster":"🧊","mname":"积木幻影 · 隐形搭客","title":"空间观察家","items":[
+{"t":"c","q":"用3个同样的小正方体搭成一排，从正面看能看到几个正方形？","ops":["1个","2个","3个","6个"],"a":2,"tag":"三视图认识","hard":0,"ex":"3个正方体排成一横排，从正面看就是3个正方形排成一行"},
+{"t":"c","q":"用6个小正方体拼成2行3列的一层平面图形，从上面看能看到几个正方形？","ops":["3个","5个","6个","2个"],"a":2,"tag":"从不同方向观察","hard":0,"ex":"从上面俯视，看到的正是这个平面的样子：2行×3列=6个正方形"},
+{"t":"j","q":"一个立体图形从上面看是3个小正方形，那它一定是3个小正方体搭成的。","a":0,"tag":"视图与实物","hard":1,"ex":"不一定！上面看到的3个位置上，可以叠着更多正方体，总数可能超过3个"},
+{"t":"c","q":"把3个小正方体叠成一竖列，从正面看能看到几个正方形？","ops":["1个","2个","3个","4个"],"a":2,"tag":"多角度观察","hard":1,"ex":"竖列从正面看上下重叠，但还是能看到3个位置上的正方形"},
+{"t":"j","q":"一个正方体从正面、上面、左面看到的形状都是正方形。","a":1,"tag":"正方体特征","hard":1,"ex":"正方体6个面都是完全相同的正方形，所以从哪个方向看都是正方形"},
+{"t":"f","q":"用小正方体拼一个长4个、宽3个、高2个的长方体，一共需要多少个小正方体？（只填数字）","a":"24","tag":"拼搭计数","hard":1,"ex":"4×3×2=24（个），一层一层数就清楚了"},
+{"t":"c","q":"【终极挑战】要使一个立体图形从正面看是一排3个正方形，最少需要几个小正方体？","ops":["1个","2个","3个","4个"],"a":2,"tag":"最少拼搭问题","hard":2,"ex":"正面要看到3个位置都有正方形，每个位置至少1个 → 最少3个"}
+]},
+{"no":9,"zone":"下","name":"因数与倍数","sub":"人教版五年级下册 · 第2单元","monster":"🔢","mname":"分裂怪 · 数数小鬼","title":"数论分割者","items":[
+{"t":"c","q":"18 的因数一共有几个？","ops":["4个","5个","6个","9个"],"a":2,"tag":"找一个数的因数","hard":0,"ex":"成对找：1和18、2和9、3和6，共6个"},
+{"t":"c","q":"既是2的倍数又是3的倍数的最小两位数是？","ops":["6","12","18","24"],"a":1,"tag":"2、3、5的倍数特征","hard":0,"ex":"2和3的倍数就是6的倍数：6、12、18…最小两位数是12"},
+{"t":"c","q":"下面哪个数是质数？","ops":["9","11","15","21"],"a":1,"tag":"质数与合数","hard":1,"ex":"9=3×3、15=3×5、21=3×7都是合数，只有11只有1和它本身两个因数"},
+{"t":"c","q":"100 以内最大的质数是？","ops":["91","93","97","99"],"a":2,"tag":"100以内质数","hard":1,"ex":"99=9×11、93=3×31、91=7×13 都是合数，97才是质数"},
+{"t":"j","q":"个位上是 0 或 5 的数，一定是 5 的倍数。","a":1,"tag":"5的倍数特征","hard":0,"ex":"5的倍数特征就是看个位：0或5"},
+{"t":"f","q":"30 以内 7 的最大倍数是多少？（只填数字）","a":"28","tag":"找倍数","hard":1,"ex":"7×4=28，7×5=35超过30了，所以最大是28"},
+{"t":"f","q":"【终极挑战】一个数既是 8 的倍数，又是 8 的因数，这个数是多少？（只填数字）","a":"8","tag":"因数倍数综合","hard":2,"ex":"一个数最大的因数是它本身，最小的倍数也是它本身 → 只能是8"}
+]},
+{"no":10,"zone":"下","name":"长方体和正方体","sub":"人教版五年级下册 · 第3单元","monster":"📦","mname":"方块巨兽 · 立体魔王","title":"立体大师","items":[
+{"t":"c","q":"正方体的棱长是3cm，它的表面积是？","ops":["27 cm²","54 cm²","36 cm²","18 cm²"],"a":1,"tag":"正方体表面积","hard":0,"ex":"一个面：3×3=9 cm²，正方体6个面：9×6=54 cm²"},
+{"t":"c","q":"长方体长5cm、宽4cm、高3cm，体积是？","ops":["12 cm³","47 cm³","60 cm³","24 cm³"],"a":2,"tag":"长方体体积","hard":0,"ex":"体积=长×宽×高：5×4×3=60 cm³"},
+{"t":"c","q":"1 立方分米 = ( ) 立方厘米","ops":["10","100","1000","10000"],"a":2,"tag":"体积单位换算","hard":1,"ex":"体积单位进率是1000：1dm³=1000cm³，1m³=1000dm³"},
+{"t":"c","q":"长方体长5cm、宽4cm、高3cm，它的棱长总和是？","ops":["12 cm","24 cm","48 cm","60 cm"],"a":2,"tag":"棱长总和","hard":1,"ex":"长宽高各有4条：(5+4+3)×4=48 cm"},
+{"t":"j","q":"物体的容积就是它的体积。","a":0,"tag":"容积与体积","hard":1,"ex":"不一样！体积是物体所占空间的大小，容积是它能容纳物体的体积，容积要从里面量"},
+{"t":"f","q":"正方体的棱长是2cm，它的体积是多少立方厘米？（只填数字）","a":"8","tag":"正方体体积","hard":1,"ex":"棱长×棱长×棱长：2×2×2=8 cm³"},
+{"t":"f","q":"【终极挑战】一个长方体鱼缸，从里面量长8dm、宽5dm、高4dm，它最多能装水多少升？（只填数字）","a":"160","tag":"容积应用","hard":2,"ex":"8×5×4=160 dm³，1dm³=1L，所以是160升"}
+]},
+{"no":11,"zone":"下","name":"分数的意义和性质","sub":"人教版五年级下册 · 第4单元","monster":"🍕","mname":"幻术师 · 分数大盗","title":"分数魔法师","items":[
+{"t":"c","q":"3/4 的分数单位是？","ops":["3","4","1/4","1/3"],"a":2,"tag":"分数单位","hard":0,"ex":"分母是4，就是把整体平均分成4份，1份就是分数单位1/4。3/4里有3个这样的单位"},
+{"t":"c","q":"把3米长的绳子平均分成5段，每段长多少米？","ops":["1/5米","3/5米","5/3米","3/4米"],"a":1,"tag":"分数与除法","hard":1,"ex":"3÷5=3/5（米）。注意：每段是全长的1/5，但长度是3/5米，别混淆"},
+{"t":"c","q":"把 12/18 约成最简分数是？","ops":["2/3","6/9","3/6","4/6"],"a":0,"tag":"约分","hard":0,"ex":"分子分母同时除以最大公因数6：12÷6=2，18÷6=3 → 2/3"},
+{"t":"c","q":"下面哪个分数和 2/3 相等？","ops":["3/4","8/12","2/6","4/9"],"a":1,"tag":"分数的基本性质","hard":1,"ex":"分子分母同时×4：2×4=8，3×4=12 → 8/12"},
+{"t":"f","q":"把 9/24 约成最简分数。（填写如 3/8 的形式）","a":"3/8","tag":"约分","hard":1,"ex":"分子分母同除以3：9÷3=3，24÷3=8 → 3/8"},
+{"t":"j","q":"分数的分子和分母同时乘或除以相同的数（0除外），分数的大小不变。","a":1,"tag":"分数基本性质","hard":0,"ex":"这就是分数的基本性质，和商不变规律是亲戚哦"},
+{"t":"c","q":"【终极挑战】6/9 的分子除以3，要使分数大小不变，分母应该——","ops":["除以3","乘3","加3","不变"],"a":0,"tag":"分数基本性质应用","hard":2,"ex":"分数基本性质要求同乘或同除：分子除以3，分母也要除以3 → 2/3"}
+]},
+{"no":12,"zone":"下","name":"图形的运动（三）","sub":"人教版五年级下册 · 第5单元 旋转","monster":"🌀","mname":"陀螺妖 · 旋转怪客","title":"旋转指挥官","items":[
+{"t":"c","q":"描述图形的旋转，需要说清楚哪三要素？","ops":["中心、方向、角度","长、宽、高","起点、终点、速度","边、角、顶点"],"a":0,"tag":"旋转三要素","hard":0,"ex":"旋转中心（绕哪转）、旋转方向（顺/逆时针）、旋转角度（转多少度），缺一不可"},
+{"t":"j","q":"图形旋转后，形状和大小都不变，只是位置变了。","a":1,"tag":"旋转的特征","hard":0,"ex":"旋转和平移都不改变图形的形状和大小"},
+{"t":"c","q":"钟面上，指针从“12”绕中心顺时针旋转90°，指向数字几？","ops":["2","3","6","9"],"a":1,"tag":"旋转角度","hard":1,"ex":"钟面一圈360°，12个大格，每格30°。90°÷30°=3格，从12顺时针走3格 → 3"},
+{"t":"c","q":"钟面上，指针从“6”顺时针旋转90°后指向数字几？","ops":["7","8","9","10"],"a":2,"tag":"旋转角度","hard":1,"ex":"90°是3个大格：6→7→8→9，指向9"},
+{"t":"c","q":"图形平移和旋转后，不发生改变的是——","ops":["位置","大小和形状","方向","角度"],"a":1,"tag":"运动不变性","hard":1,"ex":"平移和旋转都不改变图形的形状和大小，改变的是位置（旋转还改变方向）"},
+{"t":"j","q":"一个图形绕一点旋转360°后，能和原来的图形完全重合。","a":1,"tag":"旋转的周期","hard":2,"ex":"转一整圈360°正好回到原位，当然完全重合"},
+{"t":"c","q":"【终极挑战】钟面上分针从指向“3”走到指向“6”，分针绕中心旋转了多少度？","ops":["30°","60°","90°","180°"],"a":2,"tag":"旋转综合","hard":2,"ex":"从3到6走了3个大格，每格30°，3×30°=90°"}
+]},
+{"no":13,"zone":"下","name":"分数的加法和减法","sub":"人教版五年级下册 · 第6单元","monster":"🍳","mname":"拼盘师 · 美食怪厨","title":"分数小厨师","items":[
+{"t":"c","q":"1/2 + 1/3 = ？","ops":["2/5","5/6","1/5","1/6"],"a":1,"tag":"异分母分数加法","hard":0,"ex":"先通分：1/2=3/6，1/3=2/6，3/6+2/6=5/6"},
+{"t":"c","q":"1 − 3/8 = ？","ops":["5/8","3/8","1/8","8/8"],"a":0,"tag":"分数减法","hard":0,"ex":"把1看成8/8：8/8−3/8=5/8"},
+{"t":"c","q":"5/12 + 7/12 = ？","ops":["12/24","12/12=1","2/12","35/24"],"a":1,"tag":"同分母分数加法","hard":0,"ex":"同分母：分子相加 5+7=12，得12/12，约分就是1"},
+{"t":"f","q":"1/4 + 3/4 = ？（填写如 1 的形式）","a":"1","tag":"同分母分数加法","hard":1,"ex":"分子相加：1+3=4，4/4=1"},
+{"t":"c","q":"3/5 − 1/10 = ？","ops":["2/5","1/2","1/5","2/10"],"a":1,"tag":"异分母分数减法","hard":1,"ex":"先通分：3/5=6/10，6/10−1/10=5/10，约分得1/2"},
+{"t":"j","q":"计算异分母分数加减法时，要先通分再计算。","a":1,"tag":"计算法则","hard":0,"ex":"分母不同就是分数单位不同，要先通分统一分数单位才能加减"},
+{"t":"f","q":"【终极挑战】2/3 + 1/4 = ？（填写如 11/12 的最简分数形式）","a":"11/12","tag":"异分母通分","hard":2,"ex":"通分：2/3=8/12，1/4=3/12，8/12+3/12=11/12"}
+]},
+{"no":14,"zone":"下","name":"折线统计图","sub":"人教版五年级下册 · 第7单元","monster":"📈","mname":"曲线幽灵 · 数据怪","title":"数据分析师","items":[
+{"t":"c","q":"要清楚地表示病人体温的变化情况，用哪种统计图最合适？","ops":["条形统计图","折线统计图","扇形统计图","统计表"],"a":1,"tag":"统计图的选择","hard":0,"ex":"折线统计图最能反映数量的增减变化趋势，体温变化就选它"},
+{"t":"c","q":"折线统计图能清楚地看出——","ops":["数量的多少","数量的增减变化","各部分占比","没有用处"],"a":1,"tag":"折线统计图特点","hard":0,"ex":"折线的起伏直接展示升降变化，这是它最大的本领"},
+{"t":"j","q":"条形统计图也适合表示数量的增减变化趋势。","a":0,"tag":"条形vs折线","hard":1,"ex":"条形统计图擅长比较数量多少，看变化趋势还是折线统计图更清楚"},
+{"t":"c","q":"要比较各班人数的多少，用哪种统计图最合适？","ops":["折线统计图","条形统计图","扇形统计图","都可以"],"a":1,"tag":"统计图的选择","hard":1,"ex":"比较多少、大小，条形统计图一目了然"},
+{"t":"c","q":"折线统计图中，折线越陡，表示数量变化越——","ops":["小","大","慢","慢到不变"],"a":1,"tag":"读图能力","hard":1,"ex":"坡度越陡说明相同时间里变化越大；越平缓说明变化越小"},
+{"t":"c","q":"复式折线统计图至少有（ ）条折线？","ops":["1条","2条","3条","4条"],"a":1,"tag":"复式统计图","hard":1,"ex":"“复式”就是把两组及以上数据画在同一张图上，至少2条，还要有图例区分"},
+{"t":"c","q":"【终极挑战】小明发烧了，体温先升高后降低。折线统计图上这条线应该先——","ops":["下降后上升","上升后下降","一直不变","先平后降再升"],"a":1,"tag":"读图综合","hard":2,"ex":"体温升高 → 折线上升；体温降低 → 折线下降，先升后降"}
+]},
+{"no":15,"zone":"下","name":"数学广角·找次品","sub":"人教版五年级下册 · 第8单元","monster":"⚖️","mname":"天平刺客 · 平衡怪影","title":"天平神探","items":[
+{"t":"c","q":"8个零件中有1个是次品（轻一些），用天平称，至少称几次能保证找出次品？","ops":["1次","2次","3次","4次"],"a":1,"tag":"找次品策略","hard":0,"ex":"按3,3,2分成三份：先称3和3，再从有问题的一组里称1和1，2次保证找出"},
+{"t":"c","q":"3个球中有1个是次品（轻一些），用天平至少称几次就能找出它？","ops":["1次","2次","3次","不能确定"],"a":0,"tag":"最优分法","hard":0,"ex":"天平两端各放1个：平衡则剩下的是次品，不平衡轻的是次品，1次搞定"},
+{"t":"c","q":"用天平称物品，天平平衡了，说明两边——","ops":["左边重","右边重","一样重","无法判断"],"a":2,"tag":"天平原理","hard":0,"ex":"天平平衡=两边质量相等。不平衡时，重的一边会下沉"},
+{"t":"c","q":"9个零件中有1个次品（轻一些），至少称几次保证找出？","ops":["1次","2次","3次","4次"],"a":1,"tag":"找次品策略","hard":1,"ex":"9个平均分成3份：3,3,3。先称两组定哪组有问题（1次），组内再称一次（第2次）"},
+{"t":"j","q":"3个零件中有1个次品（稍轻），用天平至少称1次就能把它找出来。","a":1,"tag":"判断最值","hard":1,"ex":"正确！两端各放一个，平衡则是剩下的，不平衡则轻的是次品"},
+{"t":"c","q":"用天平找次品时，把待测物品尽量平均分成几份，找到次品的次数最少？","ops":["2份","3份","4份","越多越好"],"a":1,"tag":"最优策略","hard":1,"ex":"平均分成3份是最优策略，因为天平一次就能排除三分之二"},
+{"t":"f","q":"【终极挑战】27个零件中有1个次品（比正品轻），至少称几次能保证找出次品？（只填数字）","a":"3","tag":"找次品综合","hard":2,"ex":"27=9,9,9 → 一次定出9个里；9=3,3,3 → 二次定出3个里；3个再称一次 → 共3次"}
+]},
+
+];
+/* ══════════════ 全局与工具 ══════════════ */
+const $=id=>document.getElementById(id);
+const LS={
+  get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},
+  set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},
+  del(k){try{localStorage.removeItem(k)}catch(e){}}
+};
+const SET_KEY='m5adv_set_v1', PL_KEY='m5adv_players_v1', ME_KEY='m5adv_me_v1';
+var SET=LS.get(SET_KEY,{pwd:'202609',downOpen:true,sound:true});
+var ME=LS.get(ME_KEY,null);
+var CUR=null, SEL_AV=0;
+
+const AVATARS=[
+  {ic:'🦸',nm:'剑士·阿勇',desc:'正义满满'},
+  {ic:'🧙‍♀️',nm:'法师·小灵',desc:'聪明伶俐'},
+  {ic:'🏹',nm:'游侠·阿猎',desc:'眼疾手快'},
+  {ic:'🥋',nm:'格斗·小爆',desc:'元气十足'}
+];
+const DROPS=['🍬 能量药水','🍀 幸运四叶草','🔥 怒气宝石','🛡️ 勇者盾牌','⚡ 雷霆护符','💎 秘境钻石'];
+
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(()=>t.classList.remove('show'),1800)}
+function goScreen(name){
+  if(name==='map'&&!ME){name='boot';}
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  const el=$(name); if(el){el.classList.add('on');}
+  window.scrollTo(0,0);
+  if(name==='map'){renderTop();renderMap();}
+  if(name==='rank')renderRank();
+  if(name==='wrong')renderWrong();
+}
+function backHome(){goScreen(ME?'map':'boot');}
+
+/* ── 音效（WebAudio 合成，零素材） ── */
+let AC=null;
+function ac(){if(!AC){try{AC=new (window.AudioContext||window.webkitAudioContext)()}catch(e){}}if(AC&&AC.state==='suspended')AC.resume();return AC}
+function beep(freq,dur,type,vol,when){
+  if(!SET.sound)return;const c=ac();if(!c)return;
+  const o=c.createOscillator(),g=c.createGain();
+  o.type=type||'sine';o.frequency.value=freq;
+  g.gain.setValueAtTime(vol||.15,c.currentTime+(when||0));
+  g.gain.exponentialRampToValueAtTime(.001,c.currentTime+(when||0)+(dur||.15));
+  o.connect(g);g.connect(c.destination);
+  o.start(c.currentTime+(when||0));o.stop(c.currentTime+(when||0)+(dur||.15)+.02);
+}
+const SFX={
+  right(){beep(660,.12,'sine',.18);beep(880,.18,'sine',.18,.09)},
+  wrong(){beep(220,.22,'sawtooth',.12);beep(160,.25,'sawtooth',.10,.10)},
+  hit(){beep(520,.08,'square',.10)},
+  crit(){beep(520,.09,'square',.14);beep(780,.14,'square',.14,.07);beep(1040,.2,'square',.12,.14)},
+  win(){[523,659,784,1047].forEach((f,i)=>beep(f,.22,'triangle',.16,i*.12))},
+  lose(){[392,330,262].forEach((f,i)=>beep(f,.28,'triangle',.14,i*.15))},
+  lvl(){[784,988,1175].forEach((f,i)=>beep(f,.18,'sine',.15,i*.09))}
+};
+
+/* ══════════════ 存档 ══════════════ */
+function newME(name,av){
+  return {name,av:AVATARS[av].ic,exp:0,gold:0,stars:{},wrongs:[],last:Date.now()};
+}
+function saveME(){
+  if(!ME)return;ME.last=Date.now();
+  LS.set(ME_KEY,ME);
+  const pl=LS.get(PL_KEY,{});
+  const starsSum=Object.values(ME.stars).reduce((a,b)=>a+b,0);
+  pl[ME.name]={av:ME.av,exp:ME.exp,stars:starsSum,cleared:Object.keys(ME.stars).length,last:ME.last};
+  LS.set(PL_KEY,pl);
+}
+function lvOf(exp){return Math.floor(exp/100)+1}
+function starsFor(err){return err===0?3:err<=2?2:1}
+function expFor(err){return 50+(7-err)*10+(err===0?20:0)}
+function goldFor(err){return err===0?60:30}
+
+/* ══════════════ 题库辅助 ══════════════ */
+const UNIT=no=>BANK.find(u=>u.no===no);
+function unlocked(no){
+  if(no===1)return true;
+  const prev=UNIT(no-1);return !!(prev&&ME&&ME.stars[prev.no]>0);
+}
+function totalStars(){return ME?Object.values(ME.stars).reduce((a,b)=>a+b,0):0}
+function clearedCount(){return ME?Object.keys(ME.stars).length:0}
+
+/* ══════════════ 开屏 ══════════════ */
+function renderAvatars(){
+  $('avRow').innerHTML=AVATARS.map((a,i)=>
+    `<button class="av${i===SEL_AV?' on':''}" data-i="${i}"><span class="ic">${a.ic}</span><small>${a.nm}</small><em>${a.desc}</em></button>`).join('');
+  $('avRow').querySelectorAll('.av').forEach(b=>b.onclick=()=>{SEL_AV=+b.dataset.i;renderAvatars();beep(700,.06,'sine',.08)});
+}
+function tryLogin(){
+  const name=$('inName').value.trim();
+  if(!name){toast('先给自己起个响亮的名字吧！');$('inName').focus();return}
+  ac(); // 用户手势解锁音频
+  const pl=LS.get(PL_KEY,{});
+  if(pl[name]&&!ME){ /* 已有同名档案，直接续玩 */
+    ME=LS.get('m5adv_s_'+name,null)||Object.assign(newME(name,SEL_AV),{stars:pl[name].starsMap||{}});
+    if(!ME.stars)ME.stars={};
+  }else if(!ME||ME.name!==name){
+    const old=LS.get('m5adv_s_'+name,null);
+    ME=old||newME(name,SEL_AV);
+  }
+  saveME();LS.set('m5adv_s_'+name,ME);
+  toast(`欢迎回来，${ME.name}！`);
+  goScreen('map');
+}
+
+/* ══════════════ 顶栏与地图 ══════════════ */
+function renderTop(){
+  if(!ME)return;
+  const lv=lvOf(ME.exp),p=ME.exp%100;
+  const star=totalStars(),clr=clearedCount(),wr=ME.wrongs.length;
+  $('topBar').innerHTML=`
+    <span id="tbAv">${ME.av}</span>
+    <div><div id="tbName">${ME.name} <span id="tbLv">Lv.${lv}</span></div>
+      <div class="expbar"><i style="width:${p}%"></i></div></div>
+    <div id="tbStats">
+      <span class="tchip star">⭐ <b>${star}</b>/${BANK.length*3}</span>
+      <span class="tchip">🏰 <b>${clr}</b>/${BANK.length} 关</span>
+      <span class="tchip gold">🪙 <b>${ME.gold}</b></span>
+      ${wr?`<span class="tchip warn">📕 错题 <b>${wr}</b></span>`:''}
+    </div>`;
+}
+function renderMap(){
+  ['A','B'].forEach((z,zi)=>{
+    const box=$('node'+z);if(!box)return;
+    const units=BANK.filter(u=>u.zone===(zi===0?'上':'下'));
+    box.innerHTML=units.map(u=>{
+      const st=ME.stars[u.no]||0;
+      const unl=unlocked(u.no);
+      const closedDown=(u.zone==='下'&&!SET.downOpen);
+      const cls=st>0?'done':unl?'now':'locked';
+      const stars='⭐'.repeat(st)+'☆'.repeat(3-st);
+      const lk=(!unl&&!closedDown)?'<span class="lk">🔒</span>':'';
+      return `<button class="node ${cls}" data-no="${u.no}" ${unl?'':'disabled'}>
+        <span class="no-badge">第${u.no}关</span>${lk}
+        <span class="mob">${closedDown?'❄️':u.monster}</span>
+        <span class="nm">${closedDown?'下学期见':u.name}</span>
+        <span class="kb">${closedDown?'冻结中':u.mname}</span>
+        <span class="st">${st>0?stars:(unl?'待挑战':'　')}</span>
+      </button>`;
+    }).join('');
+    box.querySelectorAll('.node:not([disabled])').forEach(b=>{
+      b.onclick=()=>startLevel(+b.dataset.no);
+      if((ME.stars[+b.dataset.no]||0)===0)b.classList.add('pulse');
+    });
+  });
+  if(!SET.downOpen)$('mapB').innerHTML='<span class="zn">❄️</span>下册 · 秘境山脉<small>老师还没开放，下学期解锁！</small>';
+}
+
+/* ══════════════ 战斗 ══════════════ */
+function startLevel(no,reviewMode){
+  const unit=UNIT(no);
+  CUR={no,unit,idx:0,err:0,combo:0,maxCombo:0,hearts:5,wrongs:[],
+       review:!!reviewMode,items:reviewMode?ME.wrongs.slice():unit.items.slice()};
+  if(reviewMode&&!CUR.items.length){toast('错题本是空的，太棒了！');return}
+  if(reviewMode)CUR.items=CUR.items.map(w=>Object.assign({},UNIT(w.no).items[w.qi],{_w:w}));
+  $('monFace').textContent=reviewMode?'👻':unit.monster;
+  $('monName').textContent=reviewMode?'错题幽灵 · 复习挑战':unit.mname;
+  $('monZone').textContent=reviewMode?'错题本特训':`第 ${unit.no} 战场 · ${unit.sub}`;
+  $('battle').classList.add('on');document.querySelectorAll('.screen').forEach(s=>{if(s.id!=='battle')s.classList.remove('on')});
+  buildHp();buildHearts();askQ();
+  window.scrollTo(0,0);
+}
+function buildHp(){
+  $('monHp').innerHTML=Array.from({length:7},(_,i)=>`<div class="hcell live" id="hc${i}"></div>`).join('');
+  updHp(7);
+}
+function updHp(left){
+  $('monHpNum').textContent=`${Math.max(left,0)} / 7`;
+  for(let i=0;i<7;i++)$('hc'+i).classList.toggle('live',i<left);
+}
+function buildHearts(){
+  $('hpRow').innerHTML=Array.from({length:5},(_,i)=>`<span class="h${i<CUR.hearts?' live':''}">❤️</span>`).join('');
+}
+function qDesc(q){
+  return q.t==='c'?{label:'选择题',color:'var(--blue)'}:q.t==='j'?{label:'判断题',color:'var(--red)'}:{label:'填空题',color:'var(--green)'};
+}
+function askQ(){
+  const u=CUR.unit,qi=CUR.idx,q=CUR.items[qi];
+  $('qpos').textContent=CUR.review?`复习 第 ${qi+1} / ${CUR.items.length} 题`:`第 ${qi+1} / ${u.items.length} 题`;
+  const d=qDesc(q);
+  $('qkind').textContent=d.label;$('qkind').style.background=d.color;
+  $('qtag').textContent='考点：'+q.tag;
+  $('qstar').textContent=['⭐ 基础','⭐⭐ 进阶','💥 终极挑战'][q.hard||0];
+  $('comboInfo').textContent='🔥 连击 ×'+CUR.combo;
+  $('qText').textContent=q.q;
+  $('explainBox').style.display='none';$('explainBox').textContent='';
+  $('nextRow').innerHTML='';
+  const box=$('opsBox');box.innerHTML='';$('fillBox').classList.add('hidden');
+  if(q.t==='c'){
+    q.ops.forEach((op,i)=>{
+      const b=document.createElement('button');b.className='op';
+      b.innerHTML=`<span class="ok">${'ABCD'[i]}</span>${op}`;
+      b.onclick=()=>answer(i);box.appendChild(b);
+    });
+  }else if(q.t==='j'){
+    [['✔ 对',1],['✘ 错',0]].forEach(([tx,v])=>{
+      const b=document.createElement('button');b.className='op ju';
+      b.innerHTML=tx;b.onclick=()=>answer(v);box.appendChild(b);
+    });
+  }else{
+    $('fillBox').classList.remove('hidden');
+    const inp=$('fillIn');inp.value='';setTimeout(()=>inp.focus(),80);
+    $('fillGo').onclick=()=>answer(inp.value);
+    inp.onkeydown=e=>{if(e.key==='Enter')answer(inp.value)};
+  }
+}
+function normAns(s){
+  s=String(s||'').trim().replace('＝','=').replace(/\s+/g,'');
+  const m=s.match(/^(-?\d+(?:\.\d+)?)\/(-?\d+(?:\.\d+)?)$/);
+  if(m)return{frac:[+m[1],+m[2]]};
+  return{num:parseFloat(s),raw:s};
+}
+function ansEq(a,b){
+  const x=normAns(a),y=normAns(b);
+  if(x.frac&&y.frac)return x.frac[0]*y.frac[1]===x.frac[1]*y.frac[0];
+  if(x.frac||y.frac)return false;
+  if(!isNaN(x.num)&&!isNaN(y.num))return Math.abs(x.num-y.num)<1e-6;
+  return x.raw===y.raw;
+}
+function ansText(q){
+  return q.t==='c'?q.ops[q.a]:q.t==='j'?(q.a===1?'✔ 对':'✘ 错'):String(q.a);
+}
+function answer(v){
+  if(!CUR||CUR.lock)return;
+  const q=CUR.items[CUR.idx];
+  const ok=q.t==='f'?ansEq(v,q.a):(v===q.a);
+  CUR.lock=true;
+  const ops=$('opsBox').querySelectorAll('.op');
+  if(ok){
+    if(q.t==='c')ops[q.a].classList.add('correct');
+    else if(q.t==='j')ops[[1,0][q.a]].classList.add('correct');
+    CUR.combo++;CUR.maxCombo=Math.max(CUR.maxCombo,CUR.combo);
+    const crit=q.hard===2;
+    const dmg=crit?2:1;
+    SFX[crit?'crit':'right']();
+    hitMonster(dmg,crit);
+    if(CUR.combo>=3)showCombo(CUR.combo);
+    setTimeout(()=>{CUR.lock=false;nextQ()},750);
+  }else{
+    if(q.t==='c'){if(typeof v==='number')ops[v].classList.add('wrong');ops[q.a].classList.add('correct');}
+    else if(q.t==='j'){ops[[1,0][v||0]].classList.add('wrong');ops[[1,0][q.a]].classList.add('correct');}
+    CUR.err++;CUR.combo=0;CUR.hearts--;buildHearts();
+    CUR.wrongs.push(q);
+    if(!CUR.review&&!ME.wrongs.some(w=>w.no===CUR.no&&w.qi===CUR.idx))
+      ME.wrongs.push({no:CUR.no,qi:CUR.idx});
+    SFX.wrong();hurtHero();
+    $('explainBox').innerHTML=`<b>💡 解析：</b>${q.ex||'再想想哦'}　<b>正确答案：</b>${ansText(q)}`;
+    $('explainBox').style.display='block';
+    $('nextRow').innerHTML=`<button class="btn btn-blue" id="btnNextQ">看完了，下一题 ▶</button>`;
+    $('btnNextQ').onclick=()=>{CUR.lock=false;nextQ()};
+    if(CUR.hearts<=0){$('btnNextQ').textContent=' ❤️ 用完了…';$('btnNextQ').onclick=()=>showFail();return;}
+  }
+  saveME();
+}
+function showCombo(n){
+  const f=document.createElement('div');f.className='combo-flag show';
+  f.textContent=`连击 ×${n}！`;document.body.appendChild(f);
+  setTimeout(()=>f.remove(),800);
+}
+function hitMonster(dmg,crit){
+  const card=$('monCard');card.classList.remove('hit');void card.offsetWidth;card.classList.add('hit');
+  const fn=document.createElement('div');fn.className='float-num';
+  fn.textContent=crit?`暴击 −${dmg}!`:`−${dmg}`;card.appendChild(fn);
+  setTimeout(()=>fn.remove(),900);
+  CUR.hp=Math.max((CUR.hp===undefined?7:CUR.hp)-dmg,0);updHp(CUR.hp);
+}
+function hurtHero(){
+  const card=$('monCard');setTimeout(()=>{card.style.transform='scale(1.06)';setTimeout(()=>card.style.transform='',140)},250);
+}
+function nextQ(){
+  CUR.idx++;
+  if(CUR.idx>=CUR.items.length){winLevel();return}
+  askQ();
+}
+/* ══════════════ 结算 / 失败 ══════════════ */
+function winLevel(){
+  const u=CUR.unit||{no:0,name:'错题复习',title:'错题克星'};
+  const err=CUR.err;
+  const stars=starsFor(err),exp=CUR.review?0:expFor(err),gold=CUR.review?0:goldFor(err);
+  const first=!CUR.review&&!(ME.stars[u.no]>0);
+  if(!CUR.review){
+    ME.stars[u.no]=Math.max(ME.stars[u.no]||0,stars);
+    if(first)ME.exp+=40; // 首通加成
+    ME.exp+=exp;ME.gold+=gold;
+  }else{
+    // 复习模式：答完的题先毕业，答错的重新收录
+    CUR.items.forEach(q=>{ME.wrongs=ME.wrongs.filter(w=>!(q._w&&w.no===q._w.no&&w.qi===q._w.qi))});
+    CUR.wrongs.forEach(q=>{if(q._w&&!ME.wrongs.some(w=>w.no===q._w.no&&w.qi===q._w.qi))ME.wrongs.push(q._w)});
+  }
+  saveME();
+  const lvBefore=lvOf(ME.exp-exp),lvNow=lvOf(ME.exp);
+  $('resBig').textContent=err===0?'🏆':err<=2?'🎉':'😅';
+  $('resTitle').textContent=CUR.review?'复习完成！':(first?'首通胜利！':'战斗胜利！');
+  $('resSub').textContent=err===0?'完美无伤！一次都没答错，太强了！':err<=2?'只有小伤，表现不错！':'赢是赢了，但错得有点多，去错题本看看吧';
+  const sr=$('starRow');sr.innerHTML=[0,1,2].map(i=>`<span class="s${i<stars?' got':''}">⭐</span>`).join('');
+  $('rErr').textContent=err;$('rExp').textContent=CUR.review?'+0':`+${exp+(first?40:0)}`;
+  $('rGold').textContent=CUR.review?'+0':`+${gold}`;
+  $('rTitle').textContent=first?u.title:(ME.stars[u.no]===3?'三星认证':'熟练度提升');
+  $('dropBox').innerHTML=CUR.review?`<div class="dl">🎓 知识就是最好的奖励</div><div class="dg">🧠✨</div>`:
+    `<div class="dl">${err===0?'✨ 完美通关 · 开出金宝箱！':'通关宝箱'}</div><div class="dg">${err===0?'🎁✨':'🎁'}</div>
+     <div style="font-size:13.5px;color:var(--ink-h);font-weight:700;margin-top:4px">${DROPS[Math.floor(Math.random()*DROPS.length)]}</div>`;
+  $('wrongTips').innerHTML=err>0&&!CUR.review?`<div style="text-align:center;font-size:13.5px;color:var(--red);background:var(--red-l);border-radius:12px;padding:8px">📕 有 ${err} 道题已收进错题本，回地图后点「错题本」复习～</div>`:'';
+  const nextNo=u.no+1;
+  const hasNext=!CUR.review&&UNIT(nextNo)&&(SET.downOpen||UNIT(nextNo).zone==='上');
+  const btnNext=$('btnNext');btnNext.style.display=hasNext?'':'none';
+  btnNext.onclick=()=>goScreen('map');
+  $('btnRetry').onclick=()=>CUR.review?startLevel(0,true):startLevel(CUR.no);
+  $('btnBackMap').onclick=()=>goScreen('map');
+  goScreen('result');
+  SFX.win();if(lvNow>lvBefore)setTimeout(()=>{SFX.lvl();toast(`🎉 升级啦！Lv.${lvNow}`)},700);
+}
+function showFail(){
+  SFX.lose();
+  $('failTitle').textContent=`${CUR.unit.mname} 太强了…`;
+  $('failSub').textContent=`答错了 ${CUR.err} 次，❤️ 用完了。错题和解析都在下面，看懂了再战！`;
+  $('failWrong').innerHTML=CUR.wrongs.map(q=>`<div class="wrong-card">
+    <div class="wh"><span class="chip red">考点</span>${q.tag}</div>
+    <div class="wq">${q.q}</div>
+    <div class="wa">✔ 正确答案：${ansText(q)}</div>
+    <div class="we">💡 ${q.ex||''}</div></div>`).join('');
+  goScreen('fail');
+  $('btnRetryF').onclick=()=>startLevel(CUR.no);
+  $('btnBackMapF').onclick=()=>goScreen('map');
+}
+/*__APP1__*/
+/* ══════════════ 排行榜 ══════════════ */
+function renderRank(){
+  const pl=LS.get(PL_KEY,{});
+  const arr=Object.entries(pl).map(([name,d])=>Object.assign({name},d))
+    .sort((a,b)=>(b.stars||0)-(a.stars||0)||(b.exp||0)-(a.exp||0)||(b.cleared||0)-(a.cleared||0));
+  const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
+  $('rankBox').innerHTML=arr.length?arr.map((p,i)=>`<div class="rank-row">
+      <span class="no">${medal(i)}</span><span class="av">${p.av||'🦸'}</span>
+      <span class="nm">${p.name}</span>
+      <div class="mt" style="text-align:right">
+        <div>⭐ <b>${p.stars||0}</b> 星 · 🏰 <b>${p.cleared||0}</b>/${BANK.length} 关</div>
+        <div>Lv.${lvOf(p.exp||0)} · ${p.last?new Date(p.last).toLocaleDateString():''}</div>
+      </div></div>`).join('')
+    :'<p style="text-align:center;color:var(--ink-l);padding:30px">还没有冒险者上榜，快来当第一个！🚀</p>';
+}
+/* ══════════════ 错题本 ══════════════ */
+function renderWrong(){
+  const btn=$('wrongReviewBtn');
+  if(!ME){$('wrongBox').innerHTML='<p style="text-align:center;color:var(--ink-l);padding:30px">先回到主页，用你的名字开始冒险吧 🚀</p>';btn.innerHTML='';return}
+  const list=ME.wrongs.map(w=>Object.assign({},w,{q:UNIT(w.no)&&UNIT(w.no).items[w.qi]})).filter(x=>x.q);
+  btn.innerHTML=list.length?`<div style="margin-bottom:12px;text-align:center">
+      <button class="btn btn-orange" onclick="startLevel(0,true)">⚔️ 开始复习挑战（${list.length} 题）</button>
+      <div style="font-size:12px;color:var(--ink-l);margin-top:6px">答对一题就毕业一题，全部消灭它们！</div></div>`
+    :`<div style="text-align:center;padding:10px;color:var(--green);font-weight:700">🎉 错题本是空的，说明你现在掌握得非常好！</div>`;
+  $('wrongBox').innerHTML=list.length?list.map(x=>`<div class="wrong-card">
+      <div class="wh"><span class="chip blue">第${x.no}关 · ${UNIT(x.no).name}</span><span class="chip red">考点</span>${x.q.tag}</div>
+      <div class="wq">${x.q.q}</div>
+      <div class="wa">✔ 正确答案：${ansText(x.q)}</div>
+      <div class="we">💡 ${x.q.ex||''}</div></div>`).join('')
+    :'';
+}
+/* ══════════════ 弹层 ══════════════ */
+function openMask(html){$('maskCard').innerHTML=html;$('mask').classList.remove('hidden')}
+function closeMask(){$('mask').classList.add('hidden')}
+/* ══════════════ 教师区 ══════════════ */
+var tSel=1;
+function tTab(t,btn){
+  document.querySelectorAll('.tab[data-ttab]').forEach(b=>b.classList.toggle('on',b===btn));
+  $('tQuiz').classList.toggle('hidden',t!=='quiz');
+  $('tStu').classList.toggle('hidden',t!=='stu');
+  $('tSet').classList.toggle('hidden',t!=='set');
+  if(t==='quiz')renderQuiz();if(t==='stu')renderStu();if(t==='set')renderSet();
+}
+function renderQuiz(){
+  $('unitSel').innerHTML=BANK.map(u=>`<button class="tab${u.no===tSel?' on':''}" data-u="${u.no}">${u.zone==='上'?'上':'下'}${u.no} ${u.name}</button>`).join('');
+  $('unitSel').querySelectorAll('.tab').forEach(b=>b.onclick=()=>{tSel=+b.dataset.u;renderQuiz()});
+  const u=UNIT(tSel);
+  $('quizCount').textContent=`共 ${u.items.length} 题 · 怪物：${u.mname}`;
+  $('quizList').innerHTML=u.items.map((q,i)=>`<div class="quiz-item">
+    <div><span class="chip-kind-${q.t} ans-chip">${q.t==='c'?'选择':q.t==='j'?'判断':'填空'}</span>
+      <span class="chip-kind-c ans-chip" style="background:var(--gold-l);color:#B98A00">${['基础','进阶','终极'][q.hard||0]}</span>
+      <span class="chip-kind-c ans-chip" style="background:var(--purple-l);color:var(--purple)">${q.tag}</span></div>
+    <div class="qq">${i+1}. ${q.q}</div>
+    ${q.t==='c'?`<div style="margin-top:3px;color:var(--ink-l)">${q.ops.map((o,j)=>`${'ABCD'[j]}. ${o}`).join('　')}</div>`:''}
+    <div class="qa"><span class="tag">答案</span>${ansText(q)}</div>
+    <div class="ex">💡 ${q.ex||''}</div></div>`).join('');
+}
+$('btnPrint')&&($('btnPrint').onclick=()=>{
+  const u=UNIT(tSel);
+  $('printArea').innerHTML=`<h2 style="text-align:center">数学勇者大冒险 · ${u.name}（${u.sub}）</h2>`+
+    u.items.map((q,i)=>`<div class="pq"><div class="q">${i+1}. ${q.q}${q.t==='j'?'　（　对　/　错　）':''}</div>
+      ${q.t==='c'?`<div class="o">${q.ops.map((o,j)=>`${'ABCD'[j]}. ${o}`).join('　　')}</div>`:q.t==='f'?'<div class="o">答：＿＿＿＿＿＿</div>':''}
+      </div>`).join('')+
+    `<div style="margin-top:14px;font-size:12px;color:#555">参考答案：${u.items.map((q,i)=>`${i+1}.${ansText(q)}`).join('　')}</div>`;
+  window.print();
+});
+function renderStu(){
+  const pl=LS.get(PL_KEY,{});
+  const names=Object.keys(pl);
+  $('tStu').innerHTML=names.length?names.map(n=>{
+    const p=pl[n],s=LS.get('m5adv_s_'+n,null),wr=s&&s.wrongs?s.wrongs.length:0;
+    return `<div class="stu-row"><span class="av">${p.av||'🦸'}</span><span class="nm">${n}</span>
+      <div class="mt"><span>⭐ <b>${p.stars||0}</b></span><span>🏰 <b>${p.cleared||0}</b>/${BANK.length}</span>
+      <span>Lv.<b>${lvOf(p.exp||0)}</b></span><span>📕 错题 <b>${wr}</b></span>
+      <span>🕒 ${p.last?new Date(p.last).toLocaleString():'-'}</span></div>
+      <button class="tbtn" onclick="stuDetail('${n.replace(/'/g,'')}')">查看详情</button>
+      <button class="tbtn" style="color:var(--red)" onclick="delStu('${n.replace(/'/g,'')}')">删除</button></div>`;
+  }).join(''):'<p style="text-align:center;color:var(--ink-l);padding:30px">本机还没有学生数据</p>';
+}
+function stuDetail(name){
+  const s=LS.get('m5adv_s_'+name,null),p=LS.get(PL_KEY,{})[name];
+  const stars=s&&s.stars?s.stars:{};
+  const wr=s&&s.wrongs?s.wrongs:[];
+  openMask(`<div class="modal-h"><h3>${p&&p.av||''} ${name} 的冒险档案</h3><button class="tbtn" onclick="closeMask()">✕</button></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${BANK.map(u=>`<span class="tchip" title="${u.name}">${u.no}关 ${stars[u.no]>0?'⭐'.repeat(stars[u.no]):'—'}</span>`).join('')}</div>
+    <b style="font-size:14px;color:var(--ink-h)">📕 错题明细（${wr.length}）</b>
+    ${wr.length?wr.map(w=>{const q=UNIT(w.no)&&UNIT(w.no).items[w.qi];return q?`<div class="wrong-card">
+      <div class="wh"><span class="chip blue">第${w.no}关 ${UNIT(w.no).name}</span><span class="chip red">${q.tag}</span></div>
+      <div class="wq">${q.q}</div><div class="wa">✔ ${ansText(q)}</div><div class="we">💡 ${q.ex||''}</div></div>`:''}).join('')
+      :'<p style="color:var(--ink-l);font-size:13px">暂无错题，掌握得很棒！</p>'}`);
+}
+function delStu(name){
+  if(!confirm(`确定删除「${name}」的冒险档案吗？不可恢复！`))return;
+  const pl=LS.get(PL_KEY,{});delete pl[name];LS.set(PL_KEY,pl);LS.del('m5adv_s_'+name);
+  if(ME&&ME.name===name){ME=null;LS.del(ME_KEY)}
+  renderStu();toast('已删除');
+}
+function renderSet(){
+  $('tSet').innerHTML=`
+  <div class="set-row"><div class="st"><b>🔓 下册（秘境山脉）开放开关</b><span>关闭后地图上第8-15关对学生冻结，适合只学上册时"跟随课堂"模式</span></div>
+    <label class="switch"><input type="checkbox" id="swDown" ${SET.downOpen?'checked':''}><i></i></label></div>
+  <div class="set-row"><div class="st"><b>🔊 音效</b><span>答题反馈音效（教室可静音）</span></div>
+    <label class="switch"><input type="checkbox" id="swSound" ${SET.sound?'checked':''}><i></i></label></div>
+  <div class="set-row"><div class="st"><b>🔑 修改教师密码</b><span>当前默认：202609（建议改掉，免得被学生发现）</span></div>
+    <input class="pwd-in" id="inNewPwd" placeholder="输入新密码"><button class="btn btn-blue" id="btnSetPwd" style="padding:8px 18px">保存</button></div>
+  <div class="set-row"><div class="st"><b>➕ 如何给题库加题？</b><span>用记事本打开 index.html，找到 <b>BANK</b> 数组，照着现有格式复制一段即可。每关 items 里加一题：<br></span>
+    </div><div class="demo-line">{"t":"c","q":"题目","ops":["A","B","C","D"],"a":0,"tag":"考点","hard":0,"ex":"解析"}</div></div>
+  <div class="set-row" style="border-color:rgba(232,85,77,.4)"><div class="st"><b style="color:var(--red)">⚠️ 清空全部学生数据</b><span>删除本机所有学生档案与排行榜（不可恢复，谨慎！）</span></div>
+    <button class="btn btn-red" id="btnWipe" style="padding:8px 18px">清空数据</button></div>`;
+  $('swDown').onchange=e=>{SET.downOpen=e.target.checked;saveSet();toast(SET.downOpen?'下册已开放！':'下册已冻结');};
+  $('swSound').onchange=e=>{SET.sound=e.target.checked;saveSet();updSoundBtn();};
+  $('btnSetPwd').onclick=()=>{
+    const v=$('inNewPwd').value.trim();
+    if(!v){toast('密码不能为空');return}
+    SET.pwd=v;saveSet();toast('密码已更新 ✔');renderSet();
+  };
+  $('btnWipe').onclick=()=>{
+    if(!confirm('真的要清空全部学生数据吗？此操作不可恢复！'))return;
+    if(!confirm('再次确认：所有学生的星星、进度、错题都会被删除！'))return;
+    const pl=LS.get(PL_KEY,{});Object.keys(pl).forEach(n=>LS.del('m5adv_s_'+n));
+    LS.del(PL_KEY);LS.del(ME_KEY);ME=null;toast('已清空');goScreen('boot');
+  };
+}
+function saveSet(){LS.set(SET_KEY,SET)}
+/* ══════════════ 工具栏与初始化 ══════════════ */
+function updSoundBtn(){$('btnSound').textContent=SET.sound?'🔊':'🔇';$('btnSound').classList.toggle('off',!SET.sound)}
+let _inited=false;
+function init(){
+  if(_inited)return;_inited=true;
+  renderAvatars();updSoundBtn();
+  if(ME)$('inName').value=ME.name;
+  $('btnGo').onclick=tryLogin;
+  $('inName').onkeydown=e=>{if(e.key==='Enter')tryLogin()};
+  $('btnHelp').onclick=()=>goScreen('help');
+  $('btnRankBoot').onclick=()=>goScreen('rank');
+  $('btnWrongBoot').onclick=()=>goScreen('wrong');
+  $('btnTeacherBoot').onclick=()=>goScreen('teacher');
+  $('btnSound').onclick=()=>{SET.sound=!SET.sound;saveSet();updSoundBtn();if(SET.sound)beep(880,.1,'sine',.15)};
+  $('btnFull').onclick=()=>{
+    if(!document.fullscreenElement){document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen()}
+    else{document.exitFullscreen&&document.exitFullscreen()}
+  };
+  $('btnHome').onclick=()=>{CUR=null;goScreen('boot')};
+  $('btnGiveUp').onclick=()=>{CUR=null;goScreen('map')};
+  $('btnAbandon').onclick=()=>{CUR=null;goScreen('map')};
+  $('btnPwdGo').onclick=()=>{
+    if($('inPwd').value===SET.pwd){$('inPwd').value='';$('tLogin').classList.add('hidden');$('tPanel').classList.remove('hidden');tTab('quiz',document.querySelector('.tab[data-ttab="quiz"]'))}
+    else{toast('密码不对哦');$('inPwd').value=''}
+  };
+  $('inPwd').onkeydown=e=>{if(e.key==='Enter')$('btnPwdGo').click()};
+  $('btnTExit').onclick=()=>{$('tPanel').classList.add('hidden');$('tLogin').classList.remove('hidden');goScreen('boot')};
+  $('mask').onclick=e=>{if(e.target===$('mask'))closeMask()};
+  document.addEventListener('keydown',e=>{
+    if(!$('battle').classList.contains('on')||!CUR||CUR.lock)return;
+    const q=CUR.items[CUR.idx];if(!q)return;
+    if(q.t==='c'&&['1','2','3','4'].includes(e.key))answer(+e.key-1);
+    if(q.t==='c'&&['a','b','c','d'].includes(e.key.toLowerCase()))answer('abcd'.indexOf(e.key.toLowerCase()));
+    if(q.t==='j'&&(e.key==='1'||e.key.toLowerCase()==='t'))answer(1);
+    if(q.t==='j'&&(e.key==='2'||e.key.toLowerCase()==='f'))answer(0);
+  });
+}
+document.addEventListener('DOMContentLoaded',init);
+if(document.readyState!=='loading')init();
+</script>
+</body>
+</html>
