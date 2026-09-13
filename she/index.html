@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>城西小学社团选课 · 家长入口</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#F4696B">
+<link rel="icon" href="favicon.png">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="社团选课">
+<meta name="format-detection" content="telephone=no">
 <style>
 :root{
   --bg:#FDF6EC; --card:#fff; --line:#F0E4D4; --ink:#4A3B32; --sub:#9A8878;
@@ -57,6 +66,19 @@ input[type=text]:focus{border-color:var(--red);}
 .toast.show{opacity:.95;}
 .muted{color:var(--sub);font-size:13px;text-align:center;}
 .mt{margin-top:12px;}
+/* ===== 添加到桌面引导 ===== */
+[hidden]{display:none !important;}
+.a2hs{background:#FFF0F0;border:1.5px dashed #F7A6C1;border-radius:16px;padding:12px 14px;margin-bottom:14px;display:flex;align-items:center;gap:10px;font-size:13px;color:#B4474A;line-height:1.5;}
+.a2hs .txt{flex:1;}
+.a2hs .go{flex:none;background:#F4696B;color:#fff;border:none;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;}
+.a2hs .x{flex:none;background:none;border:none;color:#C9A6A6;font-size:20px;line-height:1;padding:2px 4px;cursor:pointer;font-family:inherit;}
+.sheet-mask{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(74,59,50,.45);z-index:200;display:flex;align-items:flex-end;justify-content:center;}
+.sheet{background:#fff;border-radius:22px 22px 0 0;padding:22px 20px 26px;width:100%;max-width:520px;}
+.sheet h3{font-size:17px;margin-bottom:8px;}
+.sheet-sub{font-size:13.5px;color:var(--sub);margin-bottom:14px;line-height:1.6;}
+.sheet ol{margin:0 0 18px 20px;font-size:14.5px;line-height:2;}
+.sheet li{margin-bottom:2px;}
+.sheet .tip{background:#FFF3CD;color:#8a6d1a;border-radius:12px;padding:10px 12px;font-size:12.5px;line-height:1.6;margin-bottom:16px;}
 </style>
 </head>
 <body>
@@ -65,9 +87,24 @@ input[type=text]:focus{border-color:var(--red);}
     <h1>🐰 城西小学社团选课</h1>
     <p>2026年秋季学期 · 名额有限，先到先得</p>
   </div>
+  <div id="a2hsBar" class="a2hs" hidden>
+    <div class="txt">把选课入口放到手机桌面，下次一点就开</div>
+    <button class="go" id="a2hsOpen">怎么加</button>
+    <button class="x" id="a2hsClose" aria-label="关闭">×</button>
+  </div>
   <div id="app"><p class="muted">加载中…</p></div>
 </div>
 <div class="toast" id="toast"></div>
+
+<div id="a2hsSheet" class="sheet-mask" hidden>
+  <div class="sheet">
+    <h3>把「社团选课」放到手机桌面</h3>
+    <p class="sheet-sub" id="a2hsHint"></p>
+    <ol id="a2hsSteps"></ol>
+    <div class="tip" id="a2hsTip" hidden></div>
+    <button class="btn" id="a2hsDone">我知道了</button>
+  </div>
+</div>
 
 <script>
 "use strict";
@@ -84,6 +121,24 @@ function toast(msg){
   clearTimeout(t._tm); t._tm = setTimeout(function(){ t.classList.remove("show"); }, 2800);
 }
 function esc(x){ return String(x==null?"":x).replace(/[&<>"']/g, function(m){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]; }); }
+
+/* 把服务端返回的开放状态转成家长看得懂的话。
+   时间戳由浏览器按**本地时区**格式化，避免服务器时区不同导致显示差 8 小时。 */
+function fmtTs(ms){
+  if (!ms) return "";
+  var d = new Date(ms);
+  return (d.getMonth()+1)+"月"+d.getDate()+"日 "+("0"+d.getHours()).slice(-2)+":"+("0"+d.getMinutes()).slice(-2);
+}
+function closedText(closed, openAt, closeAt){
+  if (closed === "before") return "选课将于 "+fmtTs(openAt)+" 开放，请到时再来～9月13日测试阶段选择的不会存在记录";
+  if (closed === "after")  return "选课已于 "+fmtTs(closeAt)+" 截止，如需调整请联系老师";
+  return "选课暂未开放，请等待老师通知后再来～";
+}
+/* 统一的错误提示：优先用服务端给出的「未开放」精确文案 */
+function errText(r){
+  if (r && r.closed) return closedText(r.closed, r.openAt, r.closeAt);
+  return (r && r.error) || "操作失败，请重试";
+}
 /* ---- 后端地址自适应 ----
    同一份页面要能在三个地方跑：
    1) 后端服务器上（https://api.kexvefuxi.cn/she/）→ 同源，用相对地址
@@ -106,12 +161,11 @@ function renderChoose(){
   stopRefresh();
   var sel = { grade:1, cls:1 };
   var html = '';
-  if (config && !config.open) html += '<div class="banner">⏳ 选课暂未开放，请等待老师通知后再来～</div>';
+  if (config && !config.open) html += '<div class="banner">⏳ '+esc(closedText(config.closed, config.openAt, config.closeAt))+'</div>';
   html += '<div class="card"><h2>① 选择孩子所在年级</h2><div class="chips" id="gradeChips"></div></div>';
   html += '<div class="card"><h2>② 选择班级</h2><div class="chips" id="clsChips"></div></div>';
-  html += '<div class="card"><h2>③ 输入孩子姓名</h2><input type="text" id="nameInput" list="rosterList" placeholder="请输入学生姓名" maxlength="12" autocomplete="off">';
-  html += '<datalist id="rosterList"></datalist>';
-  html += '<div class="muted mt">输入名字后点下方按钮，即可看到本年级可报的社团</div>';
+  html += '<div class="card"><h2>③ 输入孩子姓名</h2><input type="text" id="nameInput" placeholder="请输入学生姓名" maxlength="12" autocomplete="off">';
+  html += '<div class="muted mt">请手动输入孩子姓名，系统会与学校学籍名单核对；姓名写错将无法进入</div>';
   html += '<div class="mt"><button class="btn" id="goBtn">进入选课 →</button></div></div>';
   app.innerHTML = html;
 
@@ -122,7 +176,7 @@ function renderChoose(){
       return '<button class="chip '+(sel.grade===gr?"on":"")+'" data-g="'+gr+'">'+CN[gr]+'年级</button>';
     }).join("");
     g.querySelectorAll(".chip").forEach(function(b){
-      b.onclick = function(){ sel.grade = +b.dataset.g; sel.cls = 1; drawGrades(); drawCls(); loadRoster(); };
+      b.onclick = function(){ sel.grade = +b.dataset.g; sel.cls = 1; drawGrades(); drawCls(); };
     });
   }
   function drawCls(){
@@ -135,21 +189,11 @@ function renderChoose(){
       b.className = "chip" + (sel.cls===i?" on":"");
       b.textContent = CN[sel.grade]+"（"+i+"）班";
       b.dataset.c = i;                       /* 用 dataset 传值，避免闭包共享变量 */
-      b.onclick = function(){ sel.cls = +this.dataset.c; drawCls(); loadRoster(); };
+      b.onclick = function(){ sel.cls = +this.dataset.c; drawCls(); };
       c.appendChild(b);
     }
   }
-  function loadRoster(){
-    var dl = document.getElementById("rosterList");
-    if (!dl) return;
-    dl.innerHTML = "";
-    api("/api/roster?grade="+sel.grade+"&cls="+sel.cls).then(function(r){
-      (r.names||[]).slice(0,200).forEach(function(n){
-        var o = document.createElement("option"); o.value = n; dl.appendChild(o);
-      });
-    });
-  }
-  drawGrades(); drawCls(); loadRoster();
+  drawGrades(); drawCls();
   document.getElementById("goBtn").onclick = function(){
     var name = document.getElementById("nameInput").value.trim();
     if (!/^[\u4e00-\u9fa5a-zA-Z·]{2,12}$/.test(name)) { toast("请输入正确的学生姓名"); return; }
@@ -162,6 +206,12 @@ function renderChoose(){
 /* ========= 查询该学生是否已选 ========= */
 function checkMine(){
   api("/api/my?grade="+my.grade+"&cls="+my.cls+"&name="+encodeURIComponent(my.name)).then(function(r){
+    /* 姓名与学籍名单不一致 → 拦在门外，且**保留输入框**让家长直接改 */
+    if (r && r.notInRoster) {
+      my = null; localStorage.removeItem("cx_my");
+      toast(r.error || "姓名与学校名单不一致，请核对后重试");
+      return;
+    }
     if (r.clubs && r.clubs.length) renderMine(r);
     else renderPick([]);
   }).catch(function(){ app.innerHTML = '<div class="card"><p class="muted">网络开小差了，请刷新重试</p></div>'; });
@@ -186,6 +236,11 @@ function renderMine(data){
   html += '</div>';
 
   var freeOnes = clubs.filter(function(c){ return !c.fixed; });
+  /* 冷静期：刚选好的社团 10 分钟内不能取消（与服务端 COOL_MS 保持一致） */
+  var COOL_MS = 10 * 60 * 1000;
+  var leftMs = data.at ? (COOL_MS - (Date.now() - data.at)) : 0;
+  var cooling = freeOnes.length > 0 && leftMs > 0;
+
   if (data.canAddNormal) {
     html += '<div class="card"><div class="muted" style="margin-bottom:10px">你还可以再选一个本年级社团</div>';
     html += '<button class="btn green" id="moreBtn">+ 再选一个社团</button></div>';
@@ -193,7 +248,14 @@ function renderMine(data){
     html += '<div class="card"><p class="muted">你的社团已经确定啦，如需调整请联系老师～</p></div>';
   }
   html += '<div class="card">';
-  if (freeOnes.length) html += '<button class="btn gray" id="cancelBtn">取消「'+esc(freeOnes[0].n)+'」</button>';
+  if (freeOnes.length) {
+    if (cooling) {
+      html += '<button class="btn gray" id="cancelBtn" disabled>取消「'+esc(freeOnes[0].n)+'」（'+Math.ceil(leftMs/60000)+' 分钟后可取消）</button>';
+      html += '<div class="muted mt">刚选好不久，为防止误触，10 分钟内不能取消</div>';
+    } else {
+      html += '<button class="btn gray" id="cancelBtn">取消「'+esc(freeOnes[0].n)+'」</button>';
+    }
+  }
   html += '<div class="mt"><button class="btn gray" id="otherBtn">帮另一个孩子选课</button></div></div>';
   app.innerHTML = html;
 
@@ -204,7 +266,7 @@ function renderMine(data){
     api("/api/release", {method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({grade:my.grade, cls:my.cls, name:my.name, club:target.n})})
       .then(function(r){
-        if (r.error) { toast(r.error); return; }
+        if (r.error) { toast(errText(r)); return; }
         toast("已取消，可以重新选择"); checkMine();
       });
   };
@@ -265,7 +327,7 @@ function renderPick(mineClubs){
                              : {grade:my.grade, cls:my.cls, name:my.name, club:club};
         api(url, {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(payload)})
         .then(function(r){
-          if (r.error) { toast(r.error); checkMine(); return; }
+          if (r.error) { toast(errText(r)); checkMine(); return; }
           toast(r.msg || "操作成功！");
           checkMine();
         }).catch(function(){ toast("网络开小差了，请重试"); b.disabled=false; });
@@ -284,6 +346,85 @@ function renderPick(mineClubs){
   pickTimer = setInterval(refresh, 5000);
 }
 function stopRefresh(){ if (pickTimer) { clearInterval(pickTimer); pickTimer = null; } }
+
+/* ========= 添加到桌面引导（按微信 / iOS / 安卓分别给步骤） ========= */
+(function(){
+  var KEY = "cx_a2hs_hide", KEEP = 5*24*3600*1000;
+  var bar = document.getElementById("a2hsBar");
+  var sheet = document.getElementById("a2hsSheet");
+  var hintEl = document.getElementById("a2hsHint");
+  var stepsEl = document.getElementById("a2hsSteps");
+  var tipEl = document.getElementById("a2hsTip");
+  var deferred = null;
+
+  function standalone(){
+    return (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches)
+        || window.navigator.standalone === true;   /* iOS 从主屏图标打开 */
+  }
+  function env(){
+    var ua = navigator.userAgent || "";
+    if (/MicroMessenger/i.test(ua)) return "wechat";
+    if (/iPhone|iPad|iPod/i.test(ua)) return "ios";
+    if (/Android/i.test(ua)) return "android";
+    return "desktop";
+  }
+  var STEPS = {
+    wechat:  ["点右上角「···」按钮","选「在浏览器打开」","在浏览器菜单里选「添加到主屏幕」","回到桌面，就能看到「社团选课」图标"],
+    ios:     ["点底部中间的「分享」按钮（方框加箭头）","下滑找到「添加到主屏幕」","右上角点「添加」","桌面就多出一个「社团选课」图标"],
+    android: ["点浏览器右上角或右下角的「⋮」菜单","选「添加到主屏幕」或「添加到桌面」","确认「添加」","桌面就多出一个「社团选课」图标"],
+    desktop: ["手机上打开本页面时，会看到「添加到桌面」的分步指引"]
+  };
+  var HINT = {
+    wechat:  "微信里不能直接添加，需要先切到浏览器，两步就好。",
+    ios:     "请用 Safari 打开本页面，再按下面四步操作。",
+    android: "在浏览器菜单里就能找到「添加到主屏幕」。",
+    desktop: "电脑上用不上这个功能。"
+  };
+  var TIP = {
+    wechat:  "加好桌面图标后，下次直接从桌面点开，不用再翻聊天记录找链接。",
+    ios:     "必须用 Safari，微信和部分第三方浏览器里没有这个选项。",
+    android: "不同品牌手机说法略有差别，找「添加到主屏幕」这五个字就对了。"
+  };
+
+  function hiddenRecently(){
+    try {
+      var t = parseInt(localStorage.getItem(KEY) || "0", 10);
+      return t > 0 && (Date.now() - t) < KEEP;
+    } catch(e){ return false; }
+  }
+  function hideForever(){
+    try { localStorage.setItem(KEY, String(Date.now())); } catch(e){}
+    bar.hidden = true;
+  }
+  function openSheet(){
+    var e = env();
+    hintEl.textContent = HINT[e] || "";
+    stepsEl.innerHTML = (STEPS[e] || []).map(function(s){ return "<li>" + s + "</li>"; }).join("");
+    if (TIP[e]) { tipEl.textContent = TIP[e]; tipEl.hidden = false; } else { tipEl.hidden = true; }
+    sheet.hidden = false;
+  }
+  function closeSheet(){ sheet.hidden = true; }
+
+  document.getElementById("a2hsOpen").onclick = function(){
+    if (deferred) { deferred.prompt(); deferred = null; return; }   /* 安卓 Chrome 可直接唤起安装 */
+    openSheet();
+  };
+  document.getElementById("a2hsClose").onclick = hideForever;
+  document.getElementById("a2hsDone").onclick = function(){ closeSheet(); hideForever(); };
+  sheet.onclick = function(ev){ if (ev.target === sheet) closeSheet(); };
+
+  window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferred = e; });
+  window.addEventListener("appinstalled", function(){
+    closeSheet(); hideForever(); toast("已添加到桌面，下次一点就开");
+  });
+
+  var FORCE = /[?&]a2hs=1/.test(location.search);        /* 调试：网址后加 ?a2hs=1 强制显示 */
+  if (standalone()) { bar.hidden = true; return; }       /* 已从桌面图标打开 */
+  if (!FORCE && hiddenRecently()) return;
+  setTimeout(function(){
+    if (FORCE || (!standalone() && env() !== "desktop")) bar.hidden = false;
+  }, 1200);
+})();
 
 /* ========= 启动 ========= */
 api("/api/config").then(function(c){
