@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="线上美术馆">
+<meta name="theme-color" content="#FDF6EC">
+<title>线上美术馆</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#FDF6EC; --card:#fff; --main:#F4696B; --mainD:#DE5254; --ink:#4A3B32;
+  --sub:#9C8A7E; --line:#F2E8DC; --soft:#FBEAF0;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  padding-bottom:calc(30px + env(safe-area-inset-bottom));overflow-x:hidden;
+}
+img{max-width:100%}
+button{font-family:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding-left:16px;padding-right:16px}
+
+.top{position:sticky;top:0;z-index:50;background:rgba(253,246,236,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topin{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px}
+.logo{width:42px;height:42px;border-radius:14px;background:var(--soft);color:var(--main);display:flex;align-items:center;justify-content:center;flex:none}
+.brandtxt{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.brandtxt b{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brandtxt i{font-size:12px;color:var(--sub);font-style:normal}
+.iconbtn{margin-left:auto;width:42px;height:42px;flex:none;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.searchbar{display:none;padding-bottom:14px}
+.searchbar.on{display:block}
+.searchbar input{width:100%;height:46px;border-radius:15px;border:1px solid var(--line);background:#fff;padding:0 16px;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none}
+.searchbar input:focus{border-color:var(--main)}
+
+.tabs{display:flex;gap:10px;padding-top:16px}
+.tab{flex:1;height:44px;border-radius:15px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:15px;font-weight:600;cursor:pointer;transition:.18s}
+.tab.on{background:var(--main);border-color:var(--main);color:#fff;box-shadow:0 6px 16px rgba(244,105,107,.28)}
+
+.stats{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.stat{background:#fff;border-radius:14px;padding:9px 14px;display:flex;align-items:baseline;gap:6px;border:1px solid var(--line)}
+.stat b{font-size:19px;font-weight:700;color:var(--main)}
+.stat span{font-size:12px;color:var(--sub)}
+
+.chips{display:flex;gap:9px;overflow-x:auto;padding-top:14px;-ms-overflow-style:none;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;height:38px;padding:0 17px;border-radius:19px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:14px;font-weight:500;cursor:pointer;white-space:nowrap;transition:.16s}
+.chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+
+.filters{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+.filters select{flex:1;min-width:150px;height:44px;border-radius:14px;border:1px solid var(--line);background:#fff;padding:0 12px;font-size:14px;color:var(--ink);outline:none;cursor:pointer}
+
+.works{column-count:2;column-gap:12px;margin-top:16px}
+@media(min-width:640px){.works{column-count:3}}
+@media(min-width:980px){.works{column-count:4;column-gap:16px}}
+@media(min-width:1240px){.works{column-count:5}}
+.work{break-inside:avoid;-webkit-column-break-inside:avoid;page-break-inside:avoid;margin:0 0 12px;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 4px 14px rgba(186,148,116,.10);cursor:pointer;transition:transform .16s,box-shadow .16s}
+@media(min-width:980px){.work{margin-bottom:16px}}
+.work:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(186,148,116,.18)}
+.work img{width:100%;display:block;background:#F5EDE3;object-fit:cover}
+.wmeta{padding:9px 12px 12px}
+.wt{font-size:13.5px;font-weight:600;margin:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wa{font-size:12px;color:var(--sub);margin:3px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wtag{display:inline-block;font-size:11px;line-height:18px;padding:0 8px;border-radius:9px;margin-top:7px}
+
+.empty{text-align:center;color:var(--sub);padding:60px 20px;font-size:14px}
+.loadmore{display:flex;align-items:center;justify-content:center;gap:9px;padding:20px 0 6px;color:var(--sub);font-size:13px}
+.loadmore .spin{width:15px;height:15px;flex:none;border-radius:50%;border:2px solid var(--line);border-top-color:var(--main);animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.logincard{background:#fff;border-radius:24px;padding:26px 22px;margin:20px auto 0;max-width:460px;box-shadow:0 6px 22px rgba(186,148,116,.12)}
+.logincard h2{margin:0 0 6px;font-size:19px;font-weight:700}
+.lgsub{margin:0 0 22px;font-size:13px;color:var(--sub);line-height:1.7}
+.lgfield{margin-bottom:15px}
+.lgfield label{display:block;font-size:13px;color:var(--sub);margin-bottom:7px;font-weight:500}
+.lgfield select,.lgfield input{width:100%;height:48px;border-radius:15px;border:1px solid var(--line);background:#FDFAF5;padding:0 15px;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none}
+.lgfield select:focus,.lgfield input:focus{border-color:var(--main);background:#fff}
+.btnmain{width:100%;height:50px;border-radius:16px;border:0;background:var(--main);color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:6px;box-shadow:0 8px 18px rgba(244,105,107,.3)}
+.btnmain:active{background:var(--mainD)}
+.lgtip{margin:12px 0 0;font-size:13px;color:#C9453F;text-align:center;min-height:20px}
+
+.minehead{display:flex;align-items:center;gap:14px;background:#fff;border-radius:22px;padding:16px 18px;margin-top:20px;box-shadow:0 6px 20px rgba(186,148,116,.12)}
+.avatar{width:56px;height:56px;border-radius:19px;background:var(--soft);color:var(--main);display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;flex:none}
+.minehead h2{margin:0;font-size:19px;font-weight:700}
+.minehead p{margin:2px 0 0;font-size:13px;color:var(--sub)}
+.ghostbtn{margin-left:auto;height:38px;padding:0 15px;border-radius:13px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:13px;cursor:pointer;flex:none}
+.sharebox{margin-top:22px;background:#FFF9F0;border:1px dashed #EBD9C2;border-radius:18px;padding:16px 18px;font-size:13px;color:var(--sub);line-height:1.8}
+.sharebox b{color:var(--ink)}
+.minilink{display:inline-block;margin-top:10px;height:36px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--main);font-size:13px;font-weight:600;cursor:pointer}
+
+.viewer{position:fixed;inset:0;z-index:300;background:rgba(38,30,24,.96);display:none;flex-direction:column}
+.viewer.on{display:flex}
+.vtop{display:flex;align-items:center;gap:12px;padding:14px 16px;color:#fff}
+.vcount{font-size:13px;opacity:.7}
+.vclose{margin-left:auto;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.vstage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:0 8px;position:relative}
+.vstage img{max-width:100%;max-height:100%;object-fit:contain;border-radius:12px}
+.vnav{position:absolute;top:50%;transform:translateY(-50%);width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.14);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.vprev{left:8px}
+.vnext{right:8px}
+.vbar{padding:16px 20px calc(24px + env(safe-area-inset-bottom));color:#fff;width:100%;max-width:760px;margin:0 auto}
+.vbar h3{margin:0 0 4px;font-size:17px;font-weight:700}
+.vbar p{margin:0;font-size:13px;opacity:.75;line-height:1.7}
+.vbar .vnote{margin-top:10px;font-size:13px;background:rgba(255,255,255,.1);padding:10px 13px;border-radius:12px;line-height:1.75}
+
+.foot{text-align:center;font-size:12px;color:#C4B5A8;padding:34px 20px 10px;line-height:1.9}
+#toast{position:fixed;left:50%;bottom:60px;transform:translate(-50%,10px);background:rgba(74,59,50,.94);color:#fff;font-size:13.5px;padding:10px 18px;border-radius:14px;opacity:0;pointer-events:none;transition:.22s;z-index:400;max-width:82vw;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap topin">
+    <div class="logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="15" rx="3"/><circle cx="8.5" cy="10" r="1.6"/><path d="M3.5 16.5l4.8-4.8 4 4 3-3 5.2 5.2"/></svg>
+    </div>
+    <div class="brandtxt"><b id="brandTitle">线上美术馆</b><i id="brandSub"></i></div>
+    <button class="iconbtn" id="btnSearch" aria-label="搜索">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5l-4-4"/></svg>
+    </button>
+  </div>
+  <div class="wrap searchbar" id="searchbar">
+    <input id="qInput" type="search" placeholder="搜索作品名称或作者姓名" autocomplete="off">
+  </div>
+</header>
+
+<nav class="wrap tabs" id="tabs">
+  <button class="tab on" data-v="gallery">全校美术馆</button>
+  <button class="tab" data-v="mine">我的孩子</button>
+</nav>
+
+<main class="wrap">
+  <section id="pgGallery">
+    <div class="stats" id="stats"></div>
+    <div class="chips" id="catChips"></div>
+    <div class="filters"><select id="fClass"></select></div>
+    <div class="works" id="grid"></div>
+    <div class="loadmore" id="gridMore" style="display:none"><span class="spin"></span><span id="gridMoreTxt"></span></div>
+    <div class="empty" id="gridEmpty" style="display:none">没有找到符合条件的作品</div>
+  </section>
+
+  <section id="pgMine" style="display:none">
+    <div class="logincard" id="loginCard">
+      <h2>看孩子的作品</h2>
+      <p class="lgsub">先选班级，再输入孩子的姓名，就能一次看到他的全部作品。所有作品本来就是公开展示的，这里只是给家长一个方便的入口。</p>
+      <div class="lgfield"><label>班级</label><select id="lgClass"></select></div>
+      <div class="lgfield"><label>学生姓名</label><input id="lgName" type="text" placeholder="请输入孩子的姓名" maxlength="12" autocomplete="off"></div>
+      <button class="btnmain" id="btnLogin">进入作品墙</button>
+      <p class="lgtip" id="lgTip"></p>
+    </div>
+
+    <div id="mineBox" style="display:none">
+      <div class="minehead">
+        <div class="avatar" id="mAvatar"></div>
+        <div><h2 id="mName"></h2><p id="mSub"></p></div>
+        <button class="ghostbtn" id="btnSwitch">换一个</button>
+      </div>
+      <div class="works" id="mGrid"></div>
+      <div class="loadmore" id="mMore" style="display:none"><span class="spin"></span><span id="mMoreTxt"></span></div>
+      <div class="empty" id="mEmpty" style="display:none">这位同学的作品还没有被收录</div>
+      <div class="sharebox">
+        <b>把这个页面收藏起来</b>，以后点开就能直接看孩子的作品。手机上也可以在浏览器菜单里选「添加到主屏幕」，桌面会多一个美术馆图标。
+        <br><button class="minilink" id="btnCopy">复制孩子的专属链接</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot" id="foot"></footer>
+
+<div class="viewer" id="viewer">
+  <div class="vtop">
+    <span class="vcount" id="vCount"></span>
+    <button class="vclose" id="vClose" aria-label="关闭">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
+  </div>
+  <div class="vstage">
+    <button class="vnav vprev" id="vPrev" aria-label="上一张"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+    <img id="vImg" alt="">
+    <button class="vnav vnext" id="vNext" aria-label="下一张"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+  </div>
+  <div class="vbar">
+    <h3 id="vTitle"></h3>
+    <p id="vMeta"></p>
+    <div class="vnote" id="vNote" style="display:none"></div>
+  </div>
+</div>
+
+<script>
+var DATA = /*@DATA_START@*/{"school":"天等县城西小学","title":"线上美术馆","updated":"2026-09-15","categories":["科技类","爱国类","其他"],"classes":[[1,1],[1,2],[1,3],[1,4],[1,5],[2,1],[2,2],[2,3],[2,4],[2,5],[3,1],[3,2],[3,3],[3,4],[3,5],[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7],[4,8],[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],[5,7],[5,8],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6],[6,7],[6,8]],"works":[{"id":"w0011","t":"太空电梯","a":"郑欣怡","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0011.webp","th":"images/g4c5/w0011_t.webp","w":1000,"h":1600,"date":"2026-09-14","note":""},{"id":"w0010","t":"智能垃圾分类车","a":"吴俊杰","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0010.webp","th":"images/g4c5/w0010_t.webp","w":1600,"h":1050,"date":"2026-09-14","note":""},{"id":"w0009","t":"校园一角","a":"黄浩然","g":4,"c":5,"cat":"其他","img":"images/g4c5/w0009.webp","th":"images/g4c5/w0009_t.webp","w":1500,"h":1150,"date":"2026-09-14","note":""},{"id":"w0008","t":"未来城市","a":"陈思远","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0008.webp","th":"images/g3c2/w0008_t.webp","w":1400,"h":1400,"date":"2026-09-14","note":""},{"id":"w0007","t":"会跳舞的机器人","a":"王小红","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0007.webp","th":"images/g3c2/w0007_t.webp","w":1600,"h":1100,"date":"2026-09-14","note":""},{"id":"w0006","t":"太阳能小车","a":"李小明","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0006.webp","th":"images/g3c2/w0006_t.webp","w":1200,"h":1600,"date":"2026-09-14","note":""},{"id":"w0005","t":"我爱我的祖国","a":"李小明","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0005.webp","th":"images/g3c2/w0005_t.webp","w":1200,"h":1500,"date":"2026-09-14","note":""},{"id":"w0004","t":"天安门广场","a":"刘雨桐","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0004.webp","th":"images/g3c2/w0004_t.webp","w":1600,"h":1000,"date":"2026-09-14","note":""},{"id":"w0003","t":"我的家乡","a":"赵一涵","g":3,"c":2,"cat":"其他","img":"images/g3c2/w0003.webp","th":"images/g3c2/w0003_t.webp","w":1300,"h":1300,"date":"2026-09-14","note":""},{"id":"w0002","t":"火星基地","a":"周子墨","g":3,"c":1,"cat":"科技类","img":"images/g3c1/w0002.webp","th":"images/g3c1/w0002_t.webp","w":1100,"h":1500,"date":"2026-09-14","note":""},{"id":"w0001","t":"五星红旗","a":"孙悦","g":3,"c":1,"cat":"爱国类","img":"images/g3c1/w0001.webp","th":"images/g3c1/w0001_t.webp","w":1000,"h":1400,"date":"2026-09-14","note":""}]}/*@DATA_END@*/;
+
+var PAL=[["#EAF1FC","#3F72B8"],["#FDECEC","#C9453F"],["#FDF3E2","#B4832F"],["#EAF7F1","#3F8F72"],["#F1EEFC","#6B58B8"],["#FCEEF6","#A8477E"],["#EAF6FC","#2F7C9B"]];
+var CMAP={};
+(function(){ (DATA.categories||[]).forEach(function(c,i){ CMAP[c]=PAL[i%PAL.length]; }); })();
+function catColor(c){ return CMAP[c]||PAL[PAL.length-1]; }
+
+var CN=["零","一","二","三","四","五","六","七","八","九"];
+function cnNum(n){ return CN[n]||String(n); }
+function className(g,c){ return cnNum(g)+"年级"+c+"班"; }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(m){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]; }); }
+function byId(id){ return document.getElementById(id); }
+
+var S={ view:"gallery", cat:"全部", klass:"", q:"", list:[], vi:0, me:null,
+        gList:[], gShown:0, mList:[], mShown:0 };
+/* 每屏先渲染这么多张，滚动到底再续下一批 —— 作品上千幅也不会卡 */
+var BATCH=48;
+
+function toast(msg){
+  var el=byId("toast");
+  if(!el){ el=document.createElement("div"); el.id="toast"; document.body.appendChild(el); }
+  el.textContent=msg; el.className="show";
+  clearTimeout(el._t); el._t=setTimeout(function(){ el.className=""; },1900);
+}
+
+function renderStats(){
+  var authors={}, classes={};
+  DATA.works.forEach(function(w){ authors[w.g+"-"+w.c+"-"+w.a]=1; classes[w.g+"-"+w.c]=1; });
+  byId("stats").innerHTML=
+    '<div class="stat"><b>'+DATA.works.length+'</b><span>幅作品</span></div>'+
+    '<div class="stat"><b>'+Object.keys(authors).length+'</b><span>位小画家</span></div>'+
+    '<div class="stat"><b>'+Object.keys(classes).length+'</b><span>个班级</span></div>';
+}
+
+function renderChips(){
+  var cats=["全部"].concat(DATA.categories||[]);
+  var counts={};
+  (DATA.categories||[]).forEach(function(c){ counts[c]=0; });
+  DATA.works.forEach(function(w){ var c=w.cat||"其他"; counts[c]=(counts[c]||0)+1; });
+  var el=byId("catChips"); el.innerHTML="";
+  cats.forEach(function(c){
+    var b=document.createElement("button");
+    var cnt = (c==="全部") ? DATA.works.length : (counts[c]||0);
+    b.className="chip"+(S.cat===c?" on":"");
+    b.textContent=c+" · "+cnt;
+    b.dataset.c=c;
+    b.onclick=function(){ S.cat=this.dataset.c; renderChips(); renderGrid(); };
+    el.appendChild(b);
+  });
+}
+
+function allClassKeys(){
+  var m={};
+  (DATA.classes||[]).forEach(function(p){ m[p[0]+"-"+p[1]]=1; });
+  DATA.works.forEach(function(w){ m[w.g+"-"+w.c]=1; });
+  return Object.keys(m).sort(function(a,b){
+    var A=a.split("-"), B=b.split("-");
+    return (+A[0])-(+B[0]) || (+A[1])-(+B[1]);
+  });
+}
+
+function fillClassSelect(sel, withAll){
+  sel.innerHTML="";
+  if(withAll){
+    var o0=document.createElement("option");
+    o0.value=""; o0.textContent="全部班级";
+    sel.appendChild(o0);
+  } else {
+    var op=document.createElement("option");
+    op.value=""; op.textContent="请选择班级";
+    sel.appendChild(op);
+  }
+  allClassKeys().forEach(function(k){
+    var p=k.split("-");
+    var o=document.createElement("option");
+    o.value=k; o.textContent=className(+p[0],+p[1]);
+    sel.appendChild(o);
+  });
+}
+
+function filtered(){
+  return DATA.works.filter(function(w){
+    if(S.cat!=="全部" && w.cat!==S.cat) return false;
+    if(S.klass && (w.g+"-"+w.c)!==S.klass) return false;
+    if(S.q){
+      var q=S.q.toLowerCase();
+      if(String(w.a||"").toLowerCase().indexOf(q)<0 && String(w.t||"").toLowerCase().indexOf(q)<0) return false;
+    }
+    return true;
+  });
+}
+
+function cardHTML(w,i){
+  var col=catColor(w.cat);
+  var ar=(w.w&&w.h)?(w.w/w.h):0.8;
+  ar=Math.max(0.62,Math.min(1.6,ar));
+  return '<div class="work" data-i="'+i+'">'+
+    '<img loading="lazy" decoding="async" src="'+esc(w.th||w.img)+'" alt="'+esc(w.t||"")+'"'+
+      ' style="aspect-ratio:'+ar.toFixed(4)+'" onerror="this.onerror=null;this.style.opacity=.35">'+
+    '<div class="wmeta">'+
+      '<p class="wt">'+esc(w.t||"未命名")+'</p>'+
+      '<p class="wa">'+esc(w.a||"")+' · '+className(w.g,w.c)+'</p>'+
+      '<span class="wtag" style="background:'+col[0]+';color:'+col[1]+'">'+esc(w.cat||"其他")+'</span>'+
+    '</div></div>';
+}
+
+function inViewport(el){
+  var r=el.getBoundingClientRect();
+  return r.top < (window.innerHeight||0)+700 && r.bottom > -700;
+}
+
+/* 把 [from,to) 这批卡片一次性拼成 HTML 再挂上去，比逐张 createElement 快得多 */
+function appendBatch(grid, list, from, to){
+  var html=[];
+  for(var i=from;i<to;i++) html.push(cardHTML(list[i],i));
+  var tmp=document.createElement("div");
+  tmp.innerHTML=html.join("");
+  var frag=document.createDocumentFragment();
+  while(tmp.firstChild) frag.appendChild(tmp.firstChild);
+  grid.appendChild(frag);
+}
+
+function renderGrid(){
+  S.gList=filtered(); S.gShown=0;
+  byId("grid").innerHTML="";
+  byId("gridMore").style.display="none";
+  byId("gridEmpty").style.display = S.gList.length ? "none" : "";
+  pumpGallery();
+}
+
+function pumpGallery(){
+  var list=S.gList, rest=list.length-S.gShown;
+  if(rest<=0) return;
+  var end=Math.min(S.gShown+BATCH, list.length);
+  appendBatch(byId("grid"), list, S.gShown, end);
+  S.gShown=end;
+  rest=list.length-end;
+  var more=byId("gridMore");
+  more.style.display = rest>0 ? "" : "none";
+  if(rest>0){
+    byId("gridMoreTxt").textContent="正在加载…还有 "+rest+" 幅作品";
+    if(inViewport(more)) setTimeout(pumpGallery,60);   /* 一屏没填满就继续铺 */
+  }
+}
+
+function pumpMine(){
+  var list=S.mList||[], rest=list.length-S.mShown;
+  if(rest<=0) return;
+  var end=Math.min(S.mShown+BATCH, list.length);
+  appendBatch(byId("mGrid"), list, S.mShown, end);
+  S.mShown=end;
+  rest=list.length-end;
+  var more=byId("mMore");
+  more.style.display = rest>0 ? "" : "none";
+  if(rest>0){
+    byId("mMoreTxt").textContent="正在加载…还有 "+rest+" 幅作品";
+    if(inViewport(more)) setTimeout(pumpMine,60);
+  }
+}
+
+function openViewer(list,i){
+  S.list=list||S.gList; S.vi=i;
+  byId("viewer").classList.add("on");
+  document.body.style.overflow="hidden";
+  paintViewer();
+}
+function paintViewer(){
+  var w=S.list[S.vi]; if(!w) return;
+  var img=byId("vImg");
+  img.src=w.img; img.alt=w.t||"";
+  byId("vCount").textContent=(S.vi+1)+" / "+S.list.length;
+  byId("vTitle").textContent=w.t||"未命名";
+  byId("vMeta").textContent=(w.a||"")+" · "+className(w.g,w.c)+" · "+(w.cat||"其他")+(w.date?" · "+w.date:"");
+  var note=byId("vNote");
+  if(w.note){ note.style.display=""; note.textContent="创作说明："+w.note; } else { note.style.display="none"; }
+  byId("vPrev").style.visibility = S.list.length>1 ? "visible" : "hidden";
+  byId("vNext").style.visibility = S.list.length>1 ? "visible" : "hidden";
+}
+function nav(d){
+  if(S.list.length<2) return;
+  S.vi=(S.vi+d+S.list.length)%S.list.length;
+  paintViewer();
+}
+function closeViewer(){
+  byId("viewer").classList.remove("on");
+  document.body.style.overflow="";
+}
+
+function switchView(v){
+  S.view=v;
+  var tabs=document.querySelectorAll(".tab");
+  for(var i=0;i<tabs.length;i++){ tabs[i].classList.toggle("on", tabs[i].dataset.v===v); }
+  byId("pgGallery").style.display = v==="gallery" ? "" : "none";
+  byId("pgMine").style.display = v==="mine" ? "" : "none";
+  window.scrollTo(0,0);
+}
+
+function showMine(list){
+  byId("loginCard").style.display="none";
+  byId("mineBox").style.display="";
+  var me=S.me;
+  byId("mAvatar").textContent=(me.n||"").slice(0,1);
+  byId("mName").textContent=me.n;
+  byId("mSub").textContent=className(me.g,me.c)+" · 共 "+list.length+" 幅作品";
+  S.list=list; S.mList=list; S.mShown=0; S.vi=0;
+  byId("mGrid").innerHTML="";
+  byId("mMore").style.display="none";
+  byId("mEmpty").style.display = list.length ? "none" : "";
+  pumpMine();
+}
+
+function doLogin(){
+  var v=byId("lgClass").value;
+  var n=byId("lgName").value.trim();
+  var tip=byId("lgTip");
+  if(!v){ tip.textContent="请先选择班级"; return; }
+  if(!n){ tip.textContent="请输入孩子的姓名"; return; }
+  var p=v.split("-"), g=+p[0], c=+p[1];
+  var list=DATA.works.filter(function(w){ return w.a===n && w.g===g && w.c===c; });
+  if(!list.length){
+    tip.textContent="没有找到「"+n+"」的作品，检查一下班级和姓名";
+    return;
+  }
+  tip.textContent="";
+  S.me={n:n,g:g,c:c};
+  showMine(list);
+  try{ location.hash="#m="+encodeURIComponent(g+"-"+c+"-"+n); }catch(e){}
+  window.scrollTo(0,0);
+}
+
+function fromHash(){
+  var h="";
+  try{ h=location.hash.replace(/^#/,""); }catch(e){ return; }
+  if(h.indexOf("m=")!==0) return;
+  var v;
+  try{ v=decodeURIComponent(h.slice(2)).split("-"); }catch(e){ return; }
+  if(v.length<3) return;
+  var g=+v[0], c=+v[1], n=v.slice(2).join("-");
+  var list=DATA.works.filter(function(w){ return w.a===n && w.g===g && w.c===c; });
+  if(!list.length) return;
+  S.me={n:n,g:g,c:c};
+  byId("lgClass").value=g+"-"+c;
+  byId("lgName").value=n;
+  switchView("mine");
+  showMine(list);
+}
+
+function copyText(t){
+  function fallback(){
+    var ta=document.createElement("textarea");
+    ta.value=t; ta.style.position="fixed"; ta.style.opacity="0";
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand("copy"); toast("链接已复制"); }catch(e){ toast(t); }
+    document.body.removeChild(ta);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast("链接已复制"); }, fallback);
+  } else { fallback(); }
+}
+
+function init(){
+  byId("brandTitle").textContent=DATA.title||"线上美术馆";
+  byId("brandSub").textContent=DATA.school||"";
+  document.title=(DATA.school?DATA.school+" · ":"")+(DATA.title||"线上美术馆");
+  byId("foot").innerHTML=esc(DATA.school||"")+" · "+esc(DATA.title||"线上美术馆")+"<br>共收录 "+DATA.works.length+" 幅作品"+(DATA.updated?" · 更新于 "+esc(DATA.updated):"");
+
+  renderStats(); renderChips();
+  fillClassSelect(byId("fClass"), true);
+  fillClassSelect(byId("lgClass"), false);
+  renderGrid();
+
+  var tabs=document.querySelectorAll(".tab");
+  for(var i=0;i<tabs.length;i++){
+    tabs[i].onclick=function(){ switchView(this.dataset.v); };
+  }
+
+  byId("fClass").onchange=function(){ S.klass=this.value; renderGrid(); };
+  byId("btnLogin").onclick=doLogin;
+  byId("lgName").addEventListener("keydown",function(e){ if(e.key==="Enter") doLogin(); });
+  byId("btnSwitch").onclick=function(){
+    byId("mineBox").style.display="none";
+    byId("loginCard").style.display="";
+    byId("lgName").value="";
+    byId("lgTip").textContent="";
+    try{ location.hash=""; }catch(e){}
+  };
+  byId("btnCopy").onclick=function(){
+    if(!S.me) return;
+    var url=location.href.split("#")[0]+"#m="+encodeURIComponent(S.me.g+"-"+S.me.c+"-"+S.me.n);
+    copyText(url);
+  };
+
+  byId("btnSearch").onclick=function(){
+    var sb=byId("searchbar");
+    sb.classList.toggle("on");
+    if(sb.classList.contains("on")){ byId("qInput").focus(); }
+    else { byId("qInput").value=""; S.q=""; renderGrid(); }
+  };
+  byId("qInput").oninput=function(){
+    S.q=this.value.trim();
+    clearTimeout(this._t);
+    this._t=setTimeout(renderGrid,160);   /* 别每敲一个字就重排一次 */
+  };
+
+  /* 网格用事件委托：卡片再多也只有一个监听器；每块网格记着自己的列表，
+     避免「我的孩子」和全校画廊互相串台 */
+  function closestWork(node, root){
+    while(node && node!==root){
+      if(node.getAttribute && node.getAttribute("data-i")!==null) return node;
+      node=node.parentNode;
+    }
+    return null;
+  }
+  byId("grid").addEventListener("click",function(e){
+    var el=closestWork(e.target,this);
+    if(el) openViewer(S.gList,+el.getAttribute("data-i"));
+  });
+  byId("mGrid").addEventListener("click",function(e){
+    var el=closestWork(e.target,this);
+    if(el) openViewer(S.mList,+el.getAttribute("data-i"));
+  });
+
+  /* 滚到底自动续下一批 */
+  if("IntersectionObserver" in window){
+    var io1=new IntersectionObserver(function(es){
+      for(var i=0;i<es.length;i++){ if(es[i].isIntersecting) pumpGallery(); }
+    },{rootMargin:"700px"});
+    io1.observe(byId("gridMore"));
+    var io2=new IntersectionObserver(function(es){
+      for(var i=0;i<es.length;i++){ if(es[i].isIntersecting) pumpMine(); }
+    },{rootMargin:"700px"});
+    io2.observe(byId("mMore"));
+  } else {
+    window.addEventListener("scroll",function(){
+      if(S.gList.length>S.gShown) pumpGallery();
+      if(S.mList.length>S.mShown) pumpMine();
+    },{passive:true});
+  }
+
+  byId("vClose").onclick=closeViewer;
+  byId("vPrev").onclick=function(){ nav(-1); };
+  byId("vNext").onclick=function(){ nav(1); };
+  byId("viewer").onclick=function(e){ if(e.target===this) closeViewer(); };
+  document.addEventListener("keydown",function(e){
+    if(!byId("viewer").classList.contains("on")) return;
+    if(e.key==="Escape") closeViewer();
+    else if(e.key==="ArrowLeft") nav(-1);
+    else if(e.key==="ArrowRight") nav(1);
+  });
+
+  fromHash();
+}
+
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+</script>
+</body>
+</html>
