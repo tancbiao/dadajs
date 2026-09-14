@@ -66,6 +66,43 @@ function stuClubs(s){
   if (Array.isArray(s.clubs)) return s.clubs;
   return s.c ? [{ n: s.c, fixed: !!s.fixed }] : [];
 }
+/* ===== ★ 社团身份解析（2026-09-14 按谭谭口径重构） =====
+   铁律：**社团身份 = 名字 + 定义它的组**，不是只看名字。
+   同一个名字可能在多个年级段各开一个（各年级段独立，如「足球」在三四年级组和六年级组
+   各有一份、「足球社团」在一二年级组和五年级组各有一份），也可能只开在一个年级段
+   但别的年级段有队员（真·跨年级，目前**只有鼓号队**）。
+   旧代码只按社团名聚合，导致这些同名社团被误判成"跨年级"，
+   并且导出 Excel 时把三四年级的足球串到六年级那份（教师/场地张冠李戴）。 */
+function groupOfGrade(gr){
+  for (var i=0;i<data.groups.length;i++){
+    if (data.groups[i].grades.indexOf(gr) >= 0) return data.groups[i];
+  }
+  return null;
+}
+/* 解析「某年级的学生选了社团 name」到底属于哪一份社团定义
+   1) 先在该生自己所属的组里找同名  → 命中即用（正常情况）
+   2) 本组没有 → 再在别的组找同名    → 真跨年级（如鼓号队定义在六年级组，五年级队员）
+   3) 都没有 → null（幽灵记录，导出/统计时会标出来） */
+function resolveClub(name, gr){
+  var og = groupOfGrade(gr);
+  if (og) {
+    var hit = null;
+    og.clubs.forEach(function(c){ if (!hit && c.n === name) hit = c; });
+    if (hit) return { c: hit, g: og, cross: false };
+  }
+  for (var i=0;i<data.groups.length;i++){
+    var gx = data.groups[i], h2 = null;
+    gx.clubs.forEach(function(c){ if (!h2 && c.n === name) h2 = c; });
+    if (h2) return { c: h2, g: gx, cross: true };
+  }
+  return null;
+}
+/* 该社团名在全校是否唯一（唯一则导出/展示直接用名字，重名才加年级段后缀区分） */
+function clubNameIsUnique(name){
+  var n = 0;
+  data.groups.forEach(function(g){ g.clubs.forEach(function(c){ if (c.n === name) n++; }); });
+  return n <= 1;
+}
 function admin(body){
   body.pw = pw;
   var url = API ? (API.replace(/\/+$/,"") + "/api/admin") : "api/admin";
@@ -195,10 +232,21 @@ function render(){
     }
     return t;
   }
-  /* 某社团全校分布：{by:{年级:{t:人数, det:[{cls,n}]}}, tot:全校人数} */
-  function clubSpread(cn0){
+  /* 某社团「这一份」的全校分布：{by:{年级:{t:人数, det:[{cls,n}]}}, tot:全校人数}
+     ★ ownerGroup：限定"这一份"是谁定义的。别的年级段**自己也有同名社团**时，
+       那段学生归他们自己那份，不算到本份头上 ——
+       于是「足球」(三四年级) 与「足球」(六年级)、「足球社团」(一二年级) 与「足球社团」(五年级)
+       互不串户；而鼓号队只在六年级组定义，五年级队员仍会被正确计入。 */
+  function clubSpread(cn0, ownerGroup){
     var by = {}, tot = 0;
     [1,2,3,4,5,6].forEach(function(gr){
+      if (ownerGroup) {
+        var og = groupOfGrade(gr), shared = false;
+        if (og && og.id !== ownerGroup.id) {
+          og.clubs.forEach(function(c){ if (c.n === cn0) shared = true; });
+          if (shared) return;   /* 该年级段有自己同名的一份 → 不归本份 */
+        }
+      }
       var n = data.classCounts[gr]||0, det = [], t = 0;
       for (var k=1;k<=n;k++){
         var u = list(gr,k).filter(function(s){ return stuClubs(s).some(function(x){return x.n===cn0;}); }).length;
@@ -214,15 +262,18 @@ function render(){
   html += '</div><div style="overflow-x:auto"><table><tr><td class="l" style="font-weight:700">社团</td><td>类型</td>';
   /* 多年级组时「名额/班」「合计」会重复出现，所以带上年级前缀，避免看不明白 */
   var multiG = g.grades.length > 1;
-  /* ★ 主表除了本组社团，还要把「别的组、但在本组年级有人」的跨年级社团一并列出
-     （典型：鼓号队挂六年级组，五年级也有队员；不列的话五年级视图看不到它） */
+  /* ★ 主表除了本组社团，还要把「别的组定义、但在本组年级有人」的**真·跨年级**社团一并列出
+     （典型：鼓号队定义在六年级组，五年级也有队员；不列的话五年级视图看不到它）
+     ★ 但「本组也有同名社团」的不算跨年级 —— 那是各年级段各开一个（足球/篮球/手工社团等）。
+       把它们列进来只会让两份不同社团的数据混成一份。
+       2026-09-14 谭谭口径：**跨年级社团只有鼓号队**。 */
   var extraClubs = [];
   data.groups.forEach(function(gx){
     if (gx.id === g.id) return;
     gx.clubs.forEach(function(cx){
-      var inView = g.grades.reduce(function(a,gr){
-        return a + list(gr, 1) && 0 || a;    /* 占位，真正统计在下面 */
-      }, 0);
+      var sameHere = false;
+      g.clubs.forEach(function(cc){ if (cc.n === cx.n) sameHere = true; });
+      if (sameHere) return;      /* 本组有同名社团 → 各段独立，不算跨年级 */
       var tot = 0;
       g.grades.forEach(function(gr){
         var n = data.classCounts[gr]||0;
@@ -230,11 +281,11 @@ function render(){
           tot += list(gr,k).filter(function(s){ return stuClubs(s).some(function(x){return x.n===cx.n;}); }).length;
         }
       });
-      if (tot > 0) extraClubs.push({ c: cx, other: gx.name, cnt: tot });
+      if (tot > 0) extraClubs.push({ c: cx, other: gx.name, owner: gx, cnt: tot });
     });
   });
-  var viewClubs = g.clubs.map(function(c){ return { c:c, other:"" }; })
-                  .concat(extraClubs.map(function(x){ return { c:x.c, other:x.other }; }));
+  var viewClubs = g.clubs.map(function(c){ return { c:c, other:"", owner:g }; })
+                  .concat(extraClubs.map(function(x){ return { c:x.c, other:x.other, owner:x.owner }; }));
 
   g.grades.forEach(function(gr){
     var n = data.classCounts[gr]||0;
@@ -246,7 +297,7 @@ function render(){
   viewClubs.forEach(function(item){
     var c = item.c;
     var isOther = !!item.other;
-    var sp = clubSpread(c.n);
+    var sp = clubSpread(c.n, item.owner);   /* ★ 只算「这一份」的成员，同名社团不互相串户 */
     var viewSum = g.grades.reduce(function(a,gr){ return a + clubInGrade(c.n, gr); }, 0);
     html += '<tr><td class="l" style="white-space:nowrap;font-weight:600">'
          +  (c.hidden?'🔒 ':'')+esc(c.n)
@@ -280,20 +331,23 @@ function render(){
        +  '说明该社团还有成员在别的年级段，明细见下方「跨年级社团全校分布」。</p>';
   html += '</div>';
 
-  /* 跨年级社团全校分布：成员不只在它定义的那个年级段（典型：鼓号队挂六年级组，五年级也有队员） */
+  /* 跨年级社团全校分布：成员不只在它定义的那个年级段（典型：鼓号队定义在六年级组，五年级也有队员）
+     ★ 判定口径（2026-09-14 谭谭明确）：社团身份 = 名字 + 定义它的组。
+       只有「定义在 A 组、B 组年级有人选了它、且 B 组自己**没有**同名社团」才算真跨年级。
+       各年级段各开一个的同名社团（足球 / 篮球 / 手工社团 等）不算，它们各自统计、互不串户。 */
   var crossClubs = [];
   data.groups.forEach(function(gx){
     gx.clubs.forEach(function(cx){
-      var spx = clubSpread(cx.n);
+      var spx = clubSpread(cx.n, gx);
       var other = Object.keys(spx.by).map(Number).filter(function(gr){ return gx.grades.indexOf(gr) < 0; });
       if (other.length) crossClubs.push({n:cx.n, group:gx.name, hidden:cx.hidden, gs:gx.grades, by:spx.by, tot:spx.tot});
     });
   });
   if (crossClubs.length) {
     html += '<div class="card"><h2>🌐 跨年级社团全校分布</h2>';
-    html += '<p class="muted">系统按<b>社团名</b>归类。下面这些社团，除了它定义的年级段，别的年级也有成员'
-         +  '（如鼓号队是校队，五年级、六年级都有队员）。按年级把各班人数摊开，方便核对总人数。'
-         +  '若同一个名字在多个年级段各有一个社团，会分开列出。</p>';
+    html += '<p class="muted">「跨年级」指<b>一个社团的成员来自多个年级段</b>（校队性质，目前只有 <b>鼓号队社团</b>）。'
+         +  '各年级段各开一个的同名社团（足球、篮球、手工社团等）<b>不算跨年级</b>，'
+         +  '它们各自在自己年级段里统计，互不串户。</p>';
     crossClubs.forEach(function(x){
       html += '<div style="margin:12px 0;padding:12px;border:2px solid var(--line);border-radius:12px">';
       html += '<div style="font-weight:700;font-size:15px">'+(x.hidden?'🔒 ':'')+esc(x.n)
@@ -656,30 +710,25 @@ function render(){
 /* ============ 导出：全校总表 + 每社团子表（真 xlsx，多工作表） ============ */
 
 /* 社团名 → 定义（跨年级段全局索引，同名社团取第一条非 hidden 优先） */
-function buildClubIndex(){
-  var idx = {};
-  data.groups.forEach(function(g){
-    g.clubs.forEach(function(c){
-      if (!idx[c.n] || (idx[c.n].hidden && !c.hidden)) idx[c.n] = c;
-    });
-  });
-  return idx;
-}
-
-/* 汇总所有选课记录 → 扁平行（一个学生一个社团一行，多社团展开多行） */
+/* 汇总所有选课记录 → 扁平行（一个学生一个社团一行，多社团展开多行）
+   ★ 2026-09-14：社团信息一律走 resolveClub（名字 + 定义组），
+     不再用「全校按名字建索引」——那会让三四年级的「足球」取到六年级那本的教师/场地。 */
 function collectRows(){
   var CN6 = {1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"};
-  var idx = buildClubIndex();
   var out = [];
   [1,2,3,4,5,6].forEach(function(gr){
     var n = data.classCounts[gr]||0;
     for (var c=1;c<=n;c++){
       (data.selections["g"+gr+"c"+c]||[]).forEach(function(s){
         stuClubs(s).forEach(function(sc){
-          var cl = idx[sc.n];
+          var rv = resolveClub(sc.n, gr);
+          var cl = rv ? rv.c : null;
           out.push({
             grade: gr, cls: c, gradeName: CN6[gr]+"年级",
             name: s.n, club: sc.n,
+            ownerId: rv ? rv.g.id : "",
+            ownerName: rv ? rv.g.name : "",
+            cross: !!(rv && rv.cross),
             type: cl ? cl.t : "",
             teacher: cl ? cl.tc : "",
             place: cl ? cl.pl : "",
@@ -844,19 +893,28 @@ function exportCsv(){
     rows: [HEAD].concat(all.map(toRow))
   });
 
-  /* 子表 2..N：每个社团一张（含内定社团；有人的才出表） */
+  /* 子表 2..N：每个**社团**一张（含内定社团；有人的才出表）
+     ★ 分组键 = 社团名 + 定义组（2026-09-14）：
+       同名社团各出各的表，不会把三四年级的足球和六年级的足球混成一张。 */
   var byClub = {};
-  all.forEach(function(r){ (byClub[r.club] = byClub[r.club] || []).push(r); });
+  all.forEach(function(r){
+    var k = r.club + "\u0000" + (r.ownerId || "");
+    (byClub[k] = byClub[k] || []).push(r);
+  });
   var order = Object.keys(byClub).sort(function(a,b){
     return byClub[b].length - byClub[a].length || (a<b?-1:1);
   });
-  order.forEach(function(cn0){
-    var list = byClub[cn0];
+  order.forEach(function(k){
+    var list = byClub[k];
     list.sort(function(a,b){
       return a.grade-b.grade || a.cls-b.cls || (a.name<b.name?-1:a.name>b.name?1:0);
     });
-    var c0 = list[0];
-    var sub = [["社团名称", cn0, "", "五小类型", c0.type, "", "辅导教师", c0.teacher, "", "场地", c0.place, "", "级别", c0.note, "", "合计", list.length + " 人"]];
+    var c0 = list[0], cn0 = c0.club;
+    /* 全校重名的社团，表名补上年级段，避免两张表同名分不清 */
+    var nm = cn0 + (clubNameIsUnique(cn0) ? "" : "（" + (c0.ownerName || "?") + "）");
+    var sub = [["社团名称", cn0, "", "年级段", c0.ownerName || "", "", "五小类型", c0.type, "",
+                "辅导教师", c0.teacher, "", "场地", c0.place, "", "级别", c0.note, "",
+                "合计", list.length + " 人"]];
     /* 第二行起：明细表头 */
     sub.push(["序号","年级","班级","姓名","社团名称","五小类型","辅导教师","场地","级别","来源"]);
     list.forEach(function(r, i){
@@ -864,7 +922,7 @@ function exportCsv(){
                 r.fixed ? (r.hidden ? "内定" : "已定") : "自选"]);
     });
     sheets.push({
-      name: cn0.replace(/[\\\/\?\*\[\]:]/g, "").slice(0, 28) || "社团",
+      name: nm.replace(/[\\\/\?\*\[\]:]/g, "").slice(0, 28) || "社团",
       headRows: 0,
       widths: [6, 9, 8, 12, 20, 10, 26, 22, 8, 8],
       rows: sub
@@ -872,21 +930,26 @@ function exportCsv(){
   });
 
   /* 子表末：名额占用与余量统计 */
-  var quotaRows = [["社团","五小类型","辅导教师","场地","级别","每班名额","已选人数","状态"]];
-  all.forEach(function(){});
-  var seen = {};
+  /* 名额占用：★ 按「名字 + 定义组」统计（2026-09-14）
+     同名社团各算各的，上限 = Σ(该年级名额/班 × 该年级班数)，比原来"取第一个 q 乘年级数"准确。 */
+  var quotaRows = [["社团","年级段","五小类型","辅导教师","场地","级别","名额上限","已选人数","状态"]];
   data.groups.forEach(function(g){
+    var mine = all.filter(function(r){ return r.ownerId === g.id; });
     g.clubs.forEach(function(c){
-      if (seen[c.n]) return; seen[c.n] = 1;
-      var used = all.filter(function(r){ return r.club === c.n; }).length;
+      var used = mine.filter(function(r){ return r.club === c.n; }).length;
       if (!used) return;
-      var qs = Object.keys(c.q||{}).map(function(k){ return c.q[k]; }).filter(function(v){ return v!==null; });
-      var q = qs.length ? qs[0] : "不限";
-      quotaRows.push([c.n, c.t, c.tc, c.pl, c.note, q, used,
-                      (q !== "不限" && used > q * Object.keys(c.q||{}).length) ? "超" : "正常"]);
+      var limit = 0, unlimited = false;
+      g.grades.forEach(function(gr){
+        var v = (c.q || {})[gr];
+        if (v === null) unlimited = true;
+        else if (typeof v === "number") limit += v * (data.classCounts[gr] || 0);
+      });
+      quotaRows.push([c.n, g.name, c.t, c.tc, c.pl, c.note,
+                      unlimited ? "不限" : limit, used,
+                      (!unlimited && used > limit) ? "超" : "正常"]);
     });
   });
-  sheets.push({ name: "名额占用统计", headRows: 1, widths: [20, 10, 26, 22, 8, 10, 10, 8], rows: quotaRows });
+  sheets.push({ name: "名额占用统计", headRows: 1, widths: [20, 10, 10, 26, 22, 8, 10, 10, 8], rows: quotaRows });
 
   var blob = XLSX.build(sheets);
   var a = document.createElement("a");
