@@ -106,55 +106,210 @@ function renderLogin(){
 }
 
 /* ============ 主面板 ============ */
+/* 本地时间戳 → "9月14日 20:00" */
+function fmtTs(ms){
+  if (!ms) return "";
+  var d = new Date(ms);
+  function p(n){ return (n<10?"0":"")+n; }
+  return (d.getMonth()+1)+"月"+d.getDate()+"日 "+p(d.getHours())+":"+p(d.getMinutes());
+}
 function render(){
   var badge = document.getElementById("stateBadge");
-  badge.innerHTML = data.open ? '<span class="badge b-open">● 选课开放中</span>' : '<span class="badge b-closed">● 已关闭</span>';
+  /* 徽标要说清「为什么关」和「什么时候会开」 */
+  var badgeText, badgeCls;
+  if (data.open) { badgeText = "● 选课开放中"; badgeCls = "b-open"; }
+  else if (data.closed === "before") { badgeText = "● 未到开放时间（"+fmtTs(data.openAt)+" 自动开）"; badgeCls = "b-closed"; }
+  else if (data.closed === "after")  { badgeText = "● 已过截止时间（"+fmtTs(data.closeAt)+"）"; badgeCls = "b-closed"; }
+  else { badgeText = "● 已手动关闭"; badgeCls = "b-closed"; }
+  badge.innerHTML = '<span class="badge '+badgeCls+'">'+badgeText+'</span>';
+
   var g = data.groups.find(function(x){return x.id===sel.group;});
   var CN = {1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"};
   function key(gr,c){ return "g"+gr+"c"+c; }
   function list(gr,c){ return data.selections[key(gr,c)]||[]; }
+  function toLocalInput(ms){
+    if (!ms) return "";
+    var d = new Date(ms);
+    function p(n){ return (n<10?"0":"")+n; }
+    return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes());
+  }
+  var hasWindow = !!(data.openAt || data.closeAt);
 
   var html = '';
-  /* 开关 + 总览操作 */
-  html += '<div class="card"><div class="row">';
-  html += '<button class="btn '+(data.open?"gray":"green")+'" id="toggleBtn">'+(data.open?"⏸ 关闭选课入口":"▶ 开放选课")+'</button>';
-  html += '<button class="btn ghost" id="csvBtn">📥 导出全校总表 CSV</button>';
-  html += '<button class="btn gray" id="resetBtn">🗑 清空全部选课记录</button>';
+
+  /* ===== 选课开关 + 时间设置（最重要的两张卡，放最前） ===== */
+  html += '<div class="card"><h2>🎛 选课开关</h2>';
+  html += '<div class="row">';
+  html += '<button class="btn '+(data.open?"gray":"green")+'" id="toggleBtn">'+(data.open?"⏸ 立即关闭选课":"▶ 立即开放选课")+'</button>';
   html += '<span class="muted">共 <b>'+Object.keys(data.selections).reduce(function(a,k){return a+data.selections[k].length;},0)+'</b> 人已选</span>';
-  html += '</div></div>';
+  html += '</div>';
+  if (hasWindow) {
+    html += '<p class="muted" style="margin-top:10px">⏰ 已设定时：'
+         + (data.openAt ? fmtTs(data.openAt) : "不限")
+         + ' 自动开 → ' + (data.closeAt ? fmtTs(data.closeAt) : "不限")
+         + ' 自动关。<b>定时优先于上方按钮</b>；想在定时窗口外临时开关，点按钮会连定时一起取消（会弹确认）。</p>';
+  } else {
+    html += '<p class="muted" style="margin-top:10px">当前由上方按钮手动控制，没有定时限制。</p>';
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h2>⏰ 选课开始 / 关闭时间（到点自动开、自动关）</h2>';
+  html += '<p class="muted">设定后到点自动开放、到点自动关闭，无需值守。时间按<b>你电脑的时区</b>填写，两个都可留空 = 不限制。</p>';
+  html += '<div class="row mt">';
+  html += '<span class="muted">开始</span><input type="datetime-local" id="winOpen" value="'+toLocalInput(data.openAt)+'" style="padding:8px;border:2px solid var(--line);border-radius:9px">';
+  html += '<span class="muted">关闭</span><input type="datetime-local" id="winClose" value="'+toLocalInput(data.closeAt)+'" style="padding:8px;border:2px solid var(--line);border-radius:9px">';
+  html += '<button class="btn" id="winSave">保存</button>';
+  html += '<button class="btn gray" id="winClear">清除（改回手动）</button></div>';
+  if (hasWindow) {
+    html += '<div class="mt" style="font-size:14px;color:#c2446a"><b>当前生效：</b>'
+         + (data.openAt ? fmtTs(data.openAt) + " 开放" : "立即开放")
+         + ' ｜ ' + (data.closeAt ? fmtTs(data.closeAt) + " 截止" : "长期开放")
+         + '　（现在是 ' + fmtTs(data.now) + '）</div>';
+  } else {
+    html += '<div class="mt muted" style="font-size:14px">当前未设定时间限制，由「选课开关」控制。</div>';
+  }
+  html += '</div>';
+
+  html += '<div class="card"><h2>📥 导出 / 🗑 清空</h2><div class="row">';
+  html += '<button class="btn ghost" id="csvBtn">📥 导出 Excel（总表+各社团子表）</button>';
+  html += '<button class="btn gray" id="resetBtn">🗑 清空全部选课记录</button>';
+  /* 清空会自动留一份快照，所以这里给一个反悔的入口——只在真的有快照时出现 */
+  if (data.canUndoReset) {
+    html += '<button class="btn" id="undoResetBtn" style="background:linear-gradient(135deg,#7bc9a6,#5bb98c)">↩️ 撤销上次清空（恢复 '+ (data.lastResetCount||0) +' 条）</button>';
+  }
+  html += '</div>';
+  if (data.canUndoReset) {
+    html += '<p class="muted" style="margin-top:10px">上次清空时间：<b>' + fmtTs(data.lastResetAt) + '</b>，共 <b>'+ (data.lastResetCount||0) +'</b> 条记录。'
+         + '快照同时留存在服务器 <code>_backups/</code> 目录，重启服务也不会丢。</p>';
+  } else {
+    html += '<p class="muted" style="margin-top:10px">清空前会自动留一份快照（服务器 <code>_backups/</code> 目录），万一误点可以撤销最近一次。</p>';
+  }
+  html += '</div>';
 
   /* 名额总览矩阵 */
+  /* 某社团在某年级的人数（该年级所有班之和） */
+  function clubInGrade(cn0, gr){
+    var n = data.classCounts[gr]||0, t=0;
+    for (var k=1;k<=n;k++){
+      t += list(gr,k).filter(function(s){ return stuClubs(s).some(function(x){return x.n===cn0;}); }).length;
+    }
+    return t;
+  }
+  /* 某社团全校分布：{by:{年级:{t:人数, det:[{cls,n}]}}, tot:全校人数} */
+  function clubSpread(cn0){
+    var by = {}, tot = 0;
+    [1,2,3,4,5,6].forEach(function(gr){
+      var n = data.classCounts[gr]||0, det = [], t = 0;
+      for (var k=1;k<=n;k++){
+        var u = list(gr,k).filter(function(s){ return stuClubs(s).some(function(x){return x.n===cn0;}); }).length;
+        if (u) { det.push({cls:k, n:u}); t += u; }
+      }
+      if (t) { by[gr] = {t:t, det:det}; tot += t; }
+    });
+    return {by:by, tot:tot};
+  }
+
   html += '<div class="card"><h2>名额总览（红色=该班超额）</h2><div class="chips">';
   data.groups.forEach(function(x){ html += '<button class="chip '+(x.id===sel.group?"on":"")+'" data-grp="'+x.id+'">'+x.name+'</button>'; });
   html += '</div><div style="overflow-x:auto"><table><tr><td class="l" style="font-weight:700">社团</td><td>类型</td>';
+  /* 多年级组时「名额/班」「合计」会重复出现，所以带上年级前缀，避免看不明白 */
+  var multiG = g.grades.length > 1;
+  /* ★ 主表除了本组社团，还要把「别的组、但在本组年级有人」的跨年级社团一并列出
+     （典型：鼓号队挂六年级组，五年级也有队员；不列的话五年级视图看不到它） */
+  var extraClubs = [];
+  data.groups.forEach(function(gx){
+    if (gx.id === g.id) return;
+    gx.clubs.forEach(function(cx){
+      var inView = g.grades.reduce(function(a,gr){
+        return a + list(gr, 1) && 0 || a;    /* 占位，真正统计在下面 */
+      }, 0);
+      var tot = 0;
+      g.grades.forEach(function(gr){
+        var n = data.classCounts[gr]||0;
+        for (var k=1;k<=n;k++){
+          tot += list(gr,k).filter(function(s){ return stuClubs(s).some(function(x){return x.n===cx.n;}); }).length;
+        }
+      });
+      if (tot > 0) extraClubs.push({ c: cx, other: gx.name, cnt: tot });
+    });
+  });
+  var viewClubs = g.clubs.map(function(c){ return { c:c, other:"" }; })
+                  .concat(extraClubs.map(function(x){ return { c:x.c, other:x.other }; }));
+
   g.grades.forEach(function(gr){
     var n = data.classCounts[gr]||0;
     for (var c=1;c<=n;c++) html += '<th>'+CN[gr]+'('+c+')</th>';
-    html += '<th style="background:#FBEAE0">名额/班</th><th style="background:#FBEAE0">合计</th>';
+    html += '<th style="background:#FBEAE0">'+(multiG?CN[gr]+"<br>":"")+'名额/班</th>'
+         +  '<th style="background:#FBEAE0">'+(multiG?CN[gr]+"<br>":"")+'小计</th>';
   });
-  html += '</tr>';
-  g.clubs.forEach(function(c){
-    html += '<tr><td class="l" style="white-space:nowrap;font-weight:600">'+(c.hidden?'🔒 ':'')+esc(c.n)+'</td><td>'+c.t+'</td>';
+  html += '<th style="background:#FBEAE0">全校<br>合计</th></tr>';
+  viewClubs.forEach(function(item){
+    var c = item.c;
+    var isOther = !!item.other;
+    var sp = clubSpread(c.n);
+    var viewSum = g.grades.reduce(function(a,gr){ return a + clubInGrade(c.n, gr); }, 0);
+    html += '<tr><td class="l" style="white-space:nowrap;font-weight:600">'
+         +  (c.hidden?'🔒 ':'')+esc(c.n)
+         +  (isOther?'<div style="font-size:11px;font-weight:400;color:#c2446a">跨年级 · 定义于「'+esc(item.other)+'」</div>':'')
+         +  '</td><td>'+(isOther?"—":c.t)+'</td>';
     g.grades.forEach(function(gr){
       var q = c.q[gr];
       var n = data.classCounts[gr]||0, sum=0;
       for (var k=1;k<=n;k++){
         var used = list(gr,k).filter(function(s){return stuClubs(s).some(function(x){return x.n===c.n;});}).length; sum+=used;
-        html += '<td class="'+(q!==null&&used>q?"ov-over":"")+'">'+used+'</td>';
+        html += '<td class="'+(q!==null&&q!==undefined&&used>q?"ov-over":"")+'">'+used+'</td>';
       }
-      html += '<td>'+(q===null?"不限":q)+'</td><td style="font-weight:700">'+sum+'</td>';
+      /* 跨年级列进来的社团，本组没有它的名额定义，显示「—」而不是「不限」免得误导 */
+      var qTxt = (q===null||q===undefined) ? (isOther?"—":"不限") : q;
+      html += '<td>'+(isOther?"—":qTxt)+'</td><td style="font-weight:700">'+sum+'</td>';
     });
+    var extra = sp.tot - viewSum;
+    html += '<td style="font-weight:700;background:#FFF7F2;color:'+(extra>0?"#c2446a":"#333")+'">'+sp.tot
+         +  (extra>0?'<div style="font-size:11px;font-weight:400">另 '+extra+' 人<br>在别年级</div>':'')+'</td>';
     html += '</tr>';
   });
-  html += '<tr><td class="l" style="font-weight:700" colspan="2">各班未分配</td>';
+  html += '<tr><td class="l" style="font-weight:700" colspan="2">各班已选</td>';
   g.grades.forEach(function(gr){
     var n = data.classCounts[gr]||0, t=0;
-    for (var k=1;k<=n;k++){ var u=list(gr,k).length; }
-    /* 未分配无法从选课数据看出（家长没注册就没有记录），显示已选人数 */
-    t=0; for (var k2=1;k2<=n;k2++){ t+=list(gr,k2).length; }
+    for (var k2=1;k2<=n;k2++){ t+=list(gr,k2).length; }
     html += '<td style="font-weight:700" colspan="'+(n+2)+'">'+CN[gr]+'年级各班已选人数见上表，合计 '+t+' 人</td>';
   });
-  html += '</tr></table></div></div>';
+  html += '<td style="background:#FFF7F2"></td></tr></table></div>';
+  html += '<p class="muted" style="margin-top:8px">本表的班级列只覆盖<b>当前选中年级段</b>。'
+       +  '「全校合计」按<b>社团名</b>统计全校人数，若它大于本视图小计（显示为红色并标注「另 N 人在别年级」），'
+       +  '说明该社团还有成员在别的年级段，明细见下方「跨年级社团全校分布」。</p>';
+  html += '</div>';
+
+  /* 跨年级社团全校分布：成员不只在它定义的那个年级段（典型：鼓号队挂六年级组，五年级也有队员） */
+  var crossClubs = [];
+  data.groups.forEach(function(gx){
+    gx.clubs.forEach(function(cx){
+      var spx = clubSpread(cx.n);
+      var other = Object.keys(spx.by).map(Number).filter(function(gr){ return gx.grades.indexOf(gr) < 0; });
+      if (other.length) crossClubs.push({n:cx.n, group:gx.name, hidden:cx.hidden, gs:gx.grades, by:spx.by, tot:spx.tot});
+    });
+  });
+  if (crossClubs.length) {
+    html += '<div class="card"><h2>🌐 跨年级社团全校分布</h2>';
+    html += '<p class="muted">系统按<b>社团名</b>归类。下面这些社团，除了它定义的年级段，别的年级也有成员'
+         +  '（如鼓号队是校队，五年级、六年级都有队员）。按年级把各班人数摊开，方便核对总人数。'
+         +  '若同一个名字在多个年级段各有一个社团，会分开列出。</p>';
+    crossClubs.forEach(function(x){
+      html += '<div style="margin:12px 0;padding:12px;border:2px solid var(--line);border-radius:12px">';
+      html += '<div style="font-weight:700;font-size:15px">'+(x.hidden?'🔒 ':'')+esc(x.n)
+           +  '　<span class="muted" style="font-weight:400;font-size:13px">定义在「'+esc(x.group)+'」，本校同名共 '+x.tot+' 人</span></div>';
+      html += '<table style="margin-top:8px"><tr><th>年级</th><th>各班人数</th><th>小计</th></tr>';
+      Object.keys(x.by).map(Number).sort().forEach(function(gr){
+        var b = x.by[gr];
+        var out = x.gs.indexOf(gr) < 0;
+        html += '<tr><td style="font-weight:600;white-space:nowrap'+(out?';color:#c2446a':'')+'">'+CN[gr]+'年级'+(out?'（非本组）':'')+'</td>'
+             +  '<td class="l">'+ b.det.map(function(d){ return CN[gr]+'('+d.cls+')班 '+d.n+' 人'; }).join('　') +'</td>'
+             +  '<td style="font-weight:700">'+b.t+'</td></tr>';
+      });
+      html += '</table></div>';
+    });
+    html += '</div>';
+  }
 
   /* 查找/修改/删除学生选课 */
   html += '<div class="card"><h2>🔍 查找学生（可删除或改选）</h2><div class="row">';
@@ -184,7 +339,7 @@ function render(){
   html += '<input type="text" id="fixNames" placeholder="姓名，多人用逗号或换行隔开" style="flex:1;min-width:180px">';
   html += '<button class="btn" id="fixAddBtn">加入内定</button></div>';
   html += '<table style="margin-top:12px"><tr><th>社团</th><th>年级</th><th>班</th><th>姓名</th><th>操作</th></tr>';
-  if (!fixedMembers.length) html += '<tr><td colspan="5" class="muted">暂无内定学生（鼓号队 60 人已在系统首次启动时自动预置）</td></tr>';
+  if (!fixedMembers.length) html += '<tr><td colspan="5" class="muted">暂无内定学生（鼓号队等学校统一安排的名单会在导入时自动预置）</td></tr>';
   fixedMembers.sort(function(a,b){ return a.c===b.c ? a.gr-b.gr : (a.c<b.c?-1:1); }).forEach(function(m0){
     html += '<tr><td>'+esc(m0.c)+'</td><td>'+CN[m0.gr]+'</td><td>'+m0.cls+'</td><td style="font-weight:600">'+esc(m0.n)+'</td>' +
       '<td><button class="btn small gray" data-unfix="1" data-gr="'+m0.gr+'" data-cls="'+m0.cls+'" data-name="'+esc(m0.n)+'" data-club="'+esc(m0.c)+'">移出内定</button></td></tr>';
@@ -219,6 +374,44 @@ function render(){
   });
   html += '</table></div><p class="muted" style="margin-top:8px">全校共 <b>'+totalStu+'</b> 人（来自《在校生名单.xls》在校生花名册）。家长输入的姓名+班级必须与名单一致才能选课；如需替换某班名单请联系管理员更新 roster.json。</p></div>';
 
+  /* 🧑‍🎓 借读 / 插班生管理：学籍系统里没有的孩子，单独加白名单即可选课 */
+  html += '<div class="card"><h2>🧑‍🎓 借读 / 插班生管理（学籍系统里没有的学生）</h2>';
+  html += '<p class="muted">有些孩子是插班借读，学籍系统查不到、花名册里也没有，家长就选不了课。把姓名加到这里，等同于本班花名册的一员——<b>不受"重置花名册"影响，也不会被覆盖</b>。</p>';
+  html += '<div class="row mt">';
+  html += '<select id="exGrade" style="padding:8px;border:2px solid var(--line);border-radius:9px">' +
+    [1,2,3,4,5,6].map(function(gr){ return '<option value="'+gr+'">'+CN[gr]+'年级</option>'; }).join("") + '</select>';
+  html += '<select id="exCls" style="padding:8px;border:2px solid var(--line);border-radius:9px"></select>';
+  html += '<input type="text" id="exNames" placeholder="姓名，多人用逗号或换行隔开" style="flex:1;min-width:180px">';
+  html += '<button class="btn" id="exAddBtn">➕ 添加</button></div>';
+  var exRows = [];
+  Object.keys(data.extraStats||{}).forEach(function(g0){
+    Object.keys(data.extraStats[g0]||{}).forEach(function(c0){
+      (data.extraStats[g0][c0]||[]).forEach(function(n0){ exRows.push({ gr:+g0, cls:+c0, n:n0 }); });
+    });
+  });
+  html += '<table style="margin-top:12px"><tr><th>年级</th><th>班</th><th>姓名</th><th>操作</th></tr>';
+  if (!exRows.length) html += '<tr><td colspan="4" class="muted">暂无借读生（有插班借读的学生时，在上方添加）</td></tr>';
+  exRows.sort(function(a,b){ return a.gr===b.gr ? a.cls-b.cls : a.gr-b.gr; }).forEach(function(r0){
+    html += '<tr><td>'+CN[r0.gr]+'</td><td>'+r0.cls+'</td><td style="font-weight:600">'+esc(r0.n)+'</td>' +
+      '<td><button class="btn small gray" data-exdel="1" data-gr="'+r0.gr+'" data-cls="'+r0.cls+'" data-name="'+esc(r0.n)+'">移除</button></td></tr>';
+  });
+  html += '</table></div>';
+
+  /* 选课时间窗口（定时自动开关） */
+  function toLocalInput(ms){
+    if (!ms) return "";
+    var d = new Date(ms);
+    function p(n){ return (n<10?"0":"")+n; }
+    return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+"T"+p(d.getHours())+":"+p(d.getMinutes());
+  }
+  /* 退课记录（可追溯 + 可恢复） */
+  var rc = data.releaseCount || 0;
+  html += '<div class="card"><h2>🕘 退课记录（可一键恢复）</h2>';
+  html += '<p class="muted">记录家长自行取消的选课。若发现有人恶意退掉别人的社团，可在此一键恢复原状。</p>';
+  html += '<div class="row mt"><button class="btn" id="relLoadBtn">查看退课记录（'+rc+' 条）</button>';
+  if (rc > 0) html += '<button class="btn gray" id="relAllBtn">♻️ 恢复全部 '+rc+' 条</button>';
+  html += '</div><div id="relLogBox" class="mt"></div></div>';
+
   /* 班级数 + 改密码 */
   html += '<div class="card"><h2>⚙ 其他设置</h2><div class="row">';
   [1,2,3,4,5,6].forEach(function(gr){
@@ -228,9 +421,126 @@ function render(){
 
   app.innerHTML = html;
 
-  document.getElementById("toggleBtn").onclick = function(){ admin({action:"toggle"}).then(function(r){ data.open=r.open; render(); toast(r.open?"已开放选课":"已关闭选课"); }); };
-  document.getElementById("resetBtn").onclick = function(){ if(confirm("⚠️ 确定清空全部学生的选课记录？此操作不可恢复！")) admin({action:"reset"}).then(function(){ toast("已清空"); refresh(); }); };
+  /* ---- 开关：定时窗口会拦住手动切换，所以先确认再 force ---- */
+  document.getElementById("toggleBtn").onclick = function(){
+    var wantOpen = !data.open;
+    var hasWin = !!(data.openAt || data.closeAt);
+    var blocked = hasWin && !data.open && (
+        (data.closed === "before" && wantOpen) ||
+        (data.closed === "after"  && wantOpen) ||
+        (data.closed === "before" && !wantOpen));   /* 未到点，想开也开不了 */
+    if (hasWin && wantOpen && (data.closed === "before" || data.closed === "after")) {
+      if (!confirm("⏰ 现在有定时限制（"
+          + (data.openAt ? fmtTs(data.openAt) : "不限") + " 开 → "
+          + (data.closeAt ? fmtTs(data.closeAt) : "不限") + " 关），当前不在开放时段。\n\n"
+          + "点「确定」= 取消定时限制并立即开放选课；\n点「取消」= 保持定时不变。")) return;
+      admin({action:"toggle", force:true}).then(function(r){
+        data.open = r.open; data.openAt = r.openAt; data.closeAt = r.closeAt;
+        render();
+        toast(r.open ? "已取消定时，选课现已开放" : "已关闭选课");
+      });
+      return;
+    }
+    admin({action:"toggle"}).then(function(r){
+      data.open = r.open; data.closed = r.closed;
+      data.openAt = r.openAt; data.closeAt = r.closeAt;
+      render();
+      /* 用真实的最终状态回话，而不是想当然地说"已开放" */
+      if (r.open) toast("已开放选课");
+      else if (r.closed === "before") toast("已关闭（未到定时开放时间）");
+      else if (r.closed === "after")  toast("已关闭（已过定时截止时间）");
+      else toast("已关闭选课");
+    });
+  };
+  document.getElementById("resetBtn").onclick = function(){
+    if (!confirm("⚠️ 确定清空全部学生的选课记录？\n\n系统会自动留一份快照，事后可以用「↩️ 撤销上次清空」找回最近这一次。")) return;
+    admin({action:"reset"}).then(function(r){
+      if (r.error) { toast(r.error); return; }
+      toast("已清空 " + (r.count||0) + " 条" + (r.canUndo ? "，可撤销" : ""));
+      refresh();
+    });
+  };
+  if (document.getElementById("undoResetBtn")) {
+    document.getElementById("undoResetBtn").onclick = function(){
+      var n = data.lastResetCount || 0;
+      if (!confirm("↩️ 恢复上次清空前的 " + n + " 条选课记录？\n\n恢复后快照会被消耗掉（只支持撤销最近一次）。")) return;
+      admin({action:"undoReset"}).then(function(r){
+        if (r.error) { toast(r.error); return; }
+        toast("已恢复 " + (r.count||0) + " 条选课记录");
+        refresh();
+      });
+    };
+  }
   document.getElementById("csvBtn").onclick = exportCsv;
+
+  /* ---- 选课时间窗口：保存 / 清除 ---- */
+  document.getElementById("winSave").onclick = function(){
+    var o = document.getElementById("winOpen").value;
+    var c = document.getElementById("winClose").value;
+    /* datetime-local 按**浏览器本地时区**解析成绝对时间戳，
+       服务端只做数值比较，因此不受服务器时区（可能是 UTC）影响。 */
+    var oa = o ? new Date(o).getTime() : null;
+    var ca = c ? new Date(c).getTime() : null;
+    if (oa !== null && isNaN(oa)) { toast("开始时间格式不对"); return; }
+    if (ca !== null && isNaN(ca)) { toast("截止时间格式不对"); return; }
+    admin({action:"setWindow", openAt:oa, closeAt:ca}).then(function(r){
+      if (r.error) { toast(r.error); return; }
+      /* 反馈要带上"当前是否已开放"，否则设了未来时间会以为没生效 */
+      if (r.open) toast("已设定，且当前已开放");
+      else if (r.closed === "before") toast("已设定，将于 " + fmtTs(r.openAt) + " 自动开放");
+      else if (r.closed === "after")  toast("已设定，但截止时间已过（现在仍是关闭）");
+      else toast("已设定：到点自动开放 / 自动关闭");
+      refresh();
+    });
+  };
+  document.getElementById("winClear").onclick = function(){
+    admin({action:"setWindow", openAt:null, closeAt:null}).then(function(){
+      toast("已清除时间限制，改回手动控制");
+      refresh();
+    });
+  };
+
+  /* ---- 退课记录：查看 + 单条恢复 + 全部恢复 ---- */
+  function p2(n){ return (n<10?"0":"") + n; }
+  function fmtTime(ms){
+    var d = new Date(ms);
+    return (d.getMonth()+1)+"月"+d.getDate()+"日 "+p2(d.getHours())+":"+p2(d.getMinutes());
+  }
+  document.getElementById("relLoadBtn").onclick = function(){
+    admin({action:"log"}).then(function(r){
+      var box = document.getElementById("relLogBox");
+      var log = (r && r.log) || [];
+      if (!log.length) { box.innerHTML = '<p class="muted">暂无退课记录 ✓</p>'; return; }
+      var h = '<div style="overflow-x:auto"><table><tr><th>时间</th><th>学生</th><th>班级</th><th>退掉的社团</th><th>操作</th></tr>';
+      log.forEach(function(x){
+        h += '<tr><td>'+fmtTime(x.at)+'</td>'
+           + '<td style="font-weight:600">'+esc(x.n)+'</td>'
+           + '<td>'+CN[x.g]+'（'+x.c+'）班</td>'
+           + '<td>'+esc(x.club || '（全部）')+'</td>'
+           + '<td><button class="btn gray" data-restore="'+x.at+'">♻️ 恢复</button></td></tr>';
+      });
+      h += '</table></div><p class="muted" style="margin-top:8px">恢复 = 该学生的社团还原成退课前的状态（含内定社团）。</p>';
+      box.innerHTML = h;
+      box.querySelectorAll("[data-restore]").forEach(function(b){
+        b.onclick = function(){
+          admin({action:"restore", at:+b.dataset.restore}).then(function(r2){
+            if (r2.error) { toast(r2.error); return; }
+            toast("已恢复："+r2.name+" → "+((r2.clubs||[]).join("、") || "（无）"));
+            refresh();
+          });
+        };
+      });
+    });
+  };
+  if (document.getElementById("relAllBtn")) {
+    document.getElementById("relAllBtn").onclick = function(){
+      if (!confirm("确定恢复全部退课记录？所有被取消的社团都会还原。")) return;
+      admin({action:"restoreAll"}).then(function(r){
+        toast("已恢复 "+((r&&r.count)||0)+" 条退课记录");
+        refresh();
+      });
+    };
+  }
   app.querySelectorAll(".chip[data-grp]").forEach(function(b){ b.onclick=function(){ sel.group=b.dataset.grp; render(); }; });
   app.querySelectorAll("input[data-club]").forEach(function(inp){
     inp.onchange = function(){
@@ -280,6 +590,38 @@ function render(){
     };
   });
 
+  /* 借读 / 插班生：添加与移除 */
+  function drawExCls(){
+    var gr = +document.getElementById("exGrade").value;
+    var n = data.classCounts[gr]||5;
+    var sc = document.getElementById("exCls");
+    sc.innerHTML = "";
+    for (var i=1;i<=n;i++){ var o=document.createElement("option"); o.value=i; o.textContent=CN[gr]+"（"+i+"）班"; sc.appendChild(o); }
+  }
+  drawExCls();
+  document.getElementById("exGrade").onchange = drawExCls;
+  document.getElementById("exAddBtn").onclick = function(){
+    var gr = +document.getElementById("exGrade").value;
+    var c0 = +document.getElementById("exCls").value;
+    var names = document.getElementById("exNames").value.split(/[\n,，、;；\t]+/).map(function(x){return x.trim();}).filter(Boolean);
+    if (!names.length) { toast("请先输入学生姓名"); return; }
+    admin({action:"addExtra", grade:gr, cls:c0, names:names}).then(function(r){
+      if (r.error) { toast(r.error); return; }
+      toast("已添加 " + (r.addedCount||0) + " 人" + (r.skipped ? "（"+r.skipped+" 人已在名单中，跳过）" : ""));
+      refresh();
+    });
+  };
+  app.querySelectorAll("button[data-exdel]").forEach(function(b){
+    b.onclick = function(){
+      if (confirm("把 " + b.dataset.name + " 从 " + CN[+b.dataset.gr] + "（" + b.dataset.cls + "）班的借读名单移除？\n\n注意：该生已选的社团记录不会自动删除，需要的话请到「查找学生」里单独处理。")) {
+        admin({action:"removeExtra", grade:+b.dataset.gr, cls:+b.dataset.cls, names:[b.dataset.name]}).then(function(r){
+          if (r.error) { toast(r.error); return; }
+          toast("已移除"); refresh();
+        });
+      }
+    };
+  });
+
   function doSearch(){
     var name = document.getElementById("searchName").value.trim();
     if(!name) return;
@@ -311,27 +653,250 @@ function render(){
   }
 }
 
-/* ============ CSV 导出 ============ */
-function exportCsv(){
-  var CN = {1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"};
-  var rows = [["年级","班级","姓名","社团","五小类型","辅导教师","场地","备注"]];
+/* ============ 导出：全校总表 + 每社团子表（真 xlsx，多工作表） ============ */
+
+/* 社团名 → 定义（跨年级段全局索引，同名社团取第一条非 hidden 优先） */
+function buildClubIndex(){
+  var idx = {};
   data.groups.forEach(function(g){
-    g.grades.forEach(function(gr){
-      var n = data.classCounts[gr]||0;
-      for (var c=1;c<=n;c++){
-        (data.selections["g"+gr+"c"+c]||[]).forEach(function(s){
-          var cl = g.clubs.find(function(x){return x.n===s.c;});
-          rows.push([CN[gr]+"年级", c, s.n, s.c, cl?cl.t:"", cl?cl.tc:"", cl?cl.pl:"", cl?cl.note:""]);
-        });
-      }
+    g.clubs.forEach(function(c){
+      if (!idx[c.n] || (idx[c.n].hidden && !c.hidden)) idx[c.n] = c;
     });
   });
-  var csv = "\ufeff" + rows.map(function(r){ return r.map(function(x){ x=String(x==null?"":x); return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x; }).join(","); }).join("\r\n");
-  var blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+  return idx;
+}
+
+/* 汇总所有选课记录 → 扁平行（一个学生一个社团一行，多社团展开多行） */
+function collectRows(){
+  var CN6 = {1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"};
+  var idx = buildClubIndex();
+  var out = [];
+  [1,2,3,4,5,6].forEach(function(gr){
+    var n = data.classCounts[gr]||0;
+    for (var c=1;c<=n;c++){
+      (data.selections["g"+gr+"c"+c]||[]).forEach(function(s){
+        stuClubs(s).forEach(function(sc){
+          var cl = idx[sc.n];
+          out.push({
+            grade: gr, cls: c, gradeName: CN6[gr]+"年级",
+            name: s.n, club: sc.n,
+            type: cl ? cl.t : "",
+            teacher: cl ? cl.tc : "",
+            place: cl ? cl.pl : "",
+            note: cl ? cl.note : "",
+            fixed: !!sc.fixed,
+            hidden: !!(cl && cl.hidden)
+          });
+        });
+      });
+    }
+  });
+  return out;
+}
+
+/* ---- 极简 XLSX 生成器（零依赖，手写 ZIP + OOXML） ---- */
+var XLSX = (function(){
+  var enc = new TextEncoder();
+  function u16(n){ return [n & 255, (n >> 8) & 255]; }
+  function u32(n){ return [n & 255, (n >> 8) & 255, (n >> 16) & 255, (n >> 24) & 255]; }
+  /* CRC32 */
+  var CRC_T = (function(){
+    var t = new Uint32Array(256);
+    for (var i=0;i<256;i++){ var c=i; for (var k=0;k<8;k++) c = (c&1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1); t[i]=c>>>0; }
+    return t;
+  })();
+  function crc32(buf){
+    var c = 0xFFFFFFFF;
+    for (var i=0;i<buf.length;i++) c = CRC_T[(c ^ buf[i]) & 255] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zip(files){
+    /* files: [{name, data:Uint8Array}] */
+    var chunks = [], central = [], offset = 0;
+    files.forEach(function(f){
+      var nm = enc.encode(f.name), crc = crc32(f.data), sz = f.data.length;
+      var lh = [].concat(u32(0x04034b50), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+                          u32(crc), u32(sz), u32(sz), u16(nm.length), u16(0));
+      var lhb = new Uint8Array(lh);
+      chunks.push(lhb, nm, f.data);
+      var ch = [].concat(u32(0x02014b50), u16(20), u16(20), u16(0x0800), u16(0), u16(0), u16(0),
+                          u32(crc), u32(sz), u32(sz), u16(nm.length), u16(0), u16(0),
+                          u16(0), u16(0), u32(0), u32(offset));
+      central.push(new Uint8Array(ch), nm);
+      offset += lhb.length + nm.length + sz;
+    });
+    var cdSize = central.reduce(function(a,b){ return a+b.length; }, 0);
+    var eocd = new Uint8Array([].concat(u32(0x06054b50), u16(0), u16(0),
+      u16(files.length), u16(files.length), u32(cdSize), u32(offset), u16(0)));
+    var total = offset + cdSize + eocd.length;
+    var out = new Uint8Array(total), p = 0;
+    chunks.concat(central, [eocd]).forEach(function(b){ out.set(b, p); p += b.length; });
+    return out;
+  }
+  function esc(s){
+    return String(s==null?"":s).replace(/[&<>"]/g, function(m){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m];
+    }).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, "");
+  }
+  function colName(i){
+    var s = "";
+    i++;
+    while (i > 0){ var m = (i-1)%26; s = String.fromCharCode(65+m) + s; i = Math.floor((i-1)/26); }
+    return s;
+  }
+  /* sheet: {name, rows:[[cell,...]], widths:[n,...], headRows:1} */
+  function sheetXml(sh){
+    var w = (sh.widths||[]).map(function(n,i){
+      return '<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+n+'" customWidth="1"/>';
+    }).join("");
+    var body = (sh.rows||[]).map(function(row, ri){
+      var cells = row.map(function(v, ci){
+        var ref = colName(ci) + (ri+1);
+        var isHead = ri < (sh.headRows||0);
+        var style = isHead ? ' s="1"' : ' s="2"';
+        if (typeof v === "number" && isFinite(v)) return '<c r="'+ref+'"'+style+'><v>'+v+'</v></c>';
+        return '<c r="'+ref+'"'+style+' t="inlineStr"><is><t xml:space="preserve">'+esc(v)+'</t></is></c>';
+      }).join("");
+      return '<row r="'+(ri+1)+'">'+cells+'</row>';
+    }).join("");
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      (w ? '<cols>'+w+'</cols>' : "") +
+      '<sheetData>'+body+'</sheetData></worksheet>';
+  }
+  function build(sheets){
+    var files = [];
+    function add(name, str){ files.push({ name: name, data: enc.encode(str) }); }
+    add("[Content_Types].xml",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+      '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+      '<Default Extension="xml" ContentType="application/xml"/>' +
+      '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+      '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+      sheets.map(function(s,i){
+        return '<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';
+      }).join("") + '</Types>');
+    add("_rels/.rels",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+      '</Relationships>');
+    add("xl/workbook.xml",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" ' +
+      'xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
+      sheets.map(function(s,i){
+        return '<sheet name="'+esc(s.name).slice(0,31)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';
+      }).join("") + '</sheets></workbook>');
+    add("xl/_rels/workbook.xml.rels",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      sheets.map(function(s,i){
+        return '<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>';
+      }).join("") +
+      '<Relationship Id="rIdSty" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '</Relationships>');
+    /* 样式：0=默认 1=表头(加粗+底色+居中+边框) 2=正文(居中+边框) */
+    add("xl/styles.xml",
+      '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<fonts count="2"><font><sz val="11"/><name val="等线"/></font>' +
+      '<font><b/><sz val="11"/><name val="等线"/></font></fonts>' +
+      '<fills count="3"><fill><patternFill patternType="none"/></fill>' +
+      '<fill><patternFill patternType="gray125"/></fill>' +
+      '<fill><patternFill patternType="solid"><fgColor rgb="FFFDF2E4"/><bgColor indexed="64"/></patternFill></fill></fills>' +
+      '<borders count="2"><border><left/><right/><top/><bottom/><diagonal/></border>' +
+      '<border><left style="thin"><color rgb="FFD9C9B0"/></left><right style="thin"><color rgb="FFD9C9B0"/></right>' +
+      '<top style="thin"><color rgb="FFD9C9B0"/></top><bottom style="thin"><color rgb="FFD9C9B0"/></bottom><diagonal/></border></borders>' +
+      '<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+      '<cellXfs count="3">' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>' +
+      '<xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' +
+      '<xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>' +
+      '</cellXfs></styleSheet>');
+    sheets.forEach(function(s,i){ add("xl/worksheets/sheet"+(i+1)+".xml", sheetXml(s)); });
+    return new Blob([zip(files)], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+  }
+  return { build: build, colName: colName };
+})();
+
+/* 导出主入口：全校总表 + 每社团一个子表 */
+function exportCsv(){
+  var all = collectRows();
+  if (!all.length) { toast("当前没有任何选课记录，无法导出"); return; }
+
+  var HEAD = ["年级","班级","姓名","社团名称","五小类型","辅导教师","场地","级别","来源"];
+  function toRow(r){
+    return [r.gradeName, r.cls+"班", r.name, r.club, r.type, r.teacher, r.place, r.note,
+            r.fixed ? (r.hidden ? "内定" : "已定") : "自选"];
+  }
+  var sheets = [];
+
+  /* 子表 1：全校总表（按年级、班级、姓名排序） */
+  all.sort(function(a,b){
+    return a.grade-b.grade || a.cls-b.cls || (a.name<b.name?-1:a.name>b.name?1:0);
+  });
+  sheets.push({
+    name: "全校总表",
+    headRows: 1,
+    widths: [9, 8, 12, 20, 10, 26, 22, 8, 8],
+    rows: [HEAD].concat(all.map(toRow))
+  });
+
+  /* 子表 2..N：每个社团一张（含内定社团；有人的才出表） */
+  var byClub = {};
+  all.forEach(function(r){ (byClub[r.club] = byClub[r.club] || []).push(r); });
+  var order = Object.keys(byClub).sort(function(a,b){
+    return byClub[b].length - byClub[a].length || (a<b?-1:1);
+  });
+  order.forEach(function(cn0){
+    var list = byClub[cn0];
+    list.sort(function(a,b){
+      return a.grade-b.grade || a.cls-b.cls || (a.name<b.name?-1:a.name>b.name?1:0);
+    });
+    var c0 = list[0];
+    var sub = [["社团名称", cn0, "", "五小类型", c0.type, "", "辅导教师", c0.teacher, "", "场地", c0.place, "", "级别", c0.note, "", "合计", list.length + " 人"]];
+    /* 第二行起：明细表头 */
+    sub.push(["序号","年级","班级","姓名","社团名称","五小类型","辅导教师","场地","级别","来源"]);
+    list.forEach(function(r, i){
+      sub.push([i+1, r.gradeName, r.cls+"班", r.name, r.club, r.type, r.teacher, r.place, r.note,
+                r.fixed ? (r.hidden ? "内定" : "已定") : "自选"]);
+    });
+    sheets.push({
+      name: cn0.replace(/[\\\/\?\*\[\]:]/g, "").slice(0, 28) || "社团",
+      headRows: 0,
+      widths: [6, 9, 8, 12, 20, 10, 26, 22, 8, 8],
+      rows: sub
+    });
+  });
+
+  /* 子表末：名额占用与余量统计 */
+  var quotaRows = [["社团","五小类型","辅导教师","场地","级别","每班名额","已选人数","状态"]];
+  all.forEach(function(){});
+  var seen = {};
+  data.groups.forEach(function(g){
+    g.clubs.forEach(function(c){
+      if (seen[c.n]) return; seen[c.n] = 1;
+      var used = all.filter(function(r){ return r.club === c.n; }).length;
+      if (!used) return;
+      var qs = Object.keys(c.q||{}).map(function(k){ return c.q[k]; }).filter(function(v){ return v!==null; });
+      var q = qs.length ? qs[0] : "不限";
+      quotaRows.push([c.n, c.t, c.tc, c.pl, c.note, q, used,
+                      (q !== "不限" && used > q * Object.keys(c.q||{}).length) ? "超" : "正常"]);
+    });
+  });
+  sheets.push({ name: "名额占用统计", headRows: 1, widths: [20, 10, 26, 22, 8, 10, 10, 8], rows: quotaRows });
+
+  var blob = XLSX.build(sheets);
   var a = document.createElement("a");
+  var d = new Date();
+  function p(n){ return (n<10?"0":"")+n; }
   a.href = URL.createObjectURL(blob);
-  a.download = "社团选课总表-" + new Date().toISOString().slice(0,10) + ".csv";
+  a.download = "社团选课总表-" + d.getFullYear() + p(d.getMonth()+1) + p(d.getDate()) + "-" + p(d.getHours()) + p(d.getMinutes()) + ".xlsx";
   a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 3000);
+  toast("已导出 Excel：" + (sheets.length-2) + " 个社团子表 + 总表 + 统计");
 }
 
 /* ============ 启动 ============ */
