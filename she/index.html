@@ -153,6 +153,19 @@ var API_ROOT = (function(){
 })();
 function api(path, opt){
   var url = API_ROOT ? (API_ROOT.replace(/\/+$/,"") + path) : path.replace(/^\//, "");
+  /* ★ 防缓存双保险（2026-09-14 修）：
+     手机浏览器（微信内置 / 各类 webview）会把 fetch 的 GET 响应缓存住。
+     家长选过之后若被老师清退，再打开时浏览器直接吐**旧缓存**，
+     服务端根本没被问到 → 页面仍显示"已入选"。
+     ① URL 追加时间戳参数，让每次请求都是新地址（缓存键必然不同）
+     ② fetch 显式带 cache:"no-store"，并补上 pragma / cache-control 头 */
+  var isGet = !opt || !opt.method || opt.method.toUpperCase() === "GET";
+  if (isGet) {
+    url += (url.indexOf("?") >= 0 ? "&" : "?") + "_=" + Date.now() + Math.random().toString(36).slice(2, 7);
+    opt = opt || {};
+    opt.cache = "no-store";
+    opt.headers = Object.assign({}, opt.headers, { "Cache-Control": "no-cache", "Pragma": "no-cache" });
+  }
   return fetch(url, opt).then(function(r){ return r.json(); });
 }
 
@@ -212,6 +225,9 @@ function checkMine(){
       toast(r.error || "姓名与学校名单不一致，请核对后重试");
       return;
     }
+    /* ★ 关键：一切以**服务端本次返回**为准（2026-09-14 修）。
+       服务端说没有社团，就一律回到选课页，绝不因为"本地存过"而继续显示已入选。
+       配合 api() 的防缓存参数，杜绝"老师已清退、家长仍看到已入选"的误导。 */
     if (r.clubs && r.clubs.length) renderMine(r);
     else renderPick([]);
   }).catch(function(){ app.innerHTML = '<div class="card"><p class="muted">网络开小差了，请刷新重试</p></div>'; });
