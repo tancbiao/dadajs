@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>线上美术馆 · 作品收集（老师端）</title>
+<style>
+:root{
+  --bg:#FDFBF7; --card:#FFFFFF; --ink:#2E2A26; --sub:#8A8279;
+  --line:#EDE6DC; --brand:#F4696B; --brand-soft:#FDECEC; --brand-ink:#B93A3D;
+  --ok:#4C9A5B; --ok-soft:#EBF5ED; --warn:#D9534F; --warn-soft:#FDECEA;
+  --shadow:0 1px 2px rgba(46,42,38,.05), 0 6px 18px rgba(46,42,38,.06);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink); font-size:15px; line-height:1.6;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;
+  padding-bottom:120px;
+}
+.wrap{max-width:920px;margin:0 auto;padding:28px 20px 0}
+
+/* ── 顶部 ── */
+header{text-align:center;padding:8px 0 26px}
+header h1{margin:0 0 8px;font-size:26px;letter-spacing:.5px}
+header h1 span{color:var(--brand)}
+header p{margin:0;color:var(--sub);font-size:14px}
+
+/* ── 步骤块 ── */
+.step{display:flex;gap:14px;background:var(--card);border:1px solid var(--line);
+      border-radius:16px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.stepno{flex:0 0 30px;height:30px;border-radius:50%;background:var(--brand);color:#fff;
+        display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px}
+.stepbody{flex:1;min-width:0}
+.stepbody h2{margin:0 0 12px;font-size:17px}
+.hint{margin:10px 0 0;color:var(--sub);font-size:13px}
+.hint b{color:var(--ink);font-weight:600}
+.hint code{background:#F5F1EA;padding:1px 5px;border-radius:4px;font-size:12.5px}
+
+/* ── 表单控件 ── */
+select,input[type=text]{
+  font:inherit;color:inherit;background:#fff;border:1px solid var(--line);
+  border-radius:10px;padding:9px 12px;outline:none;transition:border-color .15s;
+}
+select:focus,input[type=text]:focus{border-color:var(--brand)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row select{flex:0 0 auto;min-width:130px}
+
+/* ── 拖放区 ── */
+.drop{
+  border:2px dashed #E3D9CD;border-radius:14px;background:#FEFCF9;
+  padding:30px 20px;text-align:center;transition:all .18s;
+}
+.drop.over{border-color:var(--brand);background:var(--brand-soft)}
+.drop .big{margin:0 0 4px;font-size:16px;font-weight:600}
+.drop .thin{margin:0 0 16px;color:var(--sub);font-size:13px}
+.drop .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--line);
+       background:#fff;color:var(--ink);padding:9px 18px;transition:all .15s}
+button:hover{border-color:#D8CCBC;background:#FDFBF7}
+button.primary{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+button.primary:hover{background:#E85A5C}
+button:disabled{opacity:.5;cursor:not-allowed}
+
+/* ── 作品列表 ── */
+.grphead{margin:18px 0 8px;font-size:13px;font-weight:700;color:var(--brand-ink);
+         display:flex;align-items:center;gap:8px}
+.grphead::after{content:"";flex:1;height:1px;background:var(--line)}
+.item{display:flex;gap:12px;align-items:flex-start;padding:10px;border:1px solid var(--line);
+      border-radius:12px;margin-bottom:8px;background:#fff}
+.item.bad{border-color:#F3C9C7;background:var(--warn-soft)}
+.item img{width:64px;height:64px;object-fit:cover;border-radius:9px;background:#F2EEE7;flex:0 0 auto}
+.fields{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+.fields .line{display:flex;gap:8px;flex-wrap:wrap}
+.fields input{flex:1;min-width:110px}
+.fields select{flex:0 0 auto}
+.fields input.miss{border-color:#E8A9A6;background:#FFF8F8}
+.fields input.miss::placeholder{color:#D97C78}
+.fname{font-size:11.5px;color:var(--sub);word-break:break-all}
+.fpath{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:99px;
+       background:var(--ok-soft);color:var(--ok);font-size:11px}
+.del{flex:0 0 auto;width:32px;height:32px;padding:0;border-radius:9px;color:var(--sub);font-size:18px;line-height:1}
+.del:hover{background:var(--warn-soft);border-color:#F3C9C7;color:var(--warn)}
+
+/* ── 底部操作条 ── */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;background:rgba(255,255,255,.96);
+  backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;gap:16px;z-index:20;
+}
+.barinfo{font-size:14px;color:var(--sub)}
+.barinfo b{color:var(--ink);font-size:17px}
+
+/* ── 进度遮罩 ── */
+.mask{position:fixed;inset:0;background:rgba(253,251,247,.94);z-index:50;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px}
+.mask h3{margin:0;font-size:18px}
+.pbar{width:min(420px,80vw);height:9px;border-radius:99px;background:#F0EAE1;overflow:hidden}
+.pbar i{display:block;height:100%;width:0;background:var(--brand);border-radius:99px;transition:width .2s}
+.pmeta{color:var(--sub);font-size:13px}
+
+/* ── 结果弹层 ── */
+.dlg{position:fixed;inset:0;background:rgba(46,42,38,.35);z-index:60;
+     display:flex;align-items:center;justify-content:center;padding:20px}
+.dlgbox{background:#fff;border-radius:18px;padding:28px;max-width:440px;width:100%;
+        box-shadow:0 20px 50px rgba(46,42,38,.18);text-align:center}
+.dlgbox h3{margin:0 0 10px;font-size:20px}
+.dlgbox p{color:var(--sub);font-size:14px;margin:0 0 8px;text-align:left}
+.dlgbox .big{color:var(--ok);font-weight:700}
+.dlgbox ol{text-align:left;color:var(--sub);font-size:14px;margin:14px 0 20px;padding-left:22px}
+.dlgbox ol li{margin-bottom:5px}
+.dlgbox ol b{color:var(--ink)}
+
+footer{text-align:center;color:var(--sub);font-size:13px;padding:6px 0 30px}
+footer a{color:var(--brand);text-decoration:none}
+footer a:hover{text-decoration:underline}
+.hide{display:none !important}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <h1>线上美术馆 · <span>作品收集</span></h1>
+    <p>把照片拖进来，填好班级，一键生成作品包发给管理员，就能在手机上展出了。</p>
+  </header>
+
+  <!-- 步骤 1 -->
+  <section class="step">
+    <div class="stepno">1</div>
+    <div class="stepbody">
+      <h2>选择班级</h2>
+      <div class="row">
+        <select id="grade"></select>
+        <select id="klass"></select>
+      </div>
+      <p class="hint">接下来加进来的照片都归到这个班。要收另一个班，改这里再拖照片就成。</p>
+    </div>
+  </section>
+
+  <!-- 步骤 2 -->
+  <section class="step">
+    <div class="stepno">2</div>
+    <div class="stepbody">
+      <h2>添加作品照片</h2>
+      <div class="drop" id="drop">
+        <p class="big">把照片拖到这里</p>
+        <p class="thin">可以多选，也可以直接拖整个文件夹</p>
+        <div class="btns">
+          <button id="pick">选择照片</button>
+          <button id="pickDir">选择文件夹</button>
+        </div>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        <input type="file" id="dirInput" webkitdirectory hidden>
+      </div>
+      <p class="hint">
+        小技巧：把照片重命名成 <code>姓名_作品名.jpg</code>（如 <code>郑欣怡_太空电梯.jpg</code>），
+        系统会自动认出来，你就少填一半。
+      </p>
+    </div>
+  </section>
+
+  <!-- 步骤 3 -->
+  <section class="step hide" id="listStep">
+    <div class="stepno">3</div>
+    <div class="stepbody">
+      <h2>核对信息 <span id="cntTxt" style="font-weight:400;color:var(--sub);font-size:14px"></span></h2>
+      <p class="hint">标红的地方需要补填，其余确认无误即可。</p>
+      <div id="list" style="margin-top:14px"></div>
+    </div>
+  </section>
+
+  <footer>
+    天等县城西小学 · 线上美术馆 &nbsp;|&nbsp;
+    <a href="https://dadajs.cn/meishu/" target="_blank" rel="noopener">先看看已经上线的美术馆</a>
+  </footer>
+</div>
+
+<!-- 底部条 -->
+<div class="bar hide" id="bar">
+  <div class="barinfo">共 <b id="statN">0</b> 幅作品 &nbsp;·&nbsp; 压缩后约 <b id="statMB">0</b> MB</div>
+  <button class="primary" id="go">生成作品包</button>
+</div>
+
+<!-- 进度 -->
+<div class="mask hide" id="mask">
+  <h3 id="maskTitle">正在处理照片…</h3>
+  <div class="pbar"><i id="pbar"></i></div>
+  <div class="pmeta" id="maskMeta">请稍候，不要关闭这个页面</div>
+</div>
+
+<!-- 完成 -->
+<div class="dlg hide" id="dlg">
+  <div class="dlgbox">
+    <h3>作品包做好了</h3>
+    <p>文件：<b id="dlgName"></b></p>
+    <p>共 <span class="big" id="dlgN"></span> 幅作品，<span id="dlgMB"></span> MB</p>
+    <ol>
+      <li>把下载的这个 zip 包发给<b>美术馆管理员</b></li>
+      <li>管理员上线后，家长就能在手机上看到啦</li>
+      <li>别忘了告诉家长：<b>选班级 + 输姓名</b>就能看到自家孩子的作品</li>
+    </ol>
+    <button class="primary" id="dlgClose">知道了</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* ══════════════ 配置（与 build.py 保持一致） ══════════════ */
+var CATEGORIES = ["科技类", "爱国类", "其他"];
+var CLASS_PLAN = { 1: 5, 2: 5, 3: 5, 4: 8, 5: 8, 6: 8 };
+var MAX_EDGE   = 1800;   // 长边像素
+var QUALITY    = 0.92;   // WebP 质量
+var CN_DIGIT   = { "一":1, "二":2, "三":3, "四":4, "五":5, "六":6, "七":7, "八":8, "九":9, "十":10 };
+var CAT_HINTS  = ["科技","爱国","其他","手工","绘画","书法","摄影","剪纸","科创","劳动","传统文化","美术","写作","手抄报"];
+var IMG_EXT    = [".jpg",".jpeg",".png",".webp",".bmp",".gif",".tif",".tiff"];
+
+/* ══════════════ 小工具 ══════════════ */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+  return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]; }); }
+function cn(n){ return CN_DIGIT[n] || String(n); }
+function className(g, c){ return cn(g) + "年级" + c + "班"; }
+function extOf(name){ var i = String(name).lastIndexOf("."); return i < 0 ? "" : String(name).slice(i).toLowerCase(); }
+function stemOf(name){ var i = String(name).lastIndexOf("."); return i < 0 ? String(name) : String(name).slice(0, i); }
+function isImgName(name){ return IMG_EXT.indexOf(extOf(name)) >= 0; }
+function mb(bytes){ return (bytes / 1048576).toFixed(1); }
+function wait(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+
+/* ══════════════ 解析：班级 / 类别 / 文件名 ══════════════ */
+function parseClass(name){
+  var s = String(name).trim().replace(/（/g, "(").replace(/）/g, ")");
+  var m = s.match(/([一二三四五六1-9])\s*年?级?\s*\(?\s*([0-9一二三四五六七八九十]{1,3})\s*\)?\s*班?/);
+  if (!m) return null;
+  var g = CN_DIGIT[m[1]] || (m[1].match(/\d/) ? parseInt(m[1], 10) : null);
+  var c = CN_DIGIT[m[2]] || (m[2].match(/\d/) ? parseInt(m[2], 10) : null);
+  if (!g || !c) return null;
+  if (g < 1 || g > 6 || c < 1 || c > 20) return null;
+  return { g: g, c: c };
+}
+
+function isCatWord(w){
+  if (!w) return false;
+  w = String(w).trim();
+  if (!w) return false;
+  if (CAT_HINTS.indexOf(w) >= 0) return true;
+  if (w.slice(-1) === "类" && w.length <= 6) return true;
+  for (var i = 0; i < CATEGORIES.length; i++){
+    if (CATEGORIES[i].replace("类", "") === w.replace("类", "")) return true;
+  }
+  return false;
+}
+
+function normCategory(raw){
+  if (!raw) return "";
+  var n = String(raw).trim();
+  if (!n) return "";
+  for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i] === n) return CATEGORIES[i];
+  for (var j = 0; j < CATEGORIES.length; j++){
+    if (CATEGORIES[j].replace("类", "") === n.replace("类", "")) return CATEGORIES[j];
+  }
+  return n;
+}
+
+/* 文件名 → {name, cat, title}  —— 与 build.py parse_filename 对齐 */
+function parseFilename(stem){
+  var s = String(stem).trim();
+  var parts = s.split(/[_\-\s]+/).filter(function(p){ return p; });
+  if (!parts.length) return { name: "", cat: "", title: "" };
+  if (parts.length === 1) return { name: parts[0], cat: "", title: "" };
+  var name = parts[0], rest = parts.slice(1), cat = "";
+  if (isCatWord(rest[0])) { cat = rest[0]; rest = rest.slice(1); }
+  return { name: name, cat: cat, title: rest.join("_") };
+}
+
+/* 判断解析出来的这一段像不像「人名」——防止把 IMG_1234 当成学生名 */
+function looksLikeName(s){
+  if (!s) return false;
+  s = String(s).trim();
+  if (s.length < 2 || s.length > 12) return false;
+  if (/\d/.test(s)) return false;                        // 含数字，多半是相机自动命名
+  if (!/^[\u4e00-\u9fa5a-zA-Z·]+$/.test(s)) return false;
+  if (/^[a-zA-Z·]+$/.test(s) && s.length < 4) return false;   // IMG / DSC 这类要挡掉
+  return true;
+}
+
+/* 从整个相对路径里挖班级和类别（老师按标准文件夹整理时用得上） */
+function parsePathSegments(segs){
+  var out = { g: 0, c: 0, cat: "" };
+  for (var i = 0; i < segs.length - 1; i++){
+    var seg = segs[i];
+    if (!out.g){
+      var pc = parseClass(seg);
+      if (pc){ out.g = pc.g; out.c = pc.c; continue; }
+    }
+    if (!out.cat && isCatWord(seg)) out.cat = normCategory(seg);
+  }
+  return out;
+}
+
+/* ══════════════ CRC32 + ZIP（store 模式，零依赖） ══════════════ */
+var CRC_TABLE = (function(){
+  var t = new Uint32Array(256);
+  for (var i = 0; i < 256; i++){
+    var c = i;
+    for (var k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[i] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(buf){
+  var c = 0xFFFFFFFF;
+  for (var i = 0; i < buf.length; i++) c = CRC_TABLE[(c ^ buf[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF) >>> 0;
+}
+
+function dosTime(d){
+  var time = (d.getHours() << 11) | (d.getMinutes() << 5) | Math.floor(d.getSeconds() / 2);
+  var date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  return { time: time, date: date };
+}
+
+/* files: [{ name:"四年级5班/科技类/郑欣怡_太空电梯.webp", data:Uint8Array }] */
+function buildZip(files){
+  var enc = new TextEncoder();
+  var now = dosTime(new Date());
+  var parts = [];      // Blob 片段
+  var central = [];    // 中央目录字节
+  var offset = 0;
+
+  for (var i = 0; i < files.length; i++){
+    var f = files[i];
+    var nameBytes = enc.encode(f.name);
+    var data = f.data;
+    var crc = crc32(data);
+
+    /* ---- 本地文件头 ---- */
+    var lh = new Uint8Array(30 + nameBytes.length);
+    var dv = new DataView(lh.buffer);
+    dv.setUint32(0, 0x04034b50, true);
+    dv.setUint16(4, 20, true);          // version needed
+    dv.setUint16(6, 0x0800, true);      // flags: bit11 = UTF-8 文件名
+    dv.setUint16(8, 0, true);           // method: 0 = store
+    dv.setUint16(10, now.time, true);
+    dv.setUint16(12, now.date, true);
+    dv.setUint32(14, crc, true);
+    dv.setUint32(18, data.length, true);
+    dv.setUint32(22, data.length, true);
+    dv.setUint16(26, nameBytes.length, true);
+    dv.setUint16(28, 0, true);          // extra len
+    lh.set(nameBytes, 30);
+
+    parts.push(lh, data);
+
+    /* ---- 中央目录条目 ---- */
+    var ce = new Uint8Array(46 + nameBytes.length);
+    var cv = new DataView(ce.buffer);
+    cv.setUint32(0, 0x02014b50, true);
+    cv.setUint16(4, 20, true);          // version made by
+    cv.setUint16(6, 20, true);          // version needed
+    cv.setUint16(8, 0x0800, true);      // flags
+    cv.setUint16(10, 0, true);          // method
+    cv.setUint16(12, now.time, true);
+    cv.setUint16(14, now.date, true);
+    cv.setUint32(16, crc, true);
+    cv.setUint32(20, data.length, true);
+    cv.setUint32(24, data.length, true);
+    cv.setUint16(28, nameBytes.length, true);
+    cv.setUint16(30, 0, true);
+    cv.setUint16(32, 0, true);
+    cv.setUint16(34, 0, true);
+    cv.setUint16(36, 0, true);
+    cv.setUint32(38, 0, true);
+    cv.setUint32(42, offset, true);
+    ce.set(nameBytes, 46);
+    central.push(ce);
+
+    offset += lh.length + data.length;
+  }
+
+  /* ---- 中央目录结束记录 ---- */
+  var cdSize = 0;
+  for (var k = 0; k < central.length; k++) cdSize += central[k].length;
+
+  var eocd = new Uint8Array(22);
+  var ev = new DataView(eocd.buffer);
+  ev.setUint32(0, 0x06054b50, true);
+  ev.setUint16(4, 0, true);
+  ev.setUint16(6, 0, true);
+  ev.setUint16(8, files.length, true);
+  ev.setUint16(10, files.length, true);
+  ev.setUint32(12, cdSize, true);
+  ev.setUint32(16, offset, true);
+  ev.setUint16(20, 0, true);
+
+  var all = parts.concat(central, [eocd]);
+  return new Blob(all, { type: "application/zip" });
+}
+
+/* ══════════════ 图片压缩 ══════════════ */
+async function shrink(file){
+  var bmp;
+  try {
+    bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
+  } catch (e) {
+    bmp = await createImageBitmap(file);   // 老浏览器兜底
+  }
+  var w = bmp.width, h = bmp.height;
+  var scale = Math.min(1, MAX_EDGE / Math.max(w, h));
+  var ow = Math.max(1, Math.round(w * scale));
+  var oh = Math.max(1, Math.round(h * scale));
+
+  var cv = document.createElement("canvas");
+  cv.width = ow; cv.height = oh;
+  var ctx = cv.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, ow, oh);
+  ctx.drawImage(bmp, 0, 0, ow, oh);
+  if (bmp.close) bmp.close();
+
+  var blob = await new Promise(function(res){
+    cv.toBlob(function(b){ res(b); }, "image/webp", QUALITY);
+  });
+  if (!blob) throw new Error("这个浏览器不支持图片压缩，建议改用 Edge 或 Chrome 打开");
+
+  /* 有些浏览器不支持 WebP 编码，会悄悄回退成 PNG，扩展名必须跟着走，
+     否则导出 .webp 其实是 PNG，后面处理会认不出 */
+  var ext = blob.type === "image/webp" ? ".webp"
+          : blob.type === "image/jpeg" ? ".jpg"
+          : ".png";
+  return { blob: blob, ext: ext };
+}
+
+/* ══════════════ 状态 ══════════════ */
+var S = {
+  items: [],       // { id, file, url, name, title, cat, g, c, size }
+  seq: 0,
+  busy: false
+};
+
+/* ══════════════ 初始化下拉框 ══════════════ */
+(function initSelects(){
+  var gs = $("grade"), ks = $("klass");
+  var h = "";
+  for (var g = 1; g <= 6; g++) h += '<option value="' + g + '">' + cn(g) + "年级</option>";
+  gs.innerHTML = h;
+  gs.value = "4";
+  function fillK(){
+    var g = parseInt(gs.value, 10), n = CLASS_PLAN[g] || 5, s = "";
+    for (var c = 1; c <= n; c++) s += '<option value="' + c + '">' + c + "班</option>";
+    ks.innerHTML = s;
+    ks.value = "5";
+  }
+  fillK();
+  gs.onchange = fillK;
+})();
+
+function curClass(){
+  return { g: parseInt($("grade").value, 10) || 1, c: parseInt($("klass").value, 10) || 1 };
+}
+
+/* ══════════════ 加入文件 ══════════════ */
+function addFiles(files, pathHints){
+  var cc = curClass();
+  var added = 0, skipped = 0;
+
+  for (var i = 0; i < files.length; i++){
+    var f = files[i];
+    var rel = (pathHints && pathHints[i]) ? pathHints[i] : f.name;
+    var segs = String(rel).split("/").filter(function(s){ return s && s !== "."; });
+    var base = segs.length ? segs[segs.length - 1] : f.name;
+
+    if (!isImgName(base)){ skipped++; continue; }
+
+    var fromPath = parsePathSegments(segs);
+    var fromName = parseFilename(stemOf(base));
+
+    /* 姓名不像人名（如 IMG_1234）就整条作废，交给老师手填 */
+    var autoName = looksLikeName(fromName.name) ? fromName.name : "";
+    var autoTitle = autoName ? (fromName.title || "") : "";
+
+    var it = {
+      id: ++S.seq,
+      file: f,
+      name: autoName,
+      title: autoTitle,
+      /* 类别留空就落成「其他」——必须和界面下拉框显示的一致，
+         否则老师看着是「科技类」，导出来却进了「其他」，属于暗坑 */
+      cat: normCategory(fromPath.cat || (autoName ? fromName.cat : "") || "") || "其他",
+      g: fromPath.g || cc.g,
+      c: fromPath.c || cc.c,
+      size: f.size
+    };
+    it.url = URL.createObjectURL(f);
+    S.items.push(it);
+    added++;
+  }
+  render();
+  if (skipped) alert("跳过了 " + skipped + " 个不是图片的文件。");
+  return added;
+}
+
+/* ══════════════ 渲染列表 ══════════════ */
+function catOptions(sel){
+  var list = CATEGORIES.slice();
+  if (sel && list.indexOf(sel) < 0) list.push(sel);
+  var h = "";
+  for (var i = 0; i < list.length; i++){
+    h += '<option value="' + esc(list[i]) + '"' + (list[i] === sel ? " selected" : "") + ">" + esc(list[i]) + "</option>";
+  }
+  return h;
+}
+
+function render(){
+  var list = $("list");
+  var step = $("listStep"), bar = $("bar");
+
+  if (!S.items.length){
+    step.classList.add("hide");
+    bar.classList.add("hide");
+    return;
+  }
+  step.classList.remove("hide");
+  bar.classList.remove("hide");
+
+  /* 按班级分组 */
+  var groups = {}, order = [];
+  S.items.forEach(function(it){
+    var key = it.g + "-" + it.c;
+    if (!groups[key]){ groups[key] = []; order.push(key); }
+    groups[key].push(it);
+  });
+  order.sort(function(a, b){
+    var pa = a.split("-").map(Number), pb = b.split("-").map(Number);
+    return pa[0] - pb[0] || pa[1] - pb[1];
+  });
+
+  var html = "";
+  order.forEach(function(key){
+    var arr = groups[key], g = arr[0].g, c = arr[0].c;
+    html += '<div class="grphead">' + esc(className(g, c)) + " · " + arr.length + " 幅</div>";
+    arr.forEach(function(it){
+      var miss = !it.name.trim();
+      html +=
+        '<div class="item' + (miss ? " bad" : "") + '" data-id="' + it.id + '">' +
+          '<img src="' + it.url + '" alt="">' +
+          '<div class="fields">' +
+            '<div class="line">' +
+              '<input type="text" class="f-name' + (miss ? " miss" : "") + '" ' +
+                'placeholder="学生姓名（必填）" value="' + esc(it.name) + '">' +
+              '<select class="f-g">' +
+                (function(){
+                  var s = "";
+                  for (var gg = 1; gg <= 6; gg++){
+                    s += '<option value="' + gg + '"' + (gg === it.g ? " selected" : "") + ">" + cn(gg) + "年级</option>";
+                  }
+                  return s;
+                })() +
+              "</select>" +
+              '<select class="f-c">' +
+                (function(){
+                  var s = "";
+                  for (var cc2 = 1; cc2 <= (CLASS_PLAN[it.g] || 5); cc2++){
+                    s += '<option value="' + cc2 + '"' + (cc2 === it.c ? " selected" : "") + ">" + cc2 + "班</option>";
+                  }
+                  return s;
+                })() +
+              "</select>" +
+            "</div>" +
+            '<div class="line">' +
+              '<input type="text" class="f-title" placeholder="作品名称" value="' + esc(it.title) + '">' +
+              '<select class="f-cat">' + catOptions(it.cat || "其他") + "</select>" +
+            "</div>" +
+            '<div class="fname">' + esc(it.file.name) + " · " + mb(it.size) + " MB" +
+              '<span class="fpath">归档到 ' + esc(className(it.g, it.c)) + "/" +
+              esc(it.cat || "其他") + "/</span></div>" +
+          "</div>" +
+          '<button class="del" title="移除">×</button>' +
+        "</div>";
+    });
+  });
+  list.innerHTML = html;
+  updateStat();
+}
+
+function updateStat(){
+  $("statN").textContent = S.items.length;
+  var total = 0;
+  S.items.forEach(function(it){ total += it.size; });
+  /* 压缩后一般缩到 25% 上下，这里给个预估 */
+  $("statMB").textContent = mb(total * 0.25);
+  $("cntTxt").textContent = "（" + S.items.length + " 幅）";
+}
+
+/* ══════════════ 列表事件（事件委托） ══════════════ */
+$("list").addEventListener("input", function(e){
+  var t = e.target, item = t.closest ? t.closest(".item") : null;
+  if (!item) return;
+  var id = parseInt(item.dataset.id, 10);
+  var it = null;
+  for (var i = 0; i < S.items.length; i++) if (S.items[i].id === id) it = S.items[i];
+  if (!it) return;
+
+  if (t.classList.contains("f-name")){
+    it.name = t.value;
+    t.classList.toggle("miss", !t.value.trim());
+    if (it.name.trim()) item.classList.remove("bad");
+  } else if (t.classList.contains("f-title")){
+    it.title = t.value;
+  }
+});
+
+$("list").addEventListener("change", function(e){
+  var t = e.target, item = t.closest ? t.closest(".item") : null;
+  if (!item) return;
+  var id = parseInt(item.dataset.id, 10);
+  var it = null;
+  for (var i = 0; i < S.items.length; i++) if (S.items[i].id === id) it = S.items[i];
+  if (!it) return;
+
+  if (t.classList.contains("f-cat")){
+    it.cat = t.value;
+  } else if (t.classList.contains("f-g")){
+    it.g = parseInt(t.value, 10);
+    if (it.c > (CLASS_PLAN[it.g] || 5)) it.c = 1;
+    render();
+  } else if (t.classList.contains("f-c")){
+    it.c = parseInt(t.value, 10);
+    render();
+  }
+});
+
+$("list").addEventListener("click", function(e){
+  var t = e.target;
+  if (!t.classList.contains("del")) return;
+  var item = t.closest(".item");
+  if (!item) return;
+  var id = parseInt(item.dataset.id, 10);
+  S.items = S.items.filter(function(x){
+    if (x.id === id){ if (x.url) URL.revokeObjectURL(x.url); return false; }
+    return true;
+  });
+  render();
+});
+
+/* ══════════════ 选择 / 拖放 ══════════════ */
+$("pick").onclick = function(){ $("fileInput").click(); };
+$("pickDir").onclick = function(){ $("dirInput").click(); };
+
+$("fileInput").onchange = function(){
+  var arr = Array.prototype.slice.call(this.files);
+  if (arr.length) addFiles(arr, null);
+  this.value = "";
+};
+
+$("dirInput").onchange = function(){
+  var arr = Array.prototype.slice.call(this.files);
+  if (arr.length){
+    var hints = arr.map(function(f){ return f.webkitRelativePath || f.name; });
+    addFiles(arr, hints);
+  }
+  this.value = "";
+};
+
+/* 拖放：支持文件夹递归 */
+function readEntry(entry, out){
+  return new Promise(function(resolve){
+    if (entry.isFile){
+      entry.file(function(f){
+        f.__rel = (entry.fullPath || ("/" + f.name)).replace(/^\//, "");
+        out.push(f); resolve();
+      }, function(){ resolve(); });
+    } else if (entry.isDirectory){
+      var reader = entry.createReader();
+      var all = [];
+      (function next(){
+        reader.readEntries(function(es){
+          if (!es.length){
+            Promise.all(all.map(function(e){ return readEntry(e, out); })).then(function(){ resolve(); });
+            return;
+          }
+          all = all.concat(Array.prototype.slice.call(es));
+          next();
+        }, function(){ resolve(); });
+      })();
+    } else {
+      resolve();
+    }
+  });
+}
+
+var drop = $("drop");
+["dragenter", "dragover"].forEach(function(ev){
+  drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add("over"); });
+});
+["dragleave", "drop"].forEach(function(ev){
+  drop.addEventListener(ev, function(e){ e.preventDefault(); if (ev === "dragleave") drop.classList.remove("over"); });
+});
+
+drop.addEventListener("drop", async function(e){
+  drop.classList.remove("over");
+  var dt = e.dataTransfer;
+  if (!dt) return;
+
+  var files = [], hints = [];
+  var items = dt.items;
+  var entries = [];
+
+  if (items && items.length && items[0].webkitGetAsEntry){
+    for (var i = 0; i < items.length; i++){
+      var en = items[i].webkitGetAsEntry();
+      if (en) entries.push(en);
+    }
+  }
+
+  if (entries.length){
+    var collected = [];
+    await Promise.all(entries.map(function(en){ return readEntry(en, collected); }));
+    collected.forEach(function(f){ files.push(f); hints.push(f.__rel || f.name); });
+  } else {
+    var fl = Array.prototype.slice.call(dt.files || []);
+    fl.forEach(function(f){ files.push(f); hints.push(f.name); });
+  }
+
+  if (files.length) addFiles(files, hints);
+});
+
+/* ══════════════ 生成作品包 ══════════════ */
+$("go").onclick = async function(){
+  if (S.busy) return;
+
+  /* 校验 */
+  var miss = S.items.filter(function(it){ return !it.name.trim(); });
+  if (miss.length){
+    alert("还有 " + miss.length + " 幅作品没填学生姓名（标红的那几个），补上再生成。");
+    if (miss[0].url){
+      var el = document.querySelector('.item[data-id="' + miss[0].id + '"]');
+      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    return;
+  }
+  if (!S.items.length) return;
+
+  S.busy = true;
+  $("mask").classList.remove("hide");
+  $("pbar").style.width = "0%";
+  $("maskTitle").textContent = "正在处理照片…";
+
+  try {
+    var out = [];
+    var used = {};
+    var totalIn = 0, totalOut = 0;
+
+    for (var i = 0; i < S.items.length; i++){
+      var it = S.items[i];
+      $("maskMeta").textContent = "第 " + (i + 1) + " / " + S.items.length + " 张：" + (it.name || it.file.name);
+      $("pbar").style.width = ((i / S.items.length) * 90).toFixed(1) + "%";
+      await wait(0);   // 让界面刷新
+
+      var shrunk = await shrink(it.file);
+      var buf = new Uint8Array(await shrunk.blob.arrayBuffer());
+      shrunk.blob = null;                  // 及时释放，几百张也不会撑爆内存
+      totalIn += it.size; totalOut += buf.length;
+
+      /* 文件名：姓名_作品名.webp，重名自动加序号 */
+      var safeName = it.name.trim().replace(/[\\\/:*?"<>|]/g, "");
+      var safeTitle = (it.title || "").trim().replace(/[\\\/:*?"<>|]/g, "");
+      var base = safeTitle ? (safeName + "_" + safeTitle) : safeName;
+      var dir = className(it.g, it.c) + "/" + (it.cat || "其他") + "/";
+      var full = dir + base + shrunk.ext;
+      if (used[full]){
+        used[full]++;
+        full = dir + base + "_" + used[full] + ".webp";
+      } else {
+        used[full] = 0;
+      }
+
+      out.push({ name: full, data: buf });
+    }
+
+    $("maskTitle").textContent = "正在打包…";
+    $("pbar").style.width = "95%";
+    await wait(30);
+
+    var zipBlob = buildZip(out);
+    $("pbar").style.width = "100%";
+
+    /* 下载 */
+    var d = new Date();
+    var pad = function(n){ return (n < 10 ? "0" : "") + n; };
+    var zipName = "作品包_" + d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) +
+                  "_" + out.length + "幅.zip";
+    var url = URL.createObjectURL(zipBlob);
+    var a = document.createElement("a");
+    a.href = url; a.download = zipName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 30000);
+
+    $("mask").classList.add("hide");
+    $("dlgName").textContent = zipName;
+    $("dlgN").textContent = out.length;
+    $("dlgMB").textContent = mb(zipBlob.size);
+    $("dlg").classList.remove("hide");
+
+  } catch (err) {
+    $("mask").classList.add("hide");
+    alert("处理失败：" + (err && err.message ? err.message : err) +
+          "\n\n如果反复失败，请改用 Edge 或 Chrome 浏览器打开这个文件。");
+  } finally {
+    S.busy = false;
+  }
+};
+
+$("dlgClose").onclick = function(){ $("dlg").classList.add("hide"); };
+
+/* ══════════════ 导出给测试用 ══════════════ */
+window.GalleryTeacher = {
+  parseClass: parseClass,
+  parseFilename: parseFilename,
+  parsePathSegments: parsePathSegments,
+  isCatWord: isCatWord,
+  looksLikeName: looksLikeName,
+  normCategory: normCategory,
+  className: className,
+  crc32: crc32,
+  buildZip: buildZip,
+  catOptions: catOptions,
+  state: S,
+  addFiles: addFiles,
+  render: render
+};
+</script>
+</body>
+</html>
