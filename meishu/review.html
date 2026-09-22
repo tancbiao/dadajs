@@ -269,6 +269,15 @@ function fillCats(cats){
 }
 
 function apply(d){
+  /* ★ 双保险：图片地址按 id 自己拼，不用服务器下发的 img/th ——
+     服务器挂在 nginx 子路径 /gallery/ 下时，一旦漏补前缀就会给出
+     .../api/img/xxx（少 /gallery）→ 404 → 审核台整列裂图。 */
+  ["pending","approved","rejected"].forEach(function(k){
+    (d[k]||[]).forEach(function(it){
+      it.img = API + "/api/img/" + it.id;
+      it.th  = API + "/api/img/" + it.id + "?s=1";
+    });
+  });
   S.data=d;
   byId("stats").innerHTML=
     stat("pending","待审核",d.pending.length)+

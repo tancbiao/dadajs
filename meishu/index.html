@@ -569,6 +569,14 @@ function mergeRemoteWorks(){
   fetch(GAPI+"/api/works").then(function(r){ return r.json(); }).then(function(d){
     var list=(d && d.list) || [];
     if(!list.length) return;
+    /* ★ 双保险：图片地址一律按 id 自己拼，不用服务器下发的 img/th。
+       服务器在 nginx 子路径下（/gallery/）拼绝对地址时，一旦忘了补前缀就会
+       给出 .../api/img/xxx（少 /gallery）→ 404 → 整墙裂图。自己拼就不会踩。
+       规则与 server.js 的 publicItem 保持一致。 */
+    list.forEach(function(w){
+      w.img = GAPI + "/api/img/" + w.id;
+      w.th  = GAPI + "/api/img/" + w.id + "?s=1";
+    });
     var have={};
     DATA.works.forEach(function(w){ have[w.id]=1; });
     var fresh=list.filter(function(w){ return !have[w.id]; });
