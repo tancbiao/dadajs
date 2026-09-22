@@ -184,7 +184,7 @@ button{font-family:inherit}
       <i id="brandSub">天等县城西小学 · 优秀作品馆</i>
     </div>
     <div class="hbtns" id="hbtns" style="display:none">
-      <button class="hbtn" id="btnOpenSite">看美术馆</button>
+      <button class="hbtn" id="btnOpenSite">看作品馆</button>
       <button class="hbtn warn" id="btnLogout">退出</button>
     </div>
   </div>
@@ -249,7 +249,7 @@ var API = (function(){
   return "https://api.kexvefuxi.cn/gallery";
 })();
 
-/* 「看美术馆」回链：同 submit.html，按托管位置自适应，避免服务器托管时 404 */
+/* 「看作品馆」回链：同 submit.html，按托管位置自适应，避免服务器托管时 404 */
 var SITE = /(^|\.)dadajs\.cn$/.test(location.hostname) ? "index.html" : "https://dadajs.cn/meishu/";
 
 /* 发布作品时的图片规格：与家长投稿页 / 老师端收集器保持一致，

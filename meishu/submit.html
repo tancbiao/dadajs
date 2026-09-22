@@ -119,7 +119,7 @@ select:focus,input[type=text]:focus{border-color:var(--main)}
       <b>我要投稿</b>
       <i id="brandSub">天等县城西小学 · 优秀作品馆</i>
     </div>
-    <a class="backbtn" id="btnBack" href="index.html">看美术馆</a>
+    <a class="backbtn" id="btnBack" href="index.html">看作品馆</a>
   </div>
 </header>
 
@@ -197,7 +197,7 @@ var API = (function(){
   return "https://api.kexvefuxi.cn/gallery";
 })();
 
-/* 「看美术馆」回链：托管在 dadajs.cn/meishu/ 时用相对路径；
+/* 「看作品馆」回链：托管在 dadajs.cn/meishu/ 时用相对路径；
    托管在服务器（api.kexvefuxi.cn/gallery/submit.html）时 public 目录里没有 index.html，
    必须显式指回 GitHub Pages 的美术馆，否则 404。 */
 var SITE = /(^|\.)dadajs\.cn$/.test(location.hostname) ? "index.html" : "https://dadajs.cn/meishu/";
