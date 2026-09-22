@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>天等县城西小学 · 智能排课系统</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+  <!-- ============ 侧栏 ============ -->
+  <aside class="side">
+    <div class="brand">
+      <h1>城西小学排课系统</h1>
+      <p>2026 年秋季学期</p>
+    </div>
+    <nav class="nav" id="nav">
+      <button data-view="timetable" class="on"><span class="ico">📅</span>班级课表</button>
+      <button data-view="teacher"><span class="ico">👩‍🏫</span>教师课表</button>
+      <button data-view="research"><span class="ico">🔬</span>教研时间</button>
+      <button data-view="plan"><span class="ico">📊</span>课时方案</button>
+      <button data-view="duty"><span class="ico">📋</span>教师任课</button>
+      <button data-view="issues"><span class="ico">⚠️</span>冲突检查</button>
+      <button data-view="data"><span class="ico">💾</span>数据与导出</button>
+    </nav>
+    <div class="side-foot">
+      数据自动保存在本机浏览器<br>建议定期「导出备份」
+    </div>
+  </aside>
+
+  <!-- ============ 主区 ============ -->
+  <div class="main">
+    <div class="topbar">
+      <h2 id="viewTitle">班级课表</h2>
+      <span class="sp"></span>
+      <button class="btn ok" id="btnAuto">⚡ 一键排全校</button>
+      <button class="btn" id="btnClearAll">一键清零</button>
+      <button class="btn" id="btnCheck">检查冲突</button>
+      <button class="btn" id="btnSave">保存</button>
+    </div>
+    <div class="content" id="content"></div>
+  </div>
+</div>
+
+<div id="modalRoot"></div>
+<div id="toastRoot"></div>
+
+<script src="assets/data.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/xlsx.js"></script>
+<script src="assets/ui.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>

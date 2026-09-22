@@ -1,0 +1,312 @@
+/* ================= 城西小学排课系统 ================= */
+:root{
+  --bg:#f4f6fa; --card:#fff; --line:#e3e8ef; --line2:#eef2f7;
+  --tx:#1f2937; --tx2:#64748b; --tx3:#94a3b8;
+  --pri:#2563eb; --pri-l:#dbeafe; --pri-d:#1d4ed8;
+  --ok:#059669; --ok-l:#d1fae5;
+  --warn:#d97706; --warn-l:#fef3c7;
+  --err:#dc2626; --err-l:#fee2e2;
+  --rs:#7c3aed; --rs-l:#ede9fe;
+  --shadow:0 1px 3px rgba(16,24,40,.06),0 1px 2px rgba(16,24,40,.04);
+  --shadow2:0 4px 16px rgba(16,24,40,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--tx);
+  font:14px/1.55 "Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;font-size:13px;cursor:pointer}
+input,select,textarea{font-family:inherit;font-size:13px;color:var(--tx)}
+
+/* ---------- 布局 ---------- */
+.app{display:flex;min-height:100vh}
+.side{
+  width:212px;flex:none;background:#fff;border-right:1px solid var(--line);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;
+}
+.brand{padding:18px 18px 14px;border-bottom:1px solid var(--line2)}
+.brand h1{margin:0;font-size:16px;font-weight:700;letter-spacing:.5px}
+.brand p{margin:4px 0 0;font-size:12px;color:var(--tx3)}
+.nav{padding:10px 8px;flex:1;overflow:auto}
+.nav button{
+  display:flex;align-items:center;gap:9px;width:100%;padding:9px 11px;margin-bottom:2px;
+  background:none;border:0;border-radius:8px;color:var(--tx2);text-align:left;font-size:13.5px;
+}
+.nav button:hover{background:var(--line2);color:var(--tx)}
+.nav button.on{background:var(--pri-l);color:var(--pri-d);font-weight:600}
+.nav .ico{width:18px;text-align:center;font-size:15px}
+.side-foot{padding:10px 14px;border-top:1px solid var(--line2);font-size:11.5px;color:var(--tx3)}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  background:#fff;border-bottom:1px solid var(--line);padding:11px 20px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;position:sticky;top:0;z-index:30;
+}
+.topbar h2{margin:0;font-size:16px;font-weight:600}
+.topbar .sp{flex:1}
+.content{padding:18px 20px 60px}
+
+/* ---------- 控件 ---------- */
+.btn{
+  padding:7px 14px;border:1px solid var(--line);background:#fff;border-radius:7px;
+  color:var(--tx);transition:.15s;white-space:nowrap;
+}
+.btn:hover{border-color:var(--pri);color:var(--pri)}
+.btn.pri{background:var(--pri);border-color:var(--pri);color:#fff}
+.btn.pri:hover{background:var(--pri-d);color:#fff}
+.btn.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.btn.ok:hover{filter:brightness(.94);color:#fff}
+.btn.dg{color:var(--err);border-color:#fca5a5}
+.btn.dg:hover{background:var(--err-l);color:var(--err);border-color:var(--err)}
+.btn.sm{padding:4px 9px;font-size:12px;border-radius:6px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{
+  padding:5px 12px;border:1px solid var(--line);background:#fff;border-radius:20px;
+  color:var(--tx2);font-size:12.5px;
+}
+.tab:hover{border-color:var(--pri);color:var(--pri)}
+.tab.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);margin-bottom:16px}
+.card-h{padding:12px 16px;border-bottom:1px solid var(--line2);display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.card-h h3{margin:0;font-size:14.5px;font-weight:600}
+.card-h .sp{flex:1}
+.card-b{padding:14px 16px}
+.card-b.tight{padding:0}
+
+.hint{font-size:12.5px;color:var(--tx2);line-height:1.7}
+.mono{font-family:Consolas,Menlo,monospace}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:1100px){.grid2{grid-template-columns:1fr}}
+
+/* ---------- 统计条 ---------- */
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.stat{
+  background:#fff;border:1px solid var(--line);border-radius:10px;padding:10px 16px;min-width:110px;
+}
+.stat .v{font-size:21px;font-weight:700;line-height:1.2}
+.stat .l{font-size:11.5px;color:var(--tx3);margin-top:1px}
+.stat.g .v{color:var(--ok)} .stat.r .v{color:var(--err)} .stat.o .v{color:var(--warn)} .stat.b .v{color:var(--pri)}
+
+/* ---------- 课表 ---------- */
+.tt-wrap{overflow:auto}
+table.tt{border-collapse:collapse;width:100%;min-width:760px;table-layout:fixed}
+table.tt th,table.tt td{
+  border:1px solid var(--line);padding:0;text-align:center;vertical-align:middle;
+}
+table.tt thead th{
+  background:#f8fafc;padding:9px 4px;font-size:13px;font-weight:600;color:var(--tx);
+}
+table.tt th.period{
+  width:112px;background:#f8fafc;font-size:12px;padding:7px 6px;line-height:1.35;
+}
+table.tt th.period small{display:block;color:var(--tx3);font-weight:400;font-size:10.5px}
+table.tt td.extra{
+  background:#fbfcfe;color:var(--tx3);font-size:12px;padding:6px 4px;
+}
+table.tt td.extra b{color:var(--tx2);font-weight:600}
+
+.cell{
+  position:relative;height:64px;padding:8px 4px 4px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  transition:.12s;
+  background:#fff;border-top:3px solid #16a34a;  /* 积木绿条 */
+}
+.cell:hover{outline:2px solid var(--pri);outline-offset:-2px;z-index:2}
+.cell .s{font-size:13px;font-weight:600;line-height:1.25}
+.cell .t{font-size:10.5px;color:var(--tx2);line-height:1.2}
+.cell.empty{background:#fff}
+.cell.empty::after{
+  content:"＋";color:#86efac;font-size:20px;font-weight:700;
+  position:absolute;top:50%;left:50%;transform:translate(-50%,-45%);
+}
+/* 一、二年级固定空槽：周二~周五最后一节大课间（不指定教师） */
+.cell.fe{
+  background:#fbfcfe;border-top-color:#cbd5e1;color:#cbd5e1;cursor:default;
+  font-size:11px;font-weight:400;letter-spacing:2px;height:64px;
+}
+.cell.fe:hover{outline:0}
+/* 合堂课（异常课）：紫色整块 + 顶部深紫条 */
+.cell.merge{background:#7c3aed;color:#fff;border-top-color:#5b21b6}
+.cell.merge .t{color:#e9d5ff}
+.merge-tag{
+  position:absolute;top:5px;left:4px;font-size:9px;background:#fff;color:#7c3aed;
+  border-radius:3px;padding:0 4px;line-height:14px;font-weight:700;
+}
+.cell.locked::before{
+  content:"🔒";position:absolute;top:4px;right:3px;font-size:9px;opacity:.65;
+}
+.cell.pin{box-shadow:inset 0 0 0 2px #f59e0b}
+.cell.rs-cover{box-shadow:inset 3px 0 0 var(--rs)}
+.cell.dragging{opacity:.4}
+.cell.dragover{outline:2px dashed var(--pri);outline-offset:-3px}
+.cell.sel{outline:2px solid var(--ok);outline-offset:-2px}
+
+/* ---------- 拖拽落点合法性提示 ---------- */
+.cell.drop-ok,.pool.drop-ok{outline:3px solid var(--ok) !important;outline-offset:-3px;background:var(--ok-l) !important}
+.cell.drop-no,.pool.drop-no{outline:3px solid var(--err) !important;outline-offset:-3px;background:var(--err-l) !important;cursor:not-allowed}
+
+/* ---------- 候选区 ---------- */
+.pool{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  padding:12px 16px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:0 0 12px 12px;
+  min-height:64px;transition:.15s;
+}
+.pool-title{width:100%;font-size:12.5px;font-weight:600;color:var(--tx2);margin-bottom:2px;display:flex;align-items:center;gap:8px}
+.pool-title .hint{font-weight:400}
+.pool-empty{font-size:12.5px;color:var(--tx3);padding:4px 0}
+.pool-item{
+  padding:6px 12px;border-radius:7px;font-size:12.5px;font-weight:600;cursor:grab;
+  box-shadow:var(--shadow);user-select:none;display:flex;align-items:center;gap:6px;
+  border:1px solid rgba(0,0,0,.06);transition:.12s;
+}
+.pool-item:hover{transform:translateY(-1px);box-shadow:var(--shadow2)}
+.pool-item:active{cursor:grabbing}
+.pool-item .n{font-size:11px;background:rgba(0,0,0,.14);border-radius:9px;padding:0 6px;line-height:16px;font-weight:700}
+.pool-item.none{opacity:.55;cursor:default}
+
+td.research{background:var(--rs-l) !important}
+td.research::before{
+  content:"教研";position:absolute;top:1px;left:3px;font-size:9px;color:var(--rs);
+  background:#fff;border-radius:3px;padding:0 3px;line-height:13px;font-weight:600;
+}
+td.research{position:relative}
+
+/* ---------- 班级标签 ---------- */
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{
+  padding:4px 11px;border:1px solid var(--line);background:#fff;border-radius:6px;
+  font-size:12.5px;color:var(--tx2);
+}
+.chip:hover{border-color:var(--pri);color:var(--pri)}
+.chip.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+.chip.warn{border-color:#fcd34d;background:var(--warn-l)}
+.chip.bad{border-color:#fca5a5;background:var(--err-l)}
+
+/* ---------- 通用表格 ---------- */
+table.tb{border-collapse:collapse;width:100%;font-size:13px}
+table.tb th,table.tb td{border:1px solid var(--line);padding:6px 9px;text-align:left}
+table.tb th{background:#f8fafc;font-weight:600;white-space:nowrap}
+table.tb td.c,table.tb th.c{text-align:center}
+table.tb tr:hover td{background:#fafcff}
+table.tb input{width:58px;padding:3px 5px;border:1px solid var(--line);border-radius:5px;text-align:center}
+table.tb input:focus{outline:0;border-color:var(--pri)}
+.tbl-scroll{overflow:auto;max-height:62vh}
+
+/* ---------- 冲突列表 ---------- */
+.issue{
+  display:flex;gap:10px;align-items:flex-start;padding:9px 12px;border-bottom:1px solid var(--line2);
+  font-size:13px;
+}
+.issue:last-child{border-bottom:0}
+.issue .tag{
+  flex:none;font-size:11px;padding:1px 7px;border-radius:4px;font-weight:600;margin-top:1px;
+}
+.issue.error .tag{background:var(--err-l);color:var(--err)}
+.issue.warn .tag{background:var(--warn-l);color:var(--warn)}
+.issue .txt{flex:1;line-height:1.6}
+
+/* ---------- 弹层 ---------- */
+.mask{
+  position:fixed;inset:0;background:rgba(15,23,42,.42);z-index:100;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.modal{
+  background:#fff;border-radius:14px;box-shadow:var(--shadow2);width:520px;max-width:100%;
+  max-height:88vh;display:flex;flex-direction:column;
+}
+.modal-h{padding:14px 18px;border-bottom:1px solid var(--line2);display:flex;align-items:center}
+.modal-h h3{margin:0;font-size:15px}
+.modal-h .sp{flex:1}
+.modal-b{padding:16px 18px;overflow:auto}
+.modal-f{padding:12px 18px;border-top:1px solid var(--line2);display:flex;gap:8px;justify-content:flex-end}
+.x{background:none;border:0;font-size:20px;color:var(--tx3);line-height:1;padding:0 4px}
+.x:hover{color:var(--tx)}
+
+.fld{margin-bottom:13px}
+.fld label{display:block;font-size:12.5px;color:var(--tx2);margin-bottom:5px}
+.fld select,.fld input[type=text]{
+  width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;
+}
+.fld select:focus,.fld input:focus{outline:0;border-color:var(--pri)}
+.opt-grid{display:flex;flex-wrap:wrap;gap:6px}
+.opt{
+  padding:6px 11px;border:1px solid var(--line);border-radius:7px;background:#fff;font-size:12.5px;
+}
+.opt:hover{border-color:var(--pri)}
+.opt.on{background:var(--pri);border-color:var(--pri);color:#fff;font-weight:600}
+.opt.dim{opacity:.45}
+
+/* ---------- 提示条 ---------- */
+.toast{
+  position:fixed;left:50%;transform:translateX(-50%);top:18px;z-index:200;
+  background:#111827;color:#fff;padding:10px 20px;border-radius:8px;font-size:13.5px;
+  box-shadow:var(--shadow2);animation:tin .2s;
+}
+.toast.ok{background:var(--ok)} .toast.err{background:var(--err)} .toast.warn{background:var(--warn)}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
+
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-weight:600;margin-left:4px}
+.pill.g{background:var(--ok-l);color:var(--ok)}
+.pill.r{background:var(--err-l);color:var(--err)}
+.pill.b{background:var(--pri-l);color:var(--pri-d)}
+.pill.p{background:var(--rs-l);color:var(--rs)}
+
+.bar{height:6px;background:var(--line2);border-radius:3px;overflow:hidden;min-width:60px}
+.bar i{display:block;height:100%;background:var(--pri);border-radius:3px}
+.bar i.over{background:var(--err)}
+.bar i.full{background:var(--ok)}
+
+.empty-tip{padding:40px 16px;text-align:center;color:var(--tx3);font-size:13px}
+
+/* ---------- 主从联动：班级课表 + 右侧缩略图面板 ---------- */
+.tt-layout{display:flex;gap:16px;align-items:flex-start}
+.tt-main{flex:1;min-width:0}
+.tt-side{
+  width:196px;flex:none;max-height:calc(100vh - 150px);overflow:auto;
+  position:sticky;top:76px;padding:2px 4px 10px 2px;
+}
+.side-title{font-size:12.5px;font-weight:600;color:var(--tx2);padding:2px 4px 8px;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.side-title .hint{font-size:11px;color:var(--tx3)}
+.thumb-card{
+  display:block;width:100%;margin-bottom:8px;padding:8px 8px 9px;
+  border:1px solid var(--line);border-radius:10px;background:#fff;
+  text-align:left;cursor:pointer;transition:.15s;
+}
+.thumb-card:hover{border-color:var(--pri);box-shadow:var(--shadow2);transform:translateY(-1px)}
+.thumb-card.on{border-color:var(--pri);box-shadow:0 0 0 2px var(--pri-l)}
+.thumb-head{display:flex;align-items:baseline;justify-content:space-between;gap:6px;margin-bottom:6px}
+.thumb-head b{font-size:12.5px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.thumb-meta{font-size:10.5px;color:var(--tx3);white-space:nowrap}
+.thumb-grid{display:flex;flex-direction:column;gap:2px}
+.thumb-line{display:grid;grid-template-columns:16px repeat(5,1fr);gap:2px}
+.thumb-line i{font-size:9px;color:var(--tx3);text-align:center;line-height:16px;font-style:normal}
+.thumb-line b{font-size:9.5px;color:var(--tx2);text-align:center;line-height:14px;font-weight:600}
+.tc{
+  aspect-ratio:1;min-height:20px;border-radius:2px;font-size:10px;font-weight:600;
+  display:flex;align-items:center;justify-content:center;line-height:1;
+  background:#f1f5f9;color:#334155;overflow:hidden;
+}
+.tc.e{background:#f1f5f9}
+.tc.mg{background:#7c3aed;color:#fff}
+.thumb-card:hover .tc.e{background:#e8eef5}
+
+/* 教师聚焦面包屑 */
+.crumb{display:flex;align-items:center;gap:8px;padding:9px 16px 0;flex-wrap:wrap}
+
+/* ---------- 打印 ---------- */
+@media print{
+  .side,.topbar,.no-print{display:none !important}
+  .app{display:block}
+  .content{padding:0}
+  .card{border:0;box-shadow:none;margin:0}
+  body{background:#fff}
+  table.tt{min-width:0;width:100%}
+  .cell{height:44px}
+  .page-break{page-break-after:always}
+}
