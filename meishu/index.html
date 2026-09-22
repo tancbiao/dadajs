@@ -135,7 +135,7 @@ button{font-family:inherit}
 </header>
 
 <nav class="wrap tabs" id="tabs">
-  <button class="tab on" data-v="gallery">全校美术馆</button>
+  <button class="tab on" data-v="gallery">全校作品</button>
   <button class="tab" data-v="mine">我的孩子</button>
 </nav>
 
@@ -239,7 +239,7 @@ function renderStats(){
   DATA.works.forEach(function(w){ authors[w.g+"-"+w.c+"-"+w.a]=1; classes[w.g+"-"+w.c]=1; });
   byId("stats").innerHTML=
     '<div class="stat"><b>'+DATA.works.length+'</b><span>幅作品</span></div>'+
-    '<div class="stat"><b>'+Object.keys(authors).length+'</b><span>位小画家</span></div>'+
+    '<div class="stat"><b>'+Object.keys(authors).length+'</b><span>位小作者</span></div>'+
     '<div class="stat"><b>'+Object.keys(classes).length+'</b><span>个班级</span></div>';
 }
 
@@ -469,11 +469,19 @@ function copyText(t){
   } else { fallback(); }
 }
 
+/* 页脚文案。抽成函数是因为「合并后端作品后」也要重刷（见 mergeRemoteWorks）。 */
+function renderFoot(){
+  var f=byId("foot"); if(!f) return;
+  f.innerHTML = esc(DATA.school||"")+" · "+esc(DATA.title||"优秀作品馆")
+    + "<br>共收录 " + DATA.works.length + " 幅作品"
+    + (DATA.updated ? " · 更新于 " + esc(DATA.updated) : "");
+}
+
 function init(){
   byId("brandTitle").textContent=DATA.title||"优秀作品馆";
   byId("brandSub").textContent=DATA.school||"";
   document.title=(DATA.school?DATA.school+" · ":"")+(DATA.title||"优秀作品馆");
-  byId("foot").innerHTML=esc(DATA.school||"")+" · "+esc(DATA.title||"优秀作品馆")+"<br>共收录 "+DATA.works.length+" 幅作品"+(DATA.updated?" · 更新于 "+esc(DATA.updated):"");
+  renderFoot();
 
   renderStats(); renderChips();
   fillClassSelect(byId("fClass"), true);
@@ -588,6 +596,10 @@ function mergeRemoteWorks(){
     CMAP={};
     (DATA.categories||[]).forEach(function(c,i){ CMAP[c]=PAL[i%PAL.length]; });
     renderStats(); renderChips(); renderGrid();
+    /* ★ 2026-09-22：页脚也要跟着刷。之前只刷了网格，
+       导致页脚「共收录 N 幅」停留在静态站的数量，
+       跟上方统计条（含后端即时作品）对不上。 */
+    renderFoot();
   }).catch(function(){});
 }
 
