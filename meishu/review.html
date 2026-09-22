@@ -114,6 +114,58 @@ button{font-family:inherit}
 .btn2.pri{background:var(--main);border-color:var(--main);color:#fff}
 .note{background:var(--bluebg);color:var(--blue);border-radius:13px;padding:11px 14px;font-size:13px;line-height:1.6;margin-top:12px}
 
+/* ══════════ 发布作品 ══════════ */
+.pubwrap{display:flex;gap:16px;margin-top:16px;align-items:flex-start}
+@media(max-width:860px){.pubwrap{flex-direction:column}}
+.pubcol{flex:1;min-width:0}
+.pubcol.side{flex:0 0 340px}
+@media(max-width:860px){.pubcol.side{flex:1;width:100%}}
+.pubcard{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 16px}
+.pubcard h3{margin:0 0 4px;font-size:15.5px;font-weight:700;display:flex;align-items:center;gap:8px}
+.pubcard h3 em{font-style:normal;font-size:12.5px;color:var(--sub);font-weight:400;margin-left:auto}
+.pubcard .hint{margin:0 0 14px;font-size:12.5px;color:var(--sub);line-height:1.6}
+.pubfld{margin-top:12px}
+.pubfld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:6px}
+.pubfld select,.pubfld input[type=text]{
+  width:100%;height:46px;border-radius:13px;border:1px solid var(--line);background:#fff;
+  padding:0 13px;font-size:15px;color:var(--ink);outline:none;font-family:inherit;-webkit-appearance:none;
+}
+.pubfld select:focus,.pubfld input[type=text]:focus{border-color:var(--main)}
+.pubrow{display:flex;gap:10px}
+.pubrow .pubfld{flex:1;min-width:0}
+.namelist{max-height:230px;overflow:auto;border:1px solid var(--line);border-radius:14px;margin-top:10px;background:#FFFDFA}
+.namelist .nm{display:flex;align-items:center;gap:8px;padding:9px 13px;font-size:14.5px;cursor:pointer;border-bottom:1px solid #F7F0E7}
+.namelist .nm:last-child{border-bottom:0}
+.namelist .nm:hover{background:var(--soft)}
+.namelist .nm.on{background:var(--main);color:#fff;font-weight:600}
+.namelist .nm .ex{font-size:11px;padding:2px 7px;border-radius:7px;background:var(--warnbg);color:var(--warn);flex:none}
+.namelist .nm.on .ex{background:rgba(255,255,255,.24);color:#fff}
+.namelist .nmq{position:sticky;top:0;background:#fff;padding:9px 11px;border-bottom:1px solid var(--line)}
+.namelist .nmq input{width:100%;height:38px;border-radius:11px;border:1px solid var(--line);padding:0 11px;font-size:14.5px;outline:none;font-family:inherit}
+.namelist .nmq input:focus{border-color:var(--main)}
+
+.pubdrop{border:2px dashed #EADFD1;border-radius:16px;padding:24px 16px;text-align:center;background:#FFFCF7;cursor:pointer;transition:.18s}
+.pubdrop:hover{border-color:var(--main);background:var(--soft)}
+.pubdrop p{margin:9px 0 0;font-size:14.5px;font-weight:600}
+.pubdrop span{display:block;font-size:12.5px;color:var(--sub);margin-top:5px}
+.pubdrop svg{color:var(--main);opacity:.85}
+
+.publist{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.pubitem{display:flex;gap:12px;border:1px solid var(--line);border-radius:16px;padding:12px;background:#FFFDFA}
+.pubitem .pv{width:86px;height:86px;flex:none;border-radius:12px;object-fit:cover;background:#F4ECE2}
+.pubitem .pb{flex:1;min-width:0}
+.pubitem .pb input{height:40px;font-size:15px;border-radius:11px;margin-bottom:7px}
+.pubitem .pb select{height:40px;font-size:14px;border-radius:11px}
+.pubitem .pm{font-size:11.5px;color:var(--sub);margin:6px 0 0}
+.pubitem .pdel{flex:none;width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:16px;line-height:1;cursor:pointer;align-self:flex-start}
+.pubacts{display:flex;gap:10px;margin-top:16px;align-items:center}
+.pubacts .btn2{flex:none}
+.pubacts .grow{flex:1}
+.pubbusy{display:flex;align-items:center;gap:9px;margin-top:14px;font-size:13.5px;color:var(--sub)}
+.pubbusy .spin{border-color:#EADFD1;border-top-color:var(--main)}
+.pubok{background:var(--okbg);color:var(--ok);border-radius:13px;padding:11px 14px;font-size:13px;line-height:1.6;margin-top:12px;font-weight:500}
+.who2{display:flex;align-items:center;gap:9px;background:var(--okbg);color:var(--ok);border-radius:13px;padding:10px 13px;font-size:14px;font-weight:600;margin-top:12px}
+
 #toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:rgba(74,59,50,.94);color:#fff;font-size:14px;padding:11px 20px;border-radius:12px;opacity:0;transition:.22s;pointer-events:none;z-index:99;max-width:84%;text-align:center}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 .spin{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;vertical-align:-2px;margin-right:6px}
@@ -200,6 +252,12 @@ var API = (function(){
 /* 「看美术馆」回链：同 submit.html，按托管位置自适应，避免服务器托管时 404 */
 var SITE = /(^|\.)dadajs\.cn$/.test(location.hostname) ? "index.html" : "https://dadajs.cn/meishu/";
 
+/* 发布作品时的图片规格：与家长投稿页 / 老师端收集器保持一致，
+   三处统一才能保证美术墙上的画质与流量表现一致 */
+var MAX_EDGE   = 1800;
+var QUALITY    = 0.92;
+var THUMB_EDGE = 520;
+
 var S = {
   pw: "",
   data: null,
@@ -207,7 +265,11 @@ var S = {
   q: "",
   cat: "",
   cur: null,
-  lastData: null
+  lastData: null,
+  /* ── 发布作品 ── */
+  classes: null,        /* {1:5,2:5,...} 各年级班数 */
+  pub: { g:0, c:0, name:"", list:[], busy:false, seq:0, roster:[] },
+  pubReady: false       /* 发布面板是否已铺好骨架（避免每次重绘丢输入） */
 };
 
 function byId(id){ return document.getElementById(id); }
@@ -280,16 +342,21 @@ function apply(d){
   });
   S.data=d;
   byId("stats").innerHTML=
+    stat("publish","发布作品","✎")+
     stat("pending","待审核",d.pending.length)+
     stat("approved","已展出",d.approved.length)+
     stat("rejected","已退回",d.rejected.length)+
     stat("settings","设置","");
+  if(d.classes) S.classes=d.classes;
+  if(d.cats) fillCats(d.cats);
+  if(!S.tab || S.tab==="publish") fillPubClasses();
   render();
 }
 
+/* 图标 tab：第 3 个参数传图标字符时，n 位显示图标而不是数字 */
 function stat(k,label,n){
-  return '<div class="stat'+(S.tab===k?" on":"")+'" data-tab="'+k+'">'+
-    (n===""?'<b style="font-size:16px">⚙</b>':'<b>'+n+"</b>")+'<span>'+label+"</span></div>";
+  var body = (n==="" || typeof n==="string") ? '<b style="font-size:16px">'+n+'</b>' : '<b>'+n+"</b>";
+  return '<div class="stat'+(S.tab===k?" on":"")+'" data-tab="'+k+'">'+body+'<span>'+label+"</span></div>";
 }
 
 /* ══════════════ 列表渲染 ══════════════ */
@@ -313,6 +380,7 @@ function render(){
     tabs[i].className="stat"+(tabs[i].getAttribute("data-tab")===S.tab?" on":"");
   }
   if(S.tab==="settings"){ renderSettings(); return; }
+  if(S.tab==="publish"){ renderPublish(); return; }
 
   var list=curList();
   byId("cnt").textContent = list.length ? "共 "+list.length+" 幅" : "";
@@ -447,6 +515,387 @@ function doRequeue(it){
   post("approve", {id:it.id, name:it.name, title:it.title, cat:it.cat}).then(function(r){
     after(r, "已移回已展出");
   });
+}
+
+/* ══════════════ 发布作品（老师直接发布，不需要家长投稿）══════════════ */
+/* 与家长投稿的区别：
+   · 家长投稿 → 落 pending → 老师审核 → 通过才上线
+   · 老师发布 → 直接落 approved → **发布即上线**，家长刷新美术馆就能看到
+   用途：学校统一组织的活动（老师收纸质稿拍照）、家长不会用手机、
+        补录往期作品。 */
+
+function pubGrades(){
+  var n=S.classes?Object.keys(S.classes).length:6;
+  return n||6;
+}
+function fillPubClasses(){
+  var g=parseInt(byId("pubGrade").value,10)||S.pub.g||1;
+  var cnt=(S.classes && S.classes[g]) || 5;
+  var h="";
+  for(var c=1;c<=cnt;c++) h+='<option value="'+c+'">'+c+"班</option>";
+  byId("pubClass").innerHTML=h;
+  if(S.pub.c && S.pub.c<=cnt) byId("pubClass").value=S.pub.c;
+}
+
+function renderPublish(){
+  byId("cnt").textContent="";
+  var box=byId("listBox");
+  var cats=(S.data && S.data.cats) || ["科技类","爱国类","其他"];
+  var gn=pubGrades();
+
+  box.innerHTML=
+  '<div class="pubwrap">'+
+    '<div class="pubcol">'+
+      '<div class="pubcard">'+
+        '<h3>① 这幅作品是谁的<em>必填</em></h3>'+
+        '<p class="hint">从名单里选一位同学。名单 = 全校学籍花名册（'+(S.data&&S.data.rosterN||1959)+' 人）＋ 借读插班生，与社团选课系统同一份。</p>'+
+        '<div class="pubrow">'+
+          '<div class="pubfld"><label>年级</label><select id="pubGrade">'+
+            (function(){ var h=""; for(var g=1;g<=gn;g++) h+='<option value="'+g+'">'+cn(g)+"年级</option>"; return h; })()+
+          '</select></div>'+
+          '<div class="pubfld"><label>班级</label><select id="pubClass"></select></div>'+
+        '</div>'+
+        '<p class="hint" style="margin-top:14px;margin-bottom:0">下面的姓名点一下就能选中（也可以自己手动填）。</p>'+
+        '<div class="namelist" id="pubNames"><div class="nm" style="color:#9C8A7E;cursor:default">选好年级班级后显示名单</div></div>'+
+        '<div class="pubfld"><label>已选学生</label>'+
+          '<input type="text" id="pubName" maxlength="12" placeholder="点上面的姓名，或直接输入" value="'+esc(S.pub.name||"")+'">'+
+        '</div>'+
+        (S.pub.name?'<div class="who2" id="pubWho"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span id="pubWhoTxt"></span></div>':'')+
+      '</div>'+
+
+      '<div class="pubcard" style="margin-top:16px">'+
+        '<h3>② 选作品照片<em id="pubCount">0 幅</em></h3>'+
+        '<p class="hint">可一次选多张，浏览器里自动压缩（长边 1800，约 300KB／幅），不走流量。</p>'+
+        '<div class="pubdrop" id="pubDrop">'+
+          '<svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>'+
+          '<p>点这里选照片（可多选）</p>'+
+          '<span>手机拍的建议先导到电脑，或用「老师端收集器」扫</span>'+
+        '</div>'+
+        '<input type="file" id="pubFiles" accept="image/*" multiple style="display:none">'+
+        '<div class="publist" id="pubList"></div>'+
+        '<div class="pubacts">'+
+          '<span class="grow"></span>'+
+          '<button class="btn2" id="pubClear">清空</button>'+
+          '<button class="btn2 pri" id="pubGo">发布上线</button>'+
+        '</div>'+
+        '<div class="pubbusy" id="pubBusy" style="display:none"><span class="spin"></span><span id="pubBusyTxt">正在处理…</span></div>'+
+      '</div>'+
+    '</div>'+
+
+    '<div class="pubcol side">'+
+      '<div class="pubcard">'+
+        '<h3>怎么用</h3>'+
+        '<p class="hint" style="margin-bottom:10px">'+
+          '<b>老师和家长的区别只有一个：老师发布不用等审核。</b><br>'+
+          '点「发布上线」，作品**立刻**出现在美术馆里，家长刷新就能看到。'+
+        '</p>'+
+        '<p class="hint" style="margin-bottom:0">'+
+          '<b>什么时候用：</b><br>'+
+          '· 学校统一组织创作活动，你收纸质稿拍照存档<br>'+
+          '· 家长不会用手机上传，把照片发给你代传<br>'+
+          '· 补录往期作品<br>'+
+          '· 现场活动即时上墙（拍完就发，孩子马上看到）'+
+        '</p>'+
+      '</div>'+
+      '<div class="pubcard" style="margin-top:16px">'+
+        '<h3>操作要点</h3>'+
+        '<p class="hint" style="margin-bottom:0">'+
+          '· 姓名必须在本班名单里 —— 作品会归到孩子名下，家长在「我的孩子」里能看到<br>'+
+          '· 类别可以先选「其他」，发完在「已展出」里点开改<br>'+
+          '· 发错了不要紧：去「已展出」找到它，可以改信息或「撤下」'+
+        '</p>'+
+      '</div>'+
+      '<div class="pubcard" style="margin-top:16px">'+
+        '<h3>名单来源</h3>'+
+        '<p class="hint" style="margin-bottom:0" id="pubRosterInfo"></p>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+
+  /* 铺骨架时只在第一次设置下拉值，之后重绘不覆盖老师的选择 */
+  if(!S.pubReady){
+    byId("pubGrade").onchange=function(){ S.pub.g=parseInt(this.value,10); S.pub.c=0; fillPubClasses(); S.pub.c=parseInt(byId("pubClass").value,10); loadPubNames(); };
+    byId("pubClass").onchange=function(){ S.pub.c=parseInt(this.value,10); loadPubNames(); };
+    byId("pubDrop").onclick=function(){ byId("pubFiles").click(); };
+    byId("pubFiles").onchange=function(){ addPubFiles(this.files); this.value=""; };
+    byId("pubName").oninput=function(){ S.pub.name=this.value.trim(); syncPubWho(); };
+    byId("pubClear").onclick=function(){
+      if(!S.pub.list.length) return;
+      if(!confirm("清空已选的 "+S.pub.list.length+" 张照片？")) return;
+      S.pub.list.forEach(function(p){ try{ URL.revokeObjectURL(p.url); }catch(e){} });
+      S.pub.list=[]; renderPubList();
+    };
+    byId("pubGo").onclick=doPublish;
+    S.pubReady=true;
+  }
+  byId("pubGrade").value=S.pub.g||1;
+  S.pub.g=parseInt(byId("pubGrade").value,10);
+  fillPubClasses();
+  S.pub.c=parseInt(byId("pubClass").value,10);
+  byId("pubName").value=S.pub.name||"";
+  renderPubList();
+  syncPubWho();
+  loadPubNames();
+
+  byId("pubRosterInfo").innerHTML=
+    "全校学籍花名册 <b>"+(S.data&&S.data.rosterN||1959)+" 人</b>，来自《在校生名单.xls》，"
+    +"与社团选课系统用的是同一份。<br>"
+    +"另加借读／插班生 <b>"+((S.data&&S.data.extras||[]).length)+" 人</b>"
+    +(function(){
+      var ex=(S.data&&S.data.extras)||[];
+      if(!ex.length) return "。";
+      return "："+ex.map(function(x){ return cn(x.g)+"年级"+x.c+"班 "+x.name; }).join("、")+"。";
+     })();
+}
+
+function syncPubWho(){
+  var box=byId("pubWho"), txt=byId("pubWhoTxt");
+  if(!box||!txt) return;
+  var g=S.pub.g, c=S.pub.c, nm=byId("pubName")?byId("pubName").value.trim():"";
+  var hit=false;
+  for(var i=0;i<S.pub.roster.length;i++){ if(S.pub.roster[i]===nm){ hit=true; break; } }
+  if(nm && hit){
+    box.style.display="";
+    txt.textContent=nm+" · "+cn(g)+"年级"+c+"班　（在名单里 ✓）";
+  } else if(nm){
+    box.style.display="none";
+  } else {
+    box.style.display="none";
+  }
+}
+
+function loadPubNames(){
+  var g=S.pub.g||1, c=S.pub.c||1;
+  post("roster",{g:g,c:c}).then(function(r){
+    if(!r.data || !r.data.ok){ S.pub.roster=[]; return; }
+    S.pub.roster=r.data.names||[];
+    var exs={};
+    (r.data.extras||[]).forEach(function(n){ exs[n]=1; });
+    var box=byId("pubNames");
+    if(!box) return;
+    if(!S.pub.roster.length){
+      box.innerHTML='<div class="nm" style="color:#9C8A7E;cursor:default">这个班还没有导入名单</div>';
+      return;
+    }
+    box.innerHTML=
+      '<div class="nmq"><input type="text" id="pubQ" placeholder="输入姓名快速筛选（'+S.pub.roster.length+' 人）" autocomplete="off"></div>'+
+      S.pub.roster.map(function(n){
+        return '<div class="nm" data-n="'+esc(n)+'">'+esc(n)+(exs[n]?'<span class="ex">借读</span>':"")+'</div>';
+      }).join("");
+    box.onclick=function(e){
+      var el=e.target.closest ? e.target.closest(".nm") : (e.target.className==="nm"?e.target:null);
+      if(!el || !el.getAttribute("data-n")) return;
+      S.pub.name=el.getAttribute("data-n");
+      byId("pubName").value=S.pub.name;
+      var all=box.querySelectorAll(".nm");
+      for(var i=0;i<all.length;i++) all[i].className="nm"+(all[i]===el?" on":"");
+      syncPubWho();
+    };
+    /* ★ 名单是异步来的，可能在老师点完之后才铺好。
+       用事件委托挂在容器上，并在每次铺完名单后**回填**已选状态，
+       这样"先点后到"和"先到后点"两种顺序都对。 */
+    if(S.pub.name){
+      var all0=box.querySelectorAll(".nm");
+      for(var i=0;i<all0.length;i++){
+        if(all0[i].getAttribute("data-n")===S.pub.name) all0[i].className="nm on";
+      }
+    }
+    var q=byId("pubQ");
+    q.oninput=function(){
+      var v=this.value.trim();
+      var all=box.querySelectorAll(".nm");
+      for(var i=0;i<all.length;i++){
+        var nm=all[i].getAttribute("data-n");
+        if(!nm) continue;
+        all[i].style.display=(!v || nm.indexOf(v)>=0)?"":"none";
+      }
+    };
+  }).catch(function(){});
+}
+
+/* ── 图片压缩（与家长投稿页同一套，含手机竖拍方向纠正）── */
+function pubShrink(file){
+  return createImageBitmap(file, { imageOrientation:"from-image" })
+    .catch(function(){ return createImageBitmap(file); })
+    .then(function(bmp){
+      var w=bmp.width, h=bmp.height;
+      var sc=Math.min(1, MAX_EDGE/Math.max(w,h));
+      var ow=Math.max(1,Math.round(w*sc)), oh=Math.max(1,Math.round(h*sc));
+      var cv=document.createElement("canvas");
+      cv.width=ow; cv.height=oh;
+      var ctx=cv.getContext("2d");
+      ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,ow,oh);
+      ctx.drawImage(bmp,0,0,ow,oh);
+      if(bmp.close) bmp.close();
+      return new Promise(function(res){ cv.toBlob(function(b){ res(b); },"image/webp",QUALITY); })
+        .then(function(blob){
+          if(!blob) throw new Error("这个浏览器不支持图片压缩");
+          var tsc=Math.min(1, THUMB_EDGE/Math.max(ow,oh));
+          var tcv=document.createElement("canvas");
+          tcv.width=Math.max(1,Math.round(ow*tsc));
+          tcv.height=Math.max(1,Math.round(oh*tsc));
+          tcv.getContext("2d").drawImage(cv,0,0,tcv.width,tcv.height);
+          return new Promise(function(res){
+            tcv.toBlob(function(b){ res(b); }, blob.type==="image/webp"?"image/webp":"image/jpeg", 0.78);
+          }).then(function(tb){
+            var ext = blob.type==="image/webp" ? "webp" : blob.type==="image/jpeg" ? "jpg" : "png";
+            return { blob:blob, thumb:tb, ext:ext, w:ow, h:oh };
+          });
+        });
+    });
+}
+function pubB64(blob){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){ var s=String(fr.result); var i=s.indexOf(","); res(i>=0?s.slice(i+1):s); };
+    fr.onerror=rej;
+    fr.readAsDataURL(blob);
+  });
+}
+
+function addPubFiles(files){
+  if(!files || !files.length) return;
+  var cats=(S.data && S.data.cats) || ["科技类","爱国类","其他"];
+  var arr=[], i;
+  for(i=0;i<files.length;i++) arr.push(files[i]);
+  var byId_=byId("pubBusy");
+  byId_.style.display="";
+  var added=0, failed=0, idx=0;
+
+  (function next(){
+    if(idx>=arr.length){
+      byId_.style.display="none";
+      renderPubList();
+      if(failed && !added) toast("这些图片没能处理，请换一张试试");
+      else if(failed) toast("有 "+failed+" 张没能处理，已跳过");
+      else if(added) toast("已加入 "+added+" 张，填好作品名就能发布");
+      return;
+    }
+    var f=arr[idx]; idx++;
+    if(!/^image\//.test(f.type)){ failed++; next(); return; }
+    byId("pubBusyTxt").textContent="正在压缩第 "+idx+" / "+arr.length+" 张…";
+    pubShrink(f).then(function(r){
+      S.pub.seq++;
+      S.pub.list.push({
+        id:S.pub.seq, blob:r.blob, thumb:r.thumb, ext:r.ext, w:r.w, h:r.h,
+        size:r.blob.size, orig:f.size,
+        url:URL.createObjectURL(r.blob),
+        title:"",
+        cat:cats[0]||"其他"
+      });
+      added++;
+      next();
+    }).catch(function(){ failed++; next(); });
+  })();
+}
+
+function renderPubList(){
+  var box=byId("pubList");
+  if(!box) return;
+  byId("pubCount").textContent=S.pub.list.length+" 幅";
+  var cats=(S.data && S.data.cats) || ["科技类","爱国类","其他"];
+  box.innerHTML=S.pub.list.map(function(p){
+    return '<div class="pubitem" data-id="'+p.id+'">'+
+      '<img class="pv" src="'+p.url+'" alt="">'+
+      '<div class="pb">'+
+        '<input type="text" class="f-t" maxlength="24" placeholder="作品名（选填，如：太空电梯）" value="'+esc(p.title)+'">'+
+        '<select class="f-c">'+cats.map(function(c){
+          return '<option value="'+esc(c)+'"'+(c===p.cat?" selected":"")+">"+esc(c)+"</option>"; }).join("")+'</select>'+
+        '<p class="pm">'+p.w+'×'+p.h+' · 压缩后 '+kb(p.size)+' · 原图 '+(p.orig<1048576?Math.round(p.orig/1024)+" KB":(p.orig/1048576).toFixed(1)+" MB")+'</p>'+
+      '</div>'+
+      '<button class="pdel" title="移除">×</button>'+
+    '</div>';
+  }).join("");
+
+  var nodes=box.querySelectorAll(".pubitem");
+  for(var i=0;i<nodes.length;i++){
+    (function(node){
+      var id=parseInt(node.getAttribute("data-id"),10);
+      var p=S.pub.list.filter(function(x){ return x.id===id; })[0];
+      if(!p) return;
+      node.querySelector(".f-t").oninput=function(){ p.title=this.value; };
+      node.querySelector(".f-c").onchange=function(){ p.cat=this.value; };
+      node.querySelector(".pdel").onclick=function(){
+        S.pub.list=S.pub.list.filter(function(x){ return x.id!==id; });
+        try{ URL.revokeObjectURL(p.url); }catch(e){}
+        renderPubList();
+      };
+    })(nodes[i]);
+  }
+  var go=byId("pubGo");
+  if(go) go.disabled = !S.pub.list.length || S.pub.busy;
+}
+
+function doPublish(){
+  var g=S.pub.g, c=S.pub.c;
+  var name=(byId("pubName").value||"").trim();
+  if(!name){ toast("请先选学生姓名"); return; }
+  if(!S.pub.list.length){ toast("请先选作品照片"); return; }
+  if(S.pub.busy) return;
+
+  /* 前端先自检一遍姓名，省得传完图才被打回来（大图上传很费时间） */
+  var hit=false;
+  for(var i=0;i<S.pub.roster.length;i++){ if(S.pub.roster[i]===name){ hit=true; break; } }
+  if(!hit){
+    if(!confirm("「"+name+"」不在"+cn(g)+"年级"+c+"班的名单里，确定要发布吗？\n\n（点「取消」先去核对姓名，点「确定」继续尝试）")) return;
+  }
+
+  S.pub.busy=true;
+  byId("pubBusy").style.display="";
+  byId("pubGo").disabled=true;
+  var left=S.pub.list.slice();
+  var okN=0, failMsg="", failName="";
+
+  (function next(k){
+    if(k>=left.length){
+      S.pub.busy=false;
+      byId("pubBusy").style.display="none";
+      renderPubList();
+      reload();
+      if(okN>0){
+        var extra=(left.length-okN)>0 ? "，（"+(left.length-okN)+" 张未成功）" : "";
+        toast("已发布 "+okN+" 幅"+extra+"，美术馆里马上就能看到");
+      }
+      if(failMsg){
+        toast(failName+"："+failMsg);
+        alert("发布中断：\n\n"+failName+" —— "+failMsg);
+      }
+      return;
+    }
+    var p=left[k];
+    byId("pubBusyTxt").textContent="正在上传第 "+(k+1)+" / "+left.length+" 张（别关页面）";
+    var b64, thb64;
+    pubB64(p.blob).then(function(v){ b64=v; return p.thumb?pubB64(p.thumb):""; }).then(function(v){
+      thb64=v||"";
+      return post("publish",{
+        g:g, c:c, name:name,
+        title:(p.title||"").trim(), cat:p.cat,
+        img:b64, th:thb64, ext:p.ext, w:p.w, h:p.h
+      });
+    }).then(function(r){
+      if(r.status===200 && r.data && r.data.ok){
+        okN++;
+        S.pub.list=S.pub.list.filter(function(x){ return x.id!==p.id; });
+        try{ URL.revokeObjectURL(p.url); }catch(e){}
+        renderPubList();
+        next(k+1);
+      } else {
+        failMsg=(r.data && r.data.error) || "上传失败";
+        failName=p.title||"（未命名）";
+        S.pub.busy=false;
+        byId("pubBusy").style.display="none";
+        renderPubList();
+        next(left.length);
+      }
+    }).catch(function(){
+      failMsg="网络断了，请检查后再试";
+      failName=p.title||"（未命名）";
+      S.pub.busy=false;
+      byId("pubBusy").style.display="none";
+      renderPubList();
+      next(left.length);
+    });
+  })(0);
 }
 
 /* ══════════════ 设置 ══════════════ */
