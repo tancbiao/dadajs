@@ -32,6 +32,8 @@ button{font-family:inherit}
 .brandtxt b{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .brandtxt i{font-size:12px;color:var(--sub);font-style:normal}
 .iconbtn{margin-left:auto;width:42px;height:42px;flex:none;border-radius:14px;border:1px solid var(--line);background:#fff;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.toplink{margin-left:8px;flex:none;height:42px;padding:0 15px;border-radius:14px;background:var(--main);color:#fff;font-size:14px;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:5px;box-shadow:0 4px 12px rgba(244,105,107,.26)}
+.toplink:active{background:var(--mainD)}
 .searchbar{display:none;padding-bottom:14px}
 .searchbar.on{display:block}
 .searchbar input{width:100%;height:46px;border-radius:15px;border:1px solid var(--line);background:#fff;padding:0 16px;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none}
@@ -123,6 +125,9 @@ button{font-family:inherit}
     <button class="iconbtn" id="btnSearch" aria-label="搜索">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20.5 20.5l-4-4"/></svg>
     </button>
+    <a class="toplink" id="btnSubmitWork" href="submit.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>投稿
+    </a>
   </div>
   <div class="wrap searchbar" id="searchbar">
     <input id="qInput" type="search" placeholder="搜索作品名称或作者姓名" autocomplete="off">
@@ -193,7 +198,18 @@ button{font-family:inherit}
 </div>
 
 <script>
-var DATA = /*@DATA_START@*/{"school":"天等县城西小学","title":"线上美术馆","updated":"2026-09-15","categories":["科技类","爱国类","其他"],"classes":[[1,1],[1,2],[1,3],[1,4],[1,5],[2,1],[2,2],[2,3],[2,4],[2,5],[3,1],[3,2],[3,3],[3,4],[3,5],[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7],[4,8],[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],[5,7],[5,8],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6],[6,7],[6,8]],"works":[{"id":"w0011","t":"太空电梯","a":"郑欣怡","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0011.webp","th":"images/g4c5/w0011_t.webp","w":1000,"h":1600,"date":"2026-09-14","note":""},{"id":"w0010","t":"智能垃圾分类车","a":"吴俊杰","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0010.webp","th":"images/g4c5/w0010_t.webp","w":1600,"h":1050,"date":"2026-09-14","note":""},{"id":"w0009","t":"校园一角","a":"黄浩然","g":4,"c":5,"cat":"其他","img":"images/g4c5/w0009.webp","th":"images/g4c5/w0009_t.webp","w":1500,"h":1150,"date":"2026-09-14","note":""},{"id":"w0008","t":"未来城市","a":"陈思远","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0008.webp","th":"images/g3c2/w0008_t.webp","w":1400,"h":1400,"date":"2026-09-14","note":""},{"id":"w0007","t":"会跳舞的机器人","a":"王小红","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0007.webp","th":"images/g3c2/w0007_t.webp","w":1600,"h":1100,"date":"2026-09-14","note":""},{"id":"w0006","t":"太阳能小车","a":"李小明","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0006.webp","th":"images/g3c2/w0006_t.webp","w":1200,"h":1600,"date":"2026-09-14","note":""},{"id":"w0005","t":"我爱我的祖国","a":"李小明","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0005.webp","th":"images/g3c2/w0005_t.webp","w":1200,"h":1500,"date":"2026-09-14","note":""},{"id":"w0004","t":"天安门广场","a":"刘雨桐","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0004.webp","th":"images/g3c2/w0004_t.webp","w":1600,"h":1000,"date":"2026-09-14","note":""},{"id":"w0003","t":"我的家乡","a":"赵一涵","g":3,"c":2,"cat":"其他","img":"images/g3c2/w0003.webp","th":"images/g3c2/w0003_t.webp","w":1300,"h":1300,"date":"2026-09-14","note":""},{"id":"w0002","t":"火星基地","a":"周子墨","g":3,"c":1,"cat":"科技类","img":"images/g3c1/w0002.webp","th":"images/g3c1/w0002_t.webp","w":1100,"h":1500,"date":"2026-09-14","note":""},{"id":"w0001","t":"五星红旗","a":"孙悦","g":3,"c":1,"cat":"爱国类","img":"images/g3c1/w0001.webp","th":"images/g3c1/w0001_t.webp","w":1000,"h":1400,"date":"2026-09-14","note":""}]}/*@DATA_END@*/;
+var DATA = /*@DATA_START@*/{"school":"天等县城西小学","title":"线上美术馆","updated":"2026-09-22","categories":["科技类","爱国类","其他"],"classes":[[1,1],[1,2],[1,3],[1,4],[1,5],[2,1],[2,2],[2,3],[2,4],[2,5],[3,1],[3,2],[3,3],[3,4],[3,5],[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7],[4,8],[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],[5,7],[5,8],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6],[6,7],[6,8]],"works":[{"id":"w0011","t":"太空电梯","a":"郑欣怡","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0011.webp","th":"images/g4c5/w0011_t.webp","w":1000,"h":1600,"date":"2026-09-14","note":""},{"id":"w0010","t":"智能垃圾分类车","a":"吴俊杰","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0010.webp","th":"images/g4c5/w0010_t.webp","w":1600,"h":1050,"date":"2026-09-14","note":""},{"id":"w0009","t":"校园一角","a":"黄浩然","g":4,"c":5,"cat":"其他","img":"images/g4c5/w0009.webp","th":"images/g4c5/w0009_t.webp","w":1500,"h":1150,"date":"2026-09-14","note":""},{"id":"w0008","t":"未来城市","a":"陈思远","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0008.webp","th":"images/g3c2/w0008_t.webp","w":1400,"h":1400,"date":"2026-09-14","note":""},{"id":"w0007","t":"会跳舞的机器人","a":"王小红","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0007.webp","th":"images/g3c2/w0007_t.webp","w":1600,"h":1100,"date":"2026-09-14","note":""},{"id":"w0006","t":"太阳能小车","a":"李小明","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0006.webp","th":"images/g3c2/w0006_t.webp","w":1200,"h":1600,"date":"2026-09-14","note":""},{"id":"w0005","t":"我爱我的祖国","a":"李小明","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0005.webp","th":"images/g3c2/w0005_t.webp","w":1200,"h":1500,"date":"2026-09-14","note":""},{"id":"w0004","t":"天安门广场","a":"刘雨桐","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0004.webp","th":"images/g3c2/w0004_t.webp","w":1600,"h":1000,"date":"2026-09-14","note":""},{"id":"w0003","t":"我的家乡","a":"赵一涵","g":3,"c":2,"cat":"其他","img":"images/g3c2/w0003.webp","th":"images/g3c2/w0003_t.webp","w":1300,"h":1300,"date":"2026-09-14","note":""},{"id":"w0002","t":"火星基地","a":"周子墨","g":3,"c":1,"cat":"科技类","img":"images/g3c1/w0002.webp","th":"images/g3c1/w0002_t.webp","w":1100,"h":1500,"date":"2026-09-14","note":""},{"id":"w0001","t":"五星红旗","a":"孙悦","g":3,"c":1,"cat":"爱国类","img":"images/g3c1/w0001.webp","th":"images/g3c1/w0001_t.webp","w":1000,"h":1400,"date":"2026-09-14","note":""}]}/*@DATA_END@*/;
+
+/* 投稿后端（腾讯云）。老师审核通过的新作品从这里即时拉取，
+   不用等 GitHub Pages 重新部署 —— 老师一点通过，家长打开就能看到 */
+var GAPI = (function(){
+  try{
+    var q = new URLSearchParams(location.search).get("api");
+    if (q) return q.replace(/\/+$/,"");
+  }catch(e){}
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return location.origin;
+  return "https://api.kexvefuxi.cn/gallery";
+})();
 
 var PAL=[["#EAF1FC","#3F72B8"],["#FDECEC","#C9453F"],["#FDF3E2","#B4832F"],["#EAF7F1","#3F8F72"],["#F1EEFC","#6B58B8"],["#FCEEF6","#A8477E"],["#EAF6FC","#2F7C9B"]];
 var CMAP={};
@@ -546,8 +562,30 @@ function init(){
   fromHash();
 }
 
-if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
-else init();
+/* 把老师新审核通过的作品并进画廊。
+   静默补：网络不通就当没有，绝不影响本地已有的内容。 */
+function mergeRemoteWorks(){
+  if(!GAPI || !window.fetch) return;
+  fetch(GAPI+"/api/works").then(function(r){ return r.json(); }).then(function(d){
+    var list=(d && d.list) || [];
+    if(!list.length) return;
+    var have={};
+    DATA.works.forEach(function(w){ have[w.id]=1; });
+    var fresh=list.filter(function(w){ return !have[w.id]; });
+    if(!fresh.length) return;
+    DATA.works = fresh.concat(DATA.works);
+    fresh.forEach(function(w){
+      if((DATA.categories||[]).indexOf(w.cat)<0) DATA.categories.push(w.cat);
+    });
+    CMAP={};
+    (DATA.categories||[]).forEach(function(c,i){ CMAP[c]=PAL[i%PAL.length]; });
+    renderStats(); renderChips(); renderGrid();
+  }).catch(function(){});
+}
+
+function boot(){ init(); mergeRemoteWorks(); }
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", boot);
+else boot();
 </script>
 </body>
 </html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#FDF6EC">
+<title>我要投稿 · 线上美术馆</title>
+<style>
+:root{
+  --bg:#FDF6EC; --card:#fff; --main:#F4696B; --mainD:#DE5254; --ink:#4A3B32;
+  --sub:#9C8A7E; --line:#F2E8DC; --soft:#FBEAF0;
+  --ok:#0F6E56; --okbg:#E1F5EE; --warn:#854F0B; --warnbg:#FAEEDA;
+  --bad:#A32D2D; --badbg:#FCEBEB;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font:15px/1.6 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  padding-bottom:calc(28px + env(safe-area-inset-bottom));overflow-x:hidden;
+}
+img{max-width:100%}
+button{font-family:inherit}
+.wrap{max-width:680px;margin:0 auto;padding-left:16px;padding-right:16px}
+
+.top{position:sticky;top:0;z-index:50;background:rgba(253,246,236,.94);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.topin{display:flex;align-items:center;gap:12px;padding-top:12px;padding-bottom:12px;max-width:680px;margin:0 auto;padding-left:16px;padding-right:16px}
+.logo{width:42px;height:42px;border-radius:14px;background:var(--soft);color:var(--main);display:flex;align-items:center;justify-content:center;flex:none}
+.brandtxt{display:flex;flex-direction:column;min-width:0;line-height:1.3}
+.brandtxt b{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brandtxt i{font-size:12px;color:var(--sub);font-style:normal}
+.backbtn{margin-left:auto;flex:none;height:38px;padding:0 14px;border-radius:13px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:13.5px;cursor:pointer;text-decoration:none;display:flex;align-items:center}
+
+.notice{margin-top:14px;border-radius:14px;padding:12px 15px;background:var(--warnbg);color:var(--warn);font-size:13.5px;line-height:1.55;display:none}
+.notice.on{display:block}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 16px;margin-top:14px}
+.steptitle{display:flex;align-items:center;gap:9px;margin:0 0 14px}
+.stepno{width:25px;height:25px;flex:none;border-radius:9px;background:var(--soft);color:var(--main);font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.steptitle h2{margin:0;font-size:15.5px;font-weight:700}
+.steptitle em{font-style:normal;font-size:12.5px;color:var(--sub);margin-left:auto;font-weight:400}
+
+.row2{display:flex;gap:10px}
+.fld{flex:1;min-width:0}
+.fld label{display:block;font-size:12.5px;color:var(--sub);margin-bottom:6px}
+select,input[type=text]{
+  width:100%;height:48px;border-radius:14px;border:1px solid var(--line);background:#fff;
+  padding:0 13px;font-size:16px;color:var(--ink);outline:none;-webkit-appearance:none;font-family:inherit;
+}
+select:focus,input[type=text]:focus{border-color:var(--main)}
+.btnmain{
+  width:100%;height:50px;margin-top:14px;border:0;border-radius:15px;
+  background:var(--main);color:#fff;font-size:16px;font-weight:700;cursor:pointer;transition:.18s;
+}
+.btnmain:active{background:var(--mainD)}
+.btnmain:disabled{background:#E8DCD0;color:#A99A8C;cursor:default}
+.btnghost{
+  height:48px;padding:0 18px;border-radius:14px;border:1px solid var(--line);background:#fff;
+  color:var(--ink);font-size:15px;cursor:pointer;flex:none;white-space:nowrap;
+}
+.tip{font-size:12.5px;color:var(--sub);margin:10px 0 0;line-height:1.55}
+.tip.bad{color:var(--bad)}
+.tip.ok{color:var(--ok)}
+
+.who{display:none;align-items:center;gap:10px;margin-top:14px;background:var(--okbg);color:var(--ok);border-radius:14px;padding:11px 14px;font-size:14px;font-weight:600}
+.who.on{display:flex}
+.who .wsw{margin-left:auto;font-size:12.5px;font-weight:400;text-decoration:underline;cursor:pointer;color:var(--ok)}
+
+.drop{
+  border:2px dashed #EADFD1;border-radius:16px;padding:26px 16px;text-align:center;
+  background:#FFFCF7;cursor:pointer;transition:.18s;
+}
+.drop:active{border-color:var(--main);background:var(--soft)}
+.drop svg{color:var(--main);opacity:.85}
+.drop p{margin:10px 0 0;font-size:14.5px;font-weight:600}
+.drop span{display:block;font-size:12.5px;color:var(--sub);margin-top:5px}
+
+.picks{margin-top:14px;display:flex;flex-direction:column;gap:12px}
+.pick{display:flex;gap:12px;border:1px solid var(--line);border-radius:16px;padding:12px;background:#FFFDFA}
+.pick .pv{width:78px;height:78px;flex:none;border-radius:12px;object-fit:cover;background:#F4ECE2}
+.pick .pb{flex:1;min-width:0}
+.pick .pmeta{font-size:11.5px;color:var(--sub);margin:6px 0 0;display:flex;gap:8px;flex-wrap:wrap}
+.pick .pmeta b{color:var(--ok);font-weight:600}
+.pick input[type=text]{height:40px;font-size:15px;border-radius:11px}
+.pick select{height:40px;font-size:14px;border-radius:11px;margin-top:8px}
+.pick .del{margin-left:auto;flex:none;width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:16px;line-height:1;cursor:pointer}
+.pick .ph{display:flex;align-items:flex-start;gap:8px}
+.pick .ph span{font-size:12.5px;color:var(--sub);margin-top:5px;flex:none}
+.busy{display:none;align-items:center;justify-content:center;gap:9px;margin-top:14px;font-size:13.5px;color:var(--sub)}
+.busy.on{display:flex}
+.spin{width:15px;height:15px;border:2px solid #EADFD1;border-top-color:var(--main);border-radius:50%;animation:sp .7s linear infinite;flex:none}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+.mine{display:flex;flex-direction:column;gap:10px}
+.mrow{display:flex;gap:11px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#FFFDFA}
+.mrow img{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:none;background:#F4ECE2}
+.mrow .mb{flex:1;min-width:0}
+.mrow .mt{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mrow .ms{font-size:12px;color:var(--sub);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{flex:none;font-size:12px;font-weight:600;padding:5px 11px;border-radius:9px;white-space:nowrap}
+.badge.p{background:var(--warnbg);color:var(--warn)}
+.badge.a{background:var(--okbg);color:var(--ok)}
+.badge.r{background:var(--badbg);color:var(--bad)}
+.empty{text-align:center;color:var(--sub);font-size:13.5px;padding:22px 0}
+.foot{text-align:center;color:var(--sub);font-size:12px;padding:22px 16px 6px;line-height:1.7}
+#toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:rgba(74,59,50,.94);color:#fff;font-size:14px;padding:11px 20px;border-radius:12px;opacity:0;transition:.22s;pointer-events:none;z-index:99;max-width:84%;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="topin">
+    <div class="logo">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+    </div>
+    <div class="brandtxt">
+      <b>我要投稿</b>
+      <i id="brandSub">天等县城西小学 · 线上美术馆</i>
+    </div>
+    <a class="backbtn" id="btnBack" href="index.html">看美术馆</a>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <div class="notice" id="notice"></div>
+
+  <section class="card">
+    <div class="steptitle">
+      <span class="stepno">1</span>
+      <h2>先确认孩子是谁</h2>
+      <em>用于核对名单</em>
+    </div>
+    <div class="row2">
+      <div class="fld"><label>年级</label><select id="lgGrade"></select></div>
+      <div class="fld"><label>班级</label><select id="lgClass"></select></div>
+    </div>
+    <div class="fld" style="margin-top:12px">
+      <label>孩子姓名</label>
+      <input id="lgName" type="text" placeholder="请输入孩子的姓名" maxlength="12" autocomplete="off">
+    </div>
+    <button class="btnmain" id="btnVerify">确认孩子身份</button>
+    <p class="tip" id="vTip">姓名要和学校名单上的一致，这样才能把作品归到孩子名下。</p>
+    <div class="who" id="whoBox">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
+      <span id="whoTxt"></span>
+      <span class="wsw" id="btnReVerify">换一个</span>
+    </div>
+  </section>
+
+  <section class="card" id="cardPick" style="display:none">
+    <div class="steptitle">
+      <span class="stepno">2</span>
+      <h2>选孩子的作品照片</h2>
+      <em id="pickCount">0 幅</em>
+    </div>
+    <div class="drop" id="drop">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="9" r="1.6"/><path d="M21 15l-5-5L5 21"/></svg>
+      <p>拍照 或 从相册选择</p>
+      <span>可一次选多张 · 自动压缩后上传，很省流量</span>
+    </div>
+    <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
+    <div class="picks" id="picks"></div>
+    <button class="btnmain" id="btnSubmit" disabled>提交给老师审核</button>
+    <div class="busy" id="busy"><span class="spin"></span><span id="busyTxt">正在处理…</span></div>
+    <p class="tip" id="subTip">提交后老师会逐幅审核，通过的作品就会出现在美术馆里。</p>
+  </section>
+
+  <section class="card" id="cardMine" style="display:none">
+    <div class="steptitle">
+      <span class="stepno">3</span>
+      <h2 id="mineTitle">孩子的投稿记录</h2>
+      <em id="mineCount"></em>
+    </div>
+    <div class="mine" id="mineList"></div>
+    <div class="empty" id="mineEmpty" style="display:none">还没有投过稿，上图选一张作品试试吧</div>
+  </section>
+
+  <p class="foot">
+    作品仅用于学校内部展示 · 上传的照片只归到本校孩子名下<br>
+    有疑问请联系班主任或美术老师
+  </p>
+</main>
+
+<div id="toast"></div>
+
+<script>
+/* ══════════════ 后端地址 ══════════════
+   线上：投稿页在 dadajs.cn（GitHub Pages），接口在腾讯云 api.kexvefuxi.cn
+   本地：页面由后端自己提供，同源即可 */
+var API = (function(){
+  var q = new URLSearchParams(location.search).get("api");
+  if (q) return q.replace(/\/+$/,"");
+  if (/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return location.origin;
+  return "https://api.kexvefuxi.cn/gallery";
+})();
+
+/* 「看美术馆」回链：托管在 dadajs.cn/meishu/ 时用相对路径；
+   托管在服务器（api.kexvefuxi.cn/gallery/submit.html）时 public 目录里没有 index.html，
+   必须显式指回 GitHub Pages 的美术馆，否则 404。 */
+var SITE = /(^|\.)dadajs\.cn$/.test(location.hostname) ? "index.html" : "https://dadajs.cn/meishu/";
+
+var MAX_EDGE   = 1800;   /* 与老师端一致，保证最终画质统一 */
+var QUALITY    = 0.92;
+var THUMB_EDGE = 520;    /* 缩略图长边：瀑布流用，约 30KB */
+
+var S = {
+  cfg: null,
+  me: null,          /* {g,c,name} */
+  picks: [],         /* { id, blob, ext, url, size, title, cat, w, h } */
+  seq: 0,
+  busy: false,
+  submitting: false
+};
+
+function byId(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(m){
+  return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]; }); }
+function cn(n){ return ({1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"})[n] || n; }
+function className(g,c){ return cn(g)+"年级"+c+"班"; }
+function mb(n){ return (n/1048576).toFixed(2)+" MB"; }
+function kb(n){ return n<1048576 ? Math.round(n/1024)+" KB" : mb(n); }
+
+var toastT=null;
+function toast(msg){
+  var el=byId("toast"); el.textContent=msg; el.classList.add("on");
+  clearTimeout(toastT); toastT=setTimeout(function(){ el.classList.remove("on"); },2600);
+}
+
+function api(path, opt){
+  return fetch(API+path, opt).then(function(r){
+    return r.json().catch(function(){ return {}; }).then(function(d){
+      return { status:r.status, data:d };
+    });
+  });
+}
+function post(path, obj){
+  return api(path, {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify(obj)
+  });
+}
+
+/* ══════════════ 图片压缩（与老师端同一套，含手机竖拍方向纠正）══════════════ */
+async function shrink(file){
+  var bmp;
+  try { bmp = await createImageBitmap(file, { imageOrientation:"from-image" }); }
+  catch(e){ bmp = await createImageBitmap(file); }
+  var w=bmp.width, h=bmp.height;
+  var scale=Math.min(1, MAX_EDGE/Math.max(w,h));
+  var ow=Math.max(1,Math.round(w*scale)), oh=Math.max(1,Math.round(h*scale));
+  var cv=document.createElement("canvas");
+  cv.width=ow; cv.height=oh;
+  var ctx=cv.getContext("2d");
+  ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,ow,oh);
+  ctx.drawImage(bmp,0,0,ow,oh);
+  if(bmp.close) bmp.close();
+  var blob=await new Promise(function(res){ cv.toBlob(function(b){ res(b); },"image/webp",QUALITY); });
+  if(!blob) throw new Error("这个浏览器不支持图片压缩，请改用微信/QQ 浏览器或 Chrome 打开");
+
+  /* 顺手再压一张缩略图。瀑布流首屏一次铺几十张，全用主图的话
+     4Mbps 的服务器会被拖死，家长要等半天才看得到东西。 */
+  var sc=Math.min(1, THUMB_EDGE/Math.max(ow,oh));
+  var tcv=document.createElement("canvas");
+  tcv.width=Math.max(1,Math.round(ow*sc));
+  tcv.height=Math.max(1,Math.round(oh*sc));
+  tcv.getContext("2d").drawImage(cv,0,0,tcv.width,tcv.height);
+  var tblob=await new Promise(function(res){
+    tcv.toBlob(function(b){ res(b); },
+      blob.type==="image/webp" ? "image/webp" : "image/jpeg", 0.78);
+  });
+
+  var ext = blob.type==="image/webp" ? "webp" : blob.type==="image/jpeg" ? "jpg" : "png";
+  return { blob:blob, thumb:tblob, ext:ext, w:ow, h:oh };
+}
+function blobToB64(blob){
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onload=function(){ var s=String(fr.result); var i=s.indexOf(","); res(i>=0?s.slice(i+1):s); };
+    fr.onerror=rej;
+    fr.readAsDataURL(blob);
+  });
+}
+
+/* ══════════════ 初始化 ══════════════ */
+function fillGrades(){
+  var h="";
+  for(var g=1;g<=6;g++) h+='<option value="'+g+'">'+cn(g)+"年级</option>";
+  byId("lgGrade").innerHTML=h;
+  byId("lgGrade").value="4";
+  fillClasses();
+}
+function fillClasses(){
+  var g=parseInt(byId("lgGrade").value,10);
+  var n=(S.cfg && S.cfg.classes && S.cfg.classes[g]) || 5;
+  var h="";
+  for(var c=1;c<=n;c++) h+='<option value="'+c+'">'+c+"班</option>";
+  byId("lgClass").innerHTML=h;
+}
+function catOpts(sel){
+  var cats=(S.cfg && S.cfg.cats) || ["科技类","爱国类","其他"];
+  return cats.map(function(c){
+    return '<option value="'+esc(c)+'"'+(c===sel?" selected":"")+">"+esc(c)+"</option>";
+  }).join("");
+}
+
+function init(){
+  byId("lgGrade").onchange=fillClasses;
+  byId("lgName").addEventListener("keydown",function(e){ if(e.key==="Enter") doVerify(); });
+  byId("btnVerify").onclick=doVerify;
+  byId("btnReVerify").onclick=function(){
+    S.me=null;
+    byId("whoBox").classList.remove("on");
+    byId("cardPick").style.display="none";
+    byId("cardMine").style.display="none";
+  };
+  byId("drop").onclick=function(){ byId("fileInput").click(); };
+  byId("fileInput").onchange=function(){ addFiles(this.files); this.value=""; };
+  byId("btnSubmit").onclick=doSubmit;
+
+  api("/api/config").then(function(r){
+    if(r.status!==200 || !r.data || !r.data.cats){ setTip("bad","连接不上服务器，请稍后再试或联系老师"); return; }
+    S.cfg=r.data;
+    if(S.cfg.school) byId("brandSub").textContent = S.cfg.school+" · 线上美术馆";
+    if(S.cfg.notice){ byId("notice").textContent=S.cfg.notice; byId("notice").classList.add("on"); }
+    fillGrades();
+    if(S.cfg.open===false){
+      byId("notice").textContent="投稿通道暂时关闭了，请留意老师通知。";
+      byId("notice").classList.add("on");
+      byId("btnVerify").disabled=true;
+      byId("subTip").textContent="投稿通道暂时关闭";
+      byId("subTip").className="tip bad";
+    }
+  }).catch(function(){
+    setTip("bad","连接不上服务器，请检查网络后重试");
+  });
+}
+
+function setTip(kind,msg){
+  var el=byId("vTip");
+  el.className="tip"+(kind?" "+kind:"");
+  el.textContent=msg;
+}
+
+/* ══════════════ 身份校验 ══════════════ */
+function doVerify(){
+  var g=parseInt(byId("lgGrade").value,10);
+  var c=parseInt(byId("lgClass").value,10);
+  var name=byId("lgName").value.trim();
+  if(!name){ setTip("bad","请先填写孩子的姓名"); return; }
+  var btn=byId("btnVerify");
+  btn.disabled=true; btn.textContent="正在核对…";
+  post("/api/verify",{g:g,c:c,name:name}).then(function(r){
+    btn.disabled=false; btn.textContent="确认孩子身份";
+    if(r.status===429){ setTip("bad", r.data.error||"试得太频繁，请等一分钟"); return; }
+    if(!r.data || r.data.ok!==true){
+      setTip("bad", (r.data && r.data.error) || "没有找到这位同学，请核对班级和姓名");
+      return;
+    }
+    S.me={g:g,c:c,name:name};
+    byId("whoTxt").textContent=name+" · "+className(g,c);
+    byId("whoBox").classList.add("on");
+    setTip("ok","身份已确认，可以选作品照片了");
+    byId("cardPick").style.display="";
+    byId("cardMine").style.display="";
+    byId("mineTitle").textContent=name+" 的投稿记录";
+    loadMine();
+    byId("cardPick").scrollIntoView({behavior:"smooth",block:"start"});
+  }).catch(function(){
+    btn.disabled=false; btn.textContent="确认孩子身份";
+    setTip("bad","网络不太好，请再试一次");
+  });
+}
+
+/* ══════════════ 选图与压缩 ══════════════ */
+function renderPicks(){
+  var box=byId("picks");
+  byId("pickCount").textContent=S.picks.length+" 幅";
+  box.innerHTML=S.picks.map(function(p){
+    return '<div class="pick" data-id="'+p.id+'">'+
+      '<img class="pv" src="'+p.url+'" alt="">'+
+      '<div class="pb">'+
+        '<div class="ph">'+
+          '<span>作品名</span>'+
+          '<input type="text" class="f-title" maxlength="24" placeholder="选填，如：太空电梯" value="'+esc(p.title)+'">'+
+          '<button class="del" title="删除">×</button>'+
+        '</div>'+
+        '<select class="f-cat">'+catOpts(p.cat)+'</select>'+
+        '<p class="pmeta">'+p.w+'×'+p.h+' · 压缩后 <b>'+kb(p.size)+'</b> · 原图 '+kb(p.orig)+'</p>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+
+  var nodes=box.querySelectorAll(".pick");
+  for(var i=0;i<nodes.length;i++){
+    (function(node){
+      var id=parseInt(node.getAttribute("data-id"),10);
+      var p=S.picks.filter(function(x){ return x.id===id; })[0];
+      if(!p) return;
+      node.querySelector(".f-title").oninput=function(){ p.title=this.value; };
+      node.querySelector(".f-cat").onchange=function(){ p.cat=this.value; };
+      node.querySelector(".del").onclick=function(){
+        S.picks=S.picks.filter(function(x){ return x.id!==id; });
+        try{ URL.revokeObjectURL(p.url); }catch(e){}
+        renderPicks();
+      };
+    })(nodes[i]);
+  }
+  byId("btnSubmit").disabled = S.picks.length===0 || S.busy;
+}
+
+async function addFiles(files){
+  if(!files || !files.length) return;
+  if(!S.me){ toast("请先确认孩子身份"); return; }
+  if(S.busy) return;
+  S.busy=true;
+  byId("busy").classList.add("on");
+  var arr=[];
+  for(var i=0;i<files.length;i++) arr.push(files[i]);
+  var added=0, failed=0;
+
+  for(var i=0;i<arr.length;i++){
+    byId("busyTxt").textContent="正在压缩第 "+(i+1)+" / "+arr.length+" 张…";
+    var f=arr[i];
+    if(!/^image\//.test(f.type)){ failed++; continue; }
+    try{
+      var r=await shrink(f);
+      S.seq++;
+      S.picks.push({
+        id:S.seq,
+        blob:r.blob, thumb:r.thumb, ext:r.ext, w:r.w, h:r.h,
+        size:r.blob.size, orig:f.size,
+        url:URL.createObjectURL(r.blob),
+        title:"",
+        cat:(S.cfg && S.cfg.cats && S.cfg.cats[0]) || "其他"
+      });
+      added++;
+    }catch(e){ failed++; }
+  }
+  S.busy=false;
+  byId("busy").classList.remove("on");
+  renderPicks();
+  if(failed && !added) toast("这些图片没能处理，请换一张试试");
+  else if(failed) toast("有 "+failed+" 张没能处理，已跳过");
+  else if(added) toast("已加入 "+added+" 幅，填上作品名再提交");
+}
+
+/* ══════════════ 提交 ══════════════ */
+async function doSubmit(){
+  if(!S.me || !S.picks.length || S.submitting) return;
+  S.submitting=true;
+  var btn=byId("btnSubmit");
+  btn.disabled=true;
+  byId("busy").classList.add("on");
+  var left=S.picks.slice();
+  var done=0, okN=0, failMsg="";
+
+  for(var i=0;i<left.length;i++){
+    var p=left[i];
+    byId("busyTxt").textContent="正在上传 "+(i+1)+" / "+left.length+"（别关页面）";
+    try{
+      var b64=await blobToB64(p.blob);
+      var thb64=p.thumb ? await blobToB64(p.thumb) : "";
+      var r=await post("/api/submit",{
+        g:S.me.g, c:S.me.c, name:S.me.name,
+        title:p.title.trim(), cat:p.cat,
+        img:b64, th:thb64, ext:p.ext, w:p.w, h:p.h
+      });
+      if(r.status===200 && r.data && r.data.ok){
+        okN++; done++;
+        S.picks=S.picks.filter(function(x){ return x.id!==p.id; });
+        try{ URL.revokeObjectURL(p.url); }catch(e){}
+        renderPicks();
+      } else {
+        failMsg=(r.data && r.data.error) || "上传失败";
+        break;
+      }
+    }catch(e){ failMsg="网络断了，请检查后再试"; break; }
+  }
+
+  S.submitting=false;
+  byId("busy").classList.remove("on");
+  renderPicks();
+  if(okN>0){
+    toast("已提交 "+okN+" 幅，等老师审核");
+    byId("subTip").className="tip ok";
+    byId("subTip").textContent="已提交 "+okN+" 幅，老师审核通过后就会出现在美术馆里。";
+    loadMine();
+  }
+  if(failMsg){
+    toast(failMsg);
+    byId("subTip").className="tip bad";
+    byId("subTip").textContent=failMsg;
+  }
+}
+
+/* ══════════════ 我的投稿记录 ══════════════ */
+function statusView(it){
+  if(it.status==="approved") return { cls:"a", txt:"已展出" };
+  if(it.status==="rejected") return { cls:"r", txt:"未通过" };
+  return { cls:"p", txt:"等老师审核" };
+}
+function loadMine(){
+  if(!S.me) return;
+  var q="?g="+S.me.g+"&c="+S.me.c+"&name="+encodeURIComponent(S.me.name)+"&_="+Date.now();
+  api("/api/mine"+q).then(function(r){
+    var list=(r.data && r.data.list) || [];
+    byId("mineCount").textContent=list.length?list.length+" 幅":"";
+    if(!list.length){
+      byId("mineList").innerHTML="";
+      byId("mineEmpty").style.display="";
+      byId("mineEmpty").textContent="还没有投过稿，上面选一张作品试试吧";
+      return;
+    }
+    byId("mineEmpty").style.display="none";
+    byId("mineList").innerHTML=list.map(function(it){
+      var v=statusView(it);
+      var sub = it.status==="rejected" && it.reason ? it.reason
+              : (it.cat||"-")+" · "+(it.at||"").slice(0,10);
+      return '<div class="mrow">'+
+        '<img src="'+API+esc(it.img)+'" alt="" loading="lazy">'+
+        '<div class="mb">'+
+          '<div class="mt">'+esc(it.title||"未命名")+'</div>'+
+          '<div class="ms">'+esc(sub)+'</div>'+
+        '</div>'+
+        '<span class="badge '+v.cls+'">'+v.txt+'</span>'+
+      '</div>';
+    }).join("");
+  }).catch(function(){});
+}
+
+var elBack = byId("btnBack"); if (elBack) elBack.href = SITE;
+
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+</script>
+</body>
+</html>
