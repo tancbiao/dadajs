@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#FDF6EC">
-<title>作品审核台 · 线上美术馆</title>
+<title>作品审核台 · 优秀作品馆</title>
 <style>
 :root{
   --bg:#FDF6EC; --card:#fff; --main:#F4696B; --mainD:#DE5254; --ink:#4A3B32;
@@ -181,7 +181,7 @@ button{font-family:inherit}
     </div>
     <div class="brandtxt">
       <b>作品审核台</b>
-      <i id="brandSub">天等县城西小学 · 线上美术馆</i>
+      <i id="brandSub">天等县城西小学 · 优秀作品馆</i>
     </div>
     <div class="hbtns" id="hbtns" style="display:none">
       <button class="hbtn" id="btnOpenSite">看美术馆</button>
@@ -540,7 +540,7 @@ function fillPubClasses(){
 function renderPublish(){
   byId("cnt").textContent="";
   var box=byId("listBox");
-  var cats=(S.data && S.data.cats) || ["科技类","爱国类","其他"];
+  var cats=(S.data && S.data.cats) || ["绘画","手工","书法","科技类","优秀实验记录","爱国类","其他"];
   var gn=pubGrades();
 
   box.innerHTML=
@@ -601,7 +601,7 @@ function renderPublish(){
         '<h3>操作要点</h3>'+
         '<p class="hint" style="margin-bottom:0">'+
           '· 姓名必须在本班名单里 —— 作品会归到孩子名下，家长在「我的孩子」里能看到<br>'+
-          '· 类别可以先选「其他」，发完在「已展出」里点开改<br>'+
+          '· 类别有：绘画 / 手工 / 书法 / 科技类 / 优秀实验记录 / 爱国类，拿不准先选「其他」，发完能改<br>'+
           '· 发错了不要紧：去「已展出」找到它，可以改信息或「撤下」'+
         '</p>'+
       '</div>'+
@@ -755,7 +755,7 @@ function pubB64(blob){
 
 function addPubFiles(files){
   if(!files || !files.length) return;
-  var cats=(S.data && S.data.cats) || ["科技类","爱国类","其他"];
+  var cats=(S.data && S.data.cats) || ["绘画","手工","书法","科技类","优秀实验记录","爱国类","其他"];
   var arr=[], i;
   for(i=0;i<files.length;i++) arr.push(files[i]);
   var byId_=byId("pubBusy");
@@ -793,7 +793,7 @@ function renderPubList(){
   var box=byId("pubList");
   if(!box) return;
   byId("pubCount").textContent=S.pub.list.length+" 幅";
-  var cats=(S.data && S.data.cats) || ["科技类","爱国类","其他"];
+  var cats=(S.data && S.data.cats) || ["绘画","手工","书法","科技类","优秀实验记录","爱国类","其他"];
   box.innerHTML=S.pub.list.map(function(p){
     return '<div class="pubitem" data-id="'+p.id+'">'+
       '<img class="pv" src="'+p.url+'" alt="">'+

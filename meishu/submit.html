@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="theme-color" content="#FDF6EC">
-<title>我要投稿 · 线上美术馆</title>
+<title>我要投稿 · 优秀作品馆</title>
 <style>
 :root{
   --bg:#FDF6EC; --card:#fff; --main:#F4696B; --mainD:#DE5254; --ink:#4A3B32;
@@ -117,7 +117,7 @@ select:focus,input[type=text]:focus{border-color:var(--main)}
     </div>
     <div class="brandtxt">
       <b>我要投稿</b>
-      <i id="brandSub">天等县城西小学 · 线上美术馆</i>
+      <i id="brandSub">天等县城西小学 · 优秀作品馆</i>
     </div>
     <a class="backbtn" id="btnBack" href="index.html">看美术馆</a>
   </div>
@@ -301,7 +301,7 @@ function fillClasses(){
   byId("lgClass").innerHTML=h;
 }
 function catOpts(sel){
-  var cats=(S.cfg && S.cfg.cats) || ["科技类","爱国类","其他"];
+  var cats=(S.cfg && S.cfg.cats) || ["绘画","手工","书法","科技类","优秀实验记录","爱国类","其他"];
   return cats.map(function(c){
     return '<option value="'+esc(c)+'"'+(c===sel?" selected":"")+">"+esc(c)+"</option>";
   }).join("");
@@ -324,7 +324,7 @@ function init(){
   api("/api/config").then(function(r){
     if(r.status!==200 || !r.data || !r.data.cats){ setTip("bad","连接不上服务器，请稍后再试或联系老师"); return; }
     S.cfg=r.data;
-    if(S.cfg.school) byId("brandSub").textContent = S.cfg.school+" · 线上美术馆";
+    if(S.cfg.school) byId("brandSub").textContent = S.cfg.school+" · 优秀作品馆";
     if(S.cfg.notice){ byId("notice").textContent=S.cfg.notice; byId("notice").classList.add("on"); }
     fillGrades();
     if(S.cfg.open===false){
