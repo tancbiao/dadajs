@@ -87,6 +87,13 @@ select:focus,input[type=text]:focus{border-color:var(--main)}
 .pick .del{margin-left:auto;flex:none;width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:16px;line-height:1;cursor:pointer}
 .pick .ph{display:flex;align-items:flex-start;gap:8px}
 .pick .ph span{font-size:12.5px;color:var(--sub);margin-top:5px;flex:none}
+/* ★ 多作者：合作者（选填）。默认不占地方，点「+ 加合作者」才出现一行 */
+.cols{display:flex;flex-direction:column;gap:7px;margin-top:8px}
+.cols .co{display:flex;align-items:center;gap:8px}
+.cols .co span{font-size:12.5px;color:var(--sub);flex:none;white-space:nowrap}
+.cols .co input[type=text]{height:40px;font-size:15px;border-radius:11px}
+.pick .addco{align-self:flex-start;margin-top:8px;height:34px;padding:0 13px;border-radius:10px;border:1px dashed var(--line);background:#fff;color:var(--main);font-size:12.5px;font-weight:600;cursor:pointer}
+.pick .delco{flex:none;width:30px;height:30px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--sub);font-size:16px;line-height:1;cursor:pointer}
 .busy{display:none;align-items:center;justify-content:center;gap:9px;margin-top:14px;font-size:13.5px;color:var(--sub)}
 .busy.on{display:flex}
 .spin{width:15px;height:15px;border:2px solid #EADFD1;border-top-color:var(--main);border-radius:50%;animation:sp .7s linear infinite;flex:none}
@@ -301,7 +308,7 @@ function fillClasses(){
   byId("lgClass").innerHTML=h;
 }
 function catOpts(sel){
-  var cats=(S.cfg && S.cfg.cats) || ["绘画","手工","书法","科技类","优秀实验记录","爱国类","其他"];
+  var cats=(S.cfg && S.cfg.cats) || ["绘画","手工","书法","科技类","优秀实验记录","爱国类","热血科创少年","其他"];
   return cats.map(function(c){
     return '<option value="'+esc(c)+'"'+(c===sel?" selected":"")+">"+esc(c)+"</option>";
   }).join("");
@@ -376,6 +383,18 @@ function doVerify(){
 }
 
 /* ══════════════ 选图与压缩 ══════════════ */
+/* 合作者（选填）输入行。★ 多作者：第一作者固定是自家孩子，这里只是「合作者」 */
+function coRows(p){
+  var arr = p.coauthors || [];
+  return arr.map(function(v,i){
+    return '<div class="co" data-co="'+i+'">'+
+      '<span>合作者'+(i+1)+'</span>'+
+      '<input type="text" class="f-co" maxlength="12" placeholder="选填，如：王小红" value="'+esc(v||"")+'">'+
+      '<button class="delco" title="删除">×</button>'+
+    '</div>';
+  }).join("");
+}
+
 function renderPicks(){
   var box=byId("picks");
   byId("pickCount").textContent=S.picks.length+" 幅";
@@ -389,6 +408,9 @@ function renderPicks(){
           '<button class="del" title="删除">×</button>'+
         '</div>'+
         '<select class="f-cat">'+catOpts(p.cat)+'</select>'+
+        /* ★ 多作者：这幅作品还有哪些合作者（选填）。第一作者固定是自家孩子 */
+        '<div class="cols">'+coRows(p)+'</div>'+
+        '<button class="addco" type="button">+ 加合作者</button>'+
         '<p class="pmeta">'+p.w+'×'+p.h+' · 压缩后 <b>'+kb(p.size)+'</b> · 原图 '+kb(p.orig)+'</p>'+
       '</div>'+
     '</div>';
@@ -400,6 +422,7 @@ function renderPicks(){
       var id=parseInt(node.getAttribute("data-id"),10);
       var p=S.picks.filter(function(x){ return x.id===id; })[0];
       if(!p) return;
+      if(!p.coauthors) p.coauthors=[];
       node.querySelector(".f-title").oninput=function(){ p.title=this.value; };
       node.querySelector(".f-cat").onchange=function(){ p.cat=this.value; };
       node.querySelector(".del").onclick=function(){
@@ -407,6 +430,19 @@ function renderPicks(){
         try{ URL.revokeObjectURL(p.url); }catch(e){}
         renderPicks();
       };
+      /* 合作者：每次重绘都按当前下标重新绑定（删除后下标会变）。
+         ★ 上限：第一作者（自家孩子）+ 合作者 合计最多 5 人 */
+      node.querySelector(".addco").onclick=function(){
+        if((p.coauthors||[]).length < 4){ p.coauthors.push(""); renderPicks(); }
+      };
+      var cos=node.querySelectorAll(".co");
+      for(var j=0;j<cos.length;j++){
+        (function(co){
+          var k=parseInt(co.getAttribute("data-co"),10);
+          co.querySelector(".f-co").oninput=function(){ p.coauthors[k]=this.value; };
+          co.querySelector(".delco").onclick=function(){ p.coauthors.splice(k,1); renderPicks(); };
+        })(cos[j]);
+      }
     })(nodes[i]);
   }
   byId("btnSubmit").disabled = S.picks.length===0 || S.busy;
@@ -435,7 +471,8 @@ async function addFiles(files){
         size:r.blob.size, orig:f.size,
         url:URL.createObjectURL(r.blob),
         title:"",
-        cat:(S.cfg && S.cfg.cats && S.cfg.cats[0]) || "其他"
+        cat:(S.cfg && S.cfg.cats && S.cfg.cats[0]) || "其他",
+        coauthors:[]          /* ★ 合作者（选填），第一作者固定是自家孩子 */
       });
       added++;
     }catch(e){ failed++; }
@@ -464,8 +501,14 @@ async function doSubmit(){
     try{
       var b64=await blobToB64(p.blob);
       var thb64=p.thumb ? await blobToB64(p.thumb) : "";
+      /* ★ 多作者：第一作者 = 自家孩子（S.me.name），后面依次跟合作者（去空、去重） */
+      var names=[S.me.name].filter(Boolean);
+      (p.coauthors||[]).forEach(function(x){
+        var v=String(x||"").trim();
+        if(v && names.indexOf(v)<0) names.push(v);
+      });
       var r=await post("/api/submit",{
-        g:S.me.g, c:S.me.c, name:S.me.name,
+        g:S.me.g, c:S.me.c, name:S.me.name, names:names,
         title:p.title.trim(), cat:p.cat,
         img:b64, th:thb64, ext:p.ext, w:p.w, h:p.h
       });

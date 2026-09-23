@@ -77,6 +77,16 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .fields select{flex:0 0 auto}
 .fields input.miss{border-color:#E8A9A6;background:#FFF8F8}
 .fields input.miss::placeholder{color:#D97C78}
+/* ★ 多作者：一列作者输入框（第一作者 / 第二作者…），可加可删 */
+.fields .namebox{flex:1;min-width:180px;display:flex;flex-direction:column;gap:7px}
+.fields .nameline{display:flex;align-items:center;gap:7px}
+.fields .nameline .nrole{flex:none;font-size:11.5px;color:var(--sub);white-space:nowrap}
+.fields .nameline input.f-name{flex:1;min-width:90px}
+.fields .nameline .addname,.fields .nameline .delname{
+  flex:none;width:30px;height:30px;padding:0;border-radius:9px;border:1px solid var(--line);
+  background:#fff;color:var(--sub);font-size:15px;line-height:1;cursor:pointer}
+.fields .nameline .addname{color:var(--brand)}
+.fields .nameline .delname:hover{border-color:#F3C9C7;color:var(--warn)}
 .fname{font-size:11.5px;color:var(--sub);word-break:break-all}
 .fpath{display:inline-block;margin-left:8px;padding:1px 7px;border-radius:99px;
        background:var(--ok-soft);color:var(--ok);font-size:11px}
@@ -156,7 +166,9 @@ footer a:hover{text-decoration:underline}
       </div>
       <p class="hint">
         小技巧：把照片重命名成 <code>姓名_作品名.jpg</code>（如 <code>郑欣怡_太空电梯.jpg</code>），
-        系统会自动认出来，你就少填一半。
+        系统会自动认出来，你就少填一半。<br>
+        多人合作的作品写成 <code>李小明+王小红_作品名.jpg</code>（加号或顿号都行，<b>不能用减号</b>），
+        加进来后会自动拆成「第一作者 / 第二作者」。
       </p>
     </div>
   </section>
@@ -208,14 +220,39 @@ footer a:hover{text-decoration:underline}
 <script>
 "use strict";
 
-/* ══════════════ 配置（与 build.py 保持一致） ══════════════ */
-var CATEGORIES = ["科技类", "爱国类", "其他"];
+/* ══════════════ 配置（与 build.py 保持一致） ══════════════
+   ★ 分类列表要和 build.py / server.js / 家长端投稿页 四处一致，
+     漏一处会出现「老师端能选、家长端选不到」的错位。 */
+var CATEGORIES = ["绘画", "手工", "书法", "科技类", "优秀实验记录", "爱国类", "热血科创少年", "其他"];
 var CLASS_PLAN = { 1: 5, 2: 5, 3: 5, 4: 8, 5: 8, 6: 8 };
 var MAX_EDGE   = 1800;   // 长边像素
 var QUALITY    = 0.92;   // WebP 质量
 var CN_DIGIT   = { "一":1, "二":2, "三":3, "四":4, "五":5, "六":6, "七":7, "八":8, "九":9, "十":10 };
-var CAT_HINTS  = ["科技","爱国","其他","手工","绘画","书法","摄影","剪纸","科创","劳动","传统文化","美术","写作","手抄报"];
+var CAT_HINTS  = ["科技","爱国","其他","手工","绘画","书法","摄影","剪纸","科创","劳动","传统文化","美术","写作","手抄报",
+                  "实验记录","实验","观察记录","小实验","热血科创少年","科创少年","热血科创"];
+/* 类别别名归一（与 build.py 的 CAT_ALIAS 对齐）。
+   ★ 注意：「科创」（两个字）仍归「科技类」，别动 —— 只有
+     「科创少年 / 热血科创 / 科创少年类」才归到新类别「热血科创少年」。 */
+var CAT_ALIAS  = {
+  "实验记录":"优秀实验记录","实验":"优秀实验记录","观察记录":"优秀实验记录",
+  "小实验":"优秀实验记录","科学实验":"优秀实验记录","实验报告":"优秀实验记录",
+  "画画":"绘画","彩铅":"绘画","水彩":"绘画","国画":"绘画","素描":"绘画",
+  "儿童画":"绘画","创意画":"绘画","美术":"绘画","油画":"绘画","版画":"绘画",
+  "手作":"手工","黏土":"手工","粘土":"手工","折纸":"手工","剪纸":"手工",
+  "编织":"手工","环保制作":"手工","手工制作":"手工",
+  "软笔":"书法","硬笔":"书法","毛笔":"书法",
+  "科技":"科技类","科创":"科技类","科学":"科技类",
+  "爱国":"爱国类",
+  "科创少年":"热血科创少年","热血科创":"热血科创少年","科创少年类":"热血科创少年",
+  "摄影":"其他","写作":"其他","手抄报":"其他","传统文化":"其他"
+};
 var IMG_EXT    = [".jpg",".jpeg",".png",".webp",".bmp",".gif",".tif",".tiff"];
+
+/* ★ 多作者（2026-09-23）：与 build.py 的 NAME_RE / split_authors 完全一致，
+   别各写一套 —— 否则老师端打包时的文件名和 build.py 解析会打架。
+   分隔符：+、顿号、＆、&、；、;（**不含减号**，减号是字段分隔符）。 */
+var NAME_RE    = /^[\u4e00-\u9fa5a-zA-Z·]{2,12}$/;
+var AUTHOR_SEP = /[+、＆&；;]+/;
 
 /* ══════════════ 小工具 ══════════════ */
 function $(id){ return document.getElementById(id); }
@@ -246,6 +283,7 @@ function isCatWord(w){
   w = String(w).trim();
   if (!w) return false;
   if (CAT_HINTS.indexOf(w) >= 0) return true;
+  if (CAT_ALIAS[w]) return true;
   if (w.slice(-1) === "类" && w.length <= 6) return true;
   for (var i = 0; i < CATEGORIES.length; i++){
     if (CATEGORIES[i].replace("类", "") === w.replace("类", "")) return true;
@@ -257,9 +295,17 @@ function normCategory(raw){
   if (!raw) return "";
   var n = String(raw).trim();
   if (!n) return "";
-  for (var i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i] === n) return CATEGORIES[i];
-  for (var j = 0; j < CATEGORIES.length; j++){
-    if (CATEGORIES[j].replace("类", "") === n.replace("类", "")) return CATEGORIES[j];
+  var i, k;
+  for (i = 0; i < CATEGORIES.length; i++) if (CATEGORIES[i] === n) return CATEGORIES[i];
+  /* ① 别名表（科创少年 → 热血科创少年 等，与 build.py 对齐） */
+  if (CAT_ALIAS[n]) return CAT_ALIAS[n];
+  /* ② 去掉尾巴的「类」再比一次（科技 ↔ 科技类） */
+  var bare = n.replace("类", "");
+  for (i = 0; i < CATEGORIES.length; i++){
+    if (CATEGORIES[i].replace("类", "") === bare) return CATEGORIES[i];
+  }
+  for (k in CAT_ALIAS){
+    if (CAT_ALIAS.hasOwnProperty(k) && k.replace("类", "") === bare) return CAT_ALIAS[k];
   }
   return n;
 }
@@ -284,6 +330,56 @@ function looksLikeName(s){
   if (!/^[\u4e00-\u9fa5a-zA-Z·]+$/.test(s)) return false;
   if (/^[a-zA-Z·]+$/.test(s) && s.length < 4) return false;   // IMG / DSC 这类要挡掉
   return true;
+}
+
+/* ★ 多作者：把文件名里的「姓名段」拆成作者列表（与 build.py 的 split_authors 完全一致）
+   - 空 / 认不出 → []
+   - 单段       → [seg]（能过 NAME_RE 才认）
+   - 多段       → 按 +、顿号、＆、&、；、; 拆；**每段都必须像姓名**才认定，
+                  有一段不像就整段当单人（否则作品名里的加号会被误拆）
+   - 上限 5 人 */
+function splitAuthors(seg){
+  var s = String(seg == null ? "" : seg).trim();
+  if (!s) return [];
+  var pieces = s.split(AUTHOR_SEP).map(function(x){ return x.trim(); })
+                .filter(function(x){ return x; });
+  if (pieces.length > 1){
+    var allOk = true;
+    for (var i = 0; i < pieces.length; i++){
+      if (!NAME_RE.test(pieces[i])){ allOk = false; break; }
+    }
+    if (allOk) return pieces.slice(0, 5);
+  }
+  return NAME_RE.test(s) ? [s] : [];
+}
+
+/* 第一作者（姓名列表里第一个非空的名字）——它才是「必填」的那一位 */
+function primaryName(it){
+  if (!it) return "";
+  var arr = it.names || [];
+  for (var i = 0; i < arr.length; i++){
+    var v = String(arr[i] == null ? "" : arr[i]).trim();
+    if (v) return v;
+  }
+  return "";
+}
+
+/* 多作者输入行（第一作者必填，其余为合作者，可加可删） */
+function nameRows(it){
+  var arr = (it.names && it.names.length) ? it.names : [""];
+  var h = "";
+  for (var i = 0; i < arr.length; i++){
+    var miss = (i === 0) && !String(arr[i] || "").trim();
+    h +=
+      '<div class="nameline" data-i="' + i + '">' +
+        '<span class="nrole">' + (i === 0 ? "第一作者" : "第" + cn(i + 1) + "作者") + "</span>" +
+        '<input type="text" class="f-name' + (miss ? " miss" : "") + '" maxlength="12" ' +
+          'placeholder="学生姓名（必填）" value="' + esc(arr[i] || "") + '">' +
+        (i > 0 ? '<button type="button" class="delname" title="删除">×</button>' : "") +
+        '<button type="button" class="addname" title="加合作者">＋</button>' +
+      "</div>";
+  }
+  return h;
 }
 
 /* 从整个相对路径里挖班级和类别（老师按标准文件夹整理时用得上） */
@@ -478,22 +574,24 @@ function addFiles(files, pathHints){
     var fromPath = parsePathSegments(segs);
     var fromName = parseFilename(stemOf(base));
 
-    /* 姓名不像人名（如 IMG_1234）就整条作废，交给老师手填 */
-    var autoName = looksLikeName(fromName.name) ? fromName.name : "";
-    var autoTitle = autoName ? (fromName.title || "") : "";
+    /* ★ 多作者：姓名段按与 build.py 同一套规则拆分。
+       整段不像人名（如 IMG / DSC）就整条作废，交给老师手填。 */
+    var names = splitAuthors(fromName.name);
+    if (!names.length || !looksLikeName(names[0])) names = [];
 
     var it = {
       id: ++S.seq,
       file: f,
-      name: autoName,
-      title: autoTitle,
+      names: names.length ? names.slice() : [""],   /* 至少留一个空输入框给老师填 */
+      title: names.length ? (fromName.title || "") : "",
       /* 类别留空就落成「其他」——必须和界面下拉框显示的一致，
          否则老师看着是「科技类」，导出来却进了「其他」，属于暗坑 */
-      cat: normCategory(fromPath.cat || (autoName ? fromName.cat : "") || "") || "其他",
+      cat: normCategory(fromPath.cat || (names.length ? fromName.cat : "") || "") || "其他",
       g: fromPath.g || cc.g,
       c: fromPath.c || cc.c,
       size: f.size
     };
+    it.name = primaryName(it);
     it.url = URL.createObjectURL(f);
     S.items.push(it);
     added++;
@@ -543,14 +641,13 @@ function render(){
     var arr = groups[key], g = arr[0].g, c = arr[0].c;
     html += '<div class="grphead">' + esc(className(g, c)) + " · " + arr.length + " 幅</div>";
     arr.forEach(function(it){
-      var miss = !it.name.trim();
+      var miss = !primaryName(it);
       html +=
         '<div class="item' + (miss ? " bad" : "") + '" data-id="' + it.id + '">' +
           '<img src="' + it.url + '" alt="">' +
           '<div class="fields">' +
             '<div class="line">' +
-              '<input type="text" class="f-name' + (miss ? " miss" : "") + '" ' +
-                'placeholder="学生姓名（必填）" value="' + esc(it.name) + '">' +
+              '<div class="namebox">' + nameRows(it) + "</div>" +
               '<select class="f-g">' +
                 (function(){
                   var s = "";
@@ -605,9 +702,17 @@ $("list").addEventListener("input", function(e){
   if (!it) return;
 
   if (t.classList.contains("f-name")){
-    it.name = t.value;
-    t.classList.toggle("miss", !t.value.trim());
-    if (it.name.trim()) item.classList.remove("bad");
+    /* ★ 多作者：按这一行在 namebox 里的下标写回对应的作者 */
+    if (!it.names) it.names = [""];
+    var nl = t.closest ? t.closest(".nameline") : null;
+    var idx = nl ? parseInt(nl.getAttribute("data-i"), 10) : 0;
+    if (!(idx >= 0 && idx < it.names.length)) idx = 0;
+    it.names[idx] = t.value;
+    it.name = primaryName(it);
+    if (idx === 0){
+      t.classList.toggle("miss", !t.value.trim());
+      if (it.name) item.classList.remove("bad");
+    }
   } else if (t.classList.contains("f-title")){
     it.title = t.value;
   }
@@ -635,10 +740,27 @@ $("list").addEventListener("change", function(e){
 
 $("list").addEventListener("click", function(e){
   var t = e.target;
-  if (!t.classList.contains("del")) return;
-  var item = t.closest(".item");
+  var item = t.closest ? t.closest(".item") : null;
   if (!item) return;
   var id = parseInt(item.dataset.id, 10);
+  var it = null;
+  for (var i = 0; i < S.items.length; i++) if (S.items[i].id === id) it = S.items[i];
+  if (!it) return;
+  if (!it.names) it.names = [""];
+
+  /* ★ 多作者：加一位合作者 / 删掉某一位 */
+  if (t.classList.contains("addname")){
+    if (it.names.length < 5){ it.names.push(""); render(); }
+    return;
+  }
+  if (t.classList.contains("delname")){
+    var nl = t.closest ? t.closest(".nameline") : null;
+    var idx = nl ? parseInt(nl.getAttribute("data-i"), 10) : -1;
+    if (idx > 0 && idx < it.names.length){ it.names.splice(idx, 1); render(); }
+    return;
+  }
+
+  if (!t.classList.contains("del")) return;
   S.items = S.items.filter(function(x){
     if (x.id === id){ if (x.url) URL.revokeObjectURL(x.url); return false; }
     return true;
@@ -733,7 +855,7 @@ $("go").onclick = async function(){
   if (S.busy) return;
 
   /* 校验 */
-  var miss = S.items.filter(function(it){ return !it.name.trim(); });
+  var miss = S.items.filter(function(it){ return !primaryName(it); });
   if (miss.length){
     alert("还有 " + miss.length + " 幅作品没填学生姓名（标红的那几个），补上再生成。");
     if (miss[0].url){
@@ -756,7 +878,7 @@ $("go").onclick = async function(){
 
     for (var i = 0; i < S.items.length; i++){
       var it = S.items[i];
-      $("maskMeta").textContent = "第 " + (i + 1) + " / " + S.items.length + " 张：" + (it.name || it.file.name);
+      $("maskMeta").textContent = "第 " + (i + 1) + " / " + S.items.length + " 张：" + (primaryName(it) || it.file.name);
       $("pbar").style.width = ((i / S.items.length) * 90).toFixed(1) + "%";
       await wait(0);   // 让界面刷新
 
@@ -765,8 +887,11 @@ $("go").onclick = async function(){
       shrunk.blob = null;                  // 及时释放，几百张也不会撑爆内存
       totalIn += it.size; totalOut += buf.length;
 
-      /* 文件名：姓名_作品名.webp，重名自动加序号 */
-      var safeName = it.name.trim().replace(/[\\\/:*?"<>|]/g, "");
+      /* 文件名：姓名_作品名.webp，重名自动加序号。
+         ★ 多作者：姓名段用「+」连接（如 李小明+王小红），build.py 会再拆回来。 */
+      var auths = (it.names || []).map(function(x){ return String(x == null ? "" : x).trim(); })
+                    .filter(function(x){ return x; });
+      var safeName = auths.join("+").replace(/[\\\/:*?"<>|]/g, "");
       var safeTitle = (it.title || "").trim().replace(/[\\\/:*?"<>|]/g, "");
       var base = safeTitle ? (safeName + "_" + safeTitle) : safeName;
       var dir = className(it.g, it.c) + "/" + (it.cat || "其他") + "/";
@@ -826,6 +951,8 @@ window.GalleryTeacher = {
   isCatWord: isCatWord,
   looksLikeName: looksLikeName,
   normCategory: normCategory,
+  splitAuthors: splitAuthors,
+  primaryName: primaryName,
   className: className,
   crc32: crc32,
   buildZip: buildZip,

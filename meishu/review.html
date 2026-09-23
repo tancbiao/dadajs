@@ -110,6 +110,14 @@ button{font-family:inherit}
 .dlg .fld input:focus,.dlg .fld select:focus,.dlg .fld textarea:focus{border-color:var(--main)}
 .dlg .row{display:flex;gap:10px}
 .dlg .row .fld{flex:1;min-width:0}
+/* ★ 多作者：作者编辑列表（第一作者 / 第二作者…，可上移下移、加合作者） */
+.dlg .fld .nmlist{display:flex;flex-direction:column;gap:7px}
+.dlg .fld .nmrow{display:flex;align-items:center;gap:6px}
+.dlg .fld .nmrow .nmrole{flex:none;width:54px;font-size:11.5px;color:var(--sub);white-space:nowrap}
+.dlg .fld .nmrow input.nm-in{flex:1;min-width:0;width:auto;height:40px}
+.dlg .fld .nmrow .nmbtn{flex:none;width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--sub);cursor:pointer;font-size:14px;line-height:1}
+.dlg .fld .nmrow .nmbtn.rm{color:var(--bad)}
+.dlg .fld .addnm{margin-top:8px;height:36px;padding:0 14px;border-radius:11px;border:1px dashed var(--line);background:#fff;color:var(--main);font-size:13px;font-weight:600;cursor:pointer}
 .dlg .dacts{display:flex;gap:10px;margin-top:18px}
 .dlg .dacts button{flex:1;height:48px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:15px;font-weight:600;cursor:pointer}
 .dlg .dacts .yes{background:var(--main);border-color:var(--main);color:#fff}
@@ -184,6 +192,14 @@ button{font-family:inherit}
 .pubbusy .spin{border-color:#EADFD1;border-top-color:var(--main)}
 .pubok{background:var(--okbg);color:var(--ok);border-radius:13px;padding:11px 14px;font-size:13px;line-height:1.6;margin-top:12px;font-weight:500}
 .who2{display:flex;align-items:center;gap:9px;background:var(--okbg);color:var(--ok);border-radius:13px;padding:10px 13px;font-size:14px;font-weight:600;margin-top:12px}
+/* ★ 多作者：发布面板里的作者编辑行（与详情弹窗同一套观感） */
+.pubcard .nmlist{display:flex;flex-direction:column;gap:7px}
+.pubcard .nmrow{display:flex;align-items:center;gap:6px}
+.pubcard .nmrow .nmrole{flex:none;width:54px;font-size:11.5px;color:var(--sub);white-space:nowrap}
+.pubcard .nmrow input.nm-in{flex:1;min-width:0;width:auto}
+.pubcard .nmrow .nmbtn{flex:none;width:30px;height:30px;border-radius:9px;border:1px solid var(--line);background:#fff;color:var(--sub);cursor:pointer;font-size:14px;line-height:1}
+.pubcard .nmrow .nmbtn.rm{color:var(--bad)}
+.pubcard .addnm{margin-top:8px;height:36px;padding:0 14px;border-radius:11px;border:1px dashed var(--line);background:#fff;color:var(--main);font-size:13px;font-weight:600;cursor:pointer}
 
 #toast{position:fixed;left:50%;bottom:34px;transform:translateX(-50%) translateY(20px);background:rgba(74,59,50,.94);color:#fff;font-size:14px;padding:11px 20px;border-radius:12px;opacity:0;transition:.22s;pointer-events:none;z-index:99;max-width:84%;text-align:center}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -245,7 +261,11 @@ button{font-family:inherit}
       <img class="bigimg" id="dImg" alt="">
       <div class="meta" id="dMeta"></div>
       <div class="row">
-        <div class="fld"><label>学生姓名</label><input id="dName" type="text" maxlength="12"></div>
+        <div class="fld">
+          <label>作者（第一作者在最前，可调顺序）</label>
+          <div id="dNames" class="nmlist"></div>
+          <button type="button" class="addnm" id="dAddName">+ 加合作者</button>
+        </div>
         <div class="fld"><label>班级</label><input id="dClass" type="text" readonly style="background:#FAF6F0;color:#9C8A7E"></div>
       </div>
       <div class="row">
@@ -290,7 +310,7 @@ var S = {
   lastData: null,
   /* ── 发布作品 ── */
   classes: null,        /* {1:5,2:5,...} 各年级班数 */
-  pub: { g:0, c:0, name:"", list:[], busy:false, seq:0, roster:[] },
+  pub: { g:0, c:0, name:"", coauthors:[], list:[], busy:false, seq:0, roster:[] },
   pubReady: false       /* 发布面板是否已铺好骨架（避免每次重绘丢输入） */
 };
 
@@ -300,6 +320,25 @@ function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(m){
 function cn(n){ return ({1:"一",2:"二",3:"三",4:"四",5:"五",6:"六"})[n] || n; }
 function className(g,c){ return cn(g)+"年级"+c+"班"; }
 function kb(n){ return n<1024 ? n+" B" : n<1048576 ? (n/1024).toFixed(0)+" KB" : (n/1048576).toFixed(1)+" MB"; }
+
+/* ★ 多作者（2026-09-23）：与 build.py 的 NAME_RE / split_authors、老师端收集器完全一致。
+   分隔符：+、顿号、＆、&、；、;（**不含减号**，减号是字段分隔符）。 */
+var NAME_RE    = /^[\u4e00-\u9fa5a-zA-Z·]{2,12}$/;
+var AUTHOR_SEP = /[+、＆&；;]+/;
+function splitAuthors(seg){
+  var s = String(seg == null ? "" : seg).trim();
+  if (!s) return [];
+  var pieces = s.split(AUTHOR_SEP).map(function(x){ return x.trim(); })
+                .filter(function(x){ return x; });
+  if (pieces.length > 1){
+    var allOk = true;
+    for (var i = 0; i < pieces.length; i++){
+      if (!NAME_RE.test(pieces[i])){ allOk = false; break; }
+    }
+    if (allOk) return pieces.slice(0, 5);
+  }
+  return NAME_RE.test(s) ? [s] : [];
+}
 
 var toastT=null;
 function toast(msg){
@@ -421,7 +460,13 @@ function curList(){
   var q=S.q.toLowerCase(), cat=S.cat;
   return a.filter(function(it){
     if(cat && it.cat!==cat) return false;
-    if(q && (it.title||"").toLowerCase().indexOf(q)<0 && (it.name||"").toLowerCase().indexOf(q)<0) return false;
+    if(q){
+      /* ★ 多作者：任一作者名都能搜到 */
+      var arr=(it.names && it.names.length)?it.names:(it.name?[it.name]:[]);
+      var hit=false;
+      for(var k=0;k<arr.length;k++){ if(String(arr[k]).toLowerCase().indexOf(q)>=0){ hit=true; break; } }
+      if(!hit && (it.title||"").toLowerCase().indexOf(q)<0) return false;
+    }
     return true;
   });
 }
@@ -504,7 +549,9 @@ function render(){
     var thumb = it.source==="static" ? it.th
               : S.tab==="trash" ? API+"/api/trashimg/"+it.id+"?s=1"
               : it.th;
-    var who = it.name ? (esc(it.name)+" · "+className(it.g,it.c)) : className(it.g,it.c);
+    /* ★ 多作者：卡片上显示全部作者（第一作者、第二作者…） */
+    var nmArr = (it.names && it.names.length) ? it.names : (it.name ? [it.name] : []);
+    var who = (nmArr.length ? esc(nmArr.join("、"))+" · " : "") + className(it.g,it.c);
     return '<div class="wcard'+(S.tab==="trash"?" trashed":"")+'" data-id="'+it.id+'">'+
       '<div class="ph">'+
         '<img loading="lazy" src="'+esc(thumb)+'" alt="" onerror="this.style.opacity=.3">'+
@@ -528,13 +575,32 @@ function findItem(id){
 }
 
 /* ══════════════ 详情弹窗 ══════════════ */
+/* ★ 多作者（2026-09-23）：详情弹窗里正在编辑的作者列表（第一作者在最前） */
+var dNames = [""];
+function renderDNames(){
+  var box=byId("dNames");
+  if(!box) return;
+  box.innerHTML = dNames.map(function(nm,i){
+    var role = i===0 ? "第一作者" : ("第"+cn(i+1)+"作者");
+    return '<div class="nmrow" data-i="'+i+'">'+
+      '<span class="nmrole">'+role+'</span>'+
+      '<input type="text" class="nm-in" maxlength="12" value="'+esc(nm||"")+'" placeholder="姓名">'+
+      (i>0 ? '<button type="button" class="nmbtn up" title="上移">↑</button>' : '')+
+      (i<dNames.length-1 ? '<button type="button" class="nmbtn down" title="下移">↓</button>' : '')+
+      (i>0 ? '<button type="button" class="nmbtn rm" title="删除">×</button>' : '')+
+    '</div>';
+  }).join("");
+}
+
 function openDetail(id){
   var it=findItem(id);
   if(!it) return;
   S.cur=it;
   byId("dTitle").textContent = it.status==="pending" ? "审核这幅作品" : "作品详情";
   byId("dImg").src=it.img;
-  byId("dName").value=it.name;
+  /* ★ 多作者：把全部作者铺进编辑列表（第一作者在最前） */
+  dNames = (it.names && it.names.length) ? it.names.slice() : (it.name ? [it.name] : [""]);
+  renderDNames();
   byId("dClass").value=className(it.g,it.c);
   byId("dTitleIn").value=it.title||"";
   byId("dCat").value=it.cat||"其他";
@@ -598,7 +664,11 @@ function reload(){
 }
 
 function doApprove(it, keepOpen){
-  var body={id:it.id, name:byId("dName").value.trim(), title:byId("dTitleIn").value.trim(),
+  /* ★ 多作者：收集编辑后的作者列表（去空、去重），第一作者 = names[0] */
+  var names = dNames.map(function(x){ return String(x||"").trim(); }).filter(Boolean);
+  var uniq = [];
+  names.forEach(function(n){ if(uniq.indexOf(n)<0) uniq.push(n); });
+  var body={id:it.id, names:uniq, name:uniq[0]||"", title:byId("dTitleIn").value.trim(),
             cat:byId("dCat").value};
   post("approve", body).then(function(r){
     after(r, keepOpen?"已保存修改":"已通过，家长和孩子马上就能看到");
@@ -616,7 +686,7 @@ function doRemove(it){
   post("remove", {id:it.id}).then(function(r){ after(r, "已删除"); });
 }
 function doRequeue(it){
-  post("approve", {id:it.id, name:it.name, title:it.title, cat:it.cat}).then(function(r){
+  post("approve", {id:it.id, name:it.name, names:it.names, title:it.title, cat:it.cat}).then(function(r){
     after(r, "已移回已展出");
   });
 }
@@ -641,6 +711,66 @@ function fillPubClasses(){
   if(S.pub.c && S.pub.c<=cnt) byId("pubClass").value=S.pub.c;
 }
 
+/* ══ 发布面板 · 多作者（★ 2026-09-23）══
+   第一作者 = 从名单里选的那位（固定，作品归到他名下）；合作者（选填）在其后。
+   行样式复用详情弹窗那一套（nmrow / nmrole / nm-in / nmbtn / addnm），保持一致。 */
+function pubAuthors(){
+  var arr=[];
+  var primary=(S.pub.name||"").trim();
+  if(primary) arr.push(primary);
+  (S.pub.coauthors||[]).forEach(function(x){
+    var v=String(x==null?"":x).trim();
+    if(v) arr.push(v);
+  });
+  return arr;
+}
+function pubAuthorRows(){
+  var h='<div class="nmrow">'+
+    '<span class="nmrole">第一作者</span>'+
+    '<input type="text" class="nm-in" id="pubName" maxlength="12" placeholder="点上面的姓名，或直接输入" value="'+esc(S.pub.name||"")+'">'+
+  '</div>';
+  var co=S.pub.coauthors||[];
+  for(var i=0;i<co.length;i++){
+    h+='<div class="nmrow" data-ci="'+i+'">'+
+      '<span class="nmrole">第'+cn(i+2)+'作者</span>'+
+      '<input type="text" class="nm-in pub-co" maxlength="12" placeholder="合作者姓名（选填）" value="'+esc(co[i]||"")+'">'+
+      (i>0?'<button type="button" class="nmbtn up" title="上移">↑</button>':'')+
+      (i<co.length-1?'<button type="button" class="nmbtn down" title="下移">↓</button>':'')+
+      '<button type="button" class="nmbtn rm" title="删除">×</button>'+
+    '</div>';
+  }
+  return h;
+}
+/* 只重绘作者区（不动 Roster 名单和照片列表），第一作者输入框始终存在（id=pubName） */
+function renderPubAuthors(){
+  var box=byId("pubAuthors");
+  if(!box) return;
+  box.innerHTML=pubAuthorRows();
+  syncPubWho();
+}
+/* 一个输入值 → 姓名数组（含加号/顿号粘贴时按 splitAuthors 规则拆） */
+function pubSplitOne(raw){
+  var parts=splitAuthors(raw);
+  if(parts.length) return parts;
+  var v=String(raw==null?"":raw).trim();
+  return v?[v]:[];
+}
+/* 把拆分出来的几位合作者写回列表（去重、含第一作者、合作者上限 4 位） */
+function pubSetCoauthors(fromCi, parts){
+  if(!S.pub.coauthors) S.pub.coauthors=[];
+  var co=S.pub.coauthors.slice();
+  var at=(fromCi>=0 && fromCi<co.length)?fromCi:co.length;
+  if(fromCi>=0 && fromCi<co.length) co.splice(fromCi,1);
+  var have=pubAuthors(), add=[];
+  parts.forEach(function(nm){
+    nm=String(nm==null?"":nm).trim();
+    if(!nm || have.indexOf(nm)>=0) return;
+    have.push(nm); add.push(nm);
+  });
+  co.splice.apply(co,[at,0].concat(add));
+  S.pub.coauthors=co.slice(0,4);
+}
+
 function renderPublish(){
   byId("cnt").textContent="";
   var box=byId("listBox");
@@ -661,8 +791,11 @@ function renderPublish(){
         '</div>'+
         '<p class="hint" style="margin-top:14px;margin-bottom:0">下面的姓名点一下就能选中（也可以自己手动填）。</p>'+
         '<div class="namelist" id="pubNames"><div class="nm" style="color:#9C8A7E;cursor:default">选好年级班级后显示名单</div></div>'+
-        '<div class="pubfld"><label>已选学生</label>'+
-          '<input type="text" id="pubName" maxlength="12" placeholder="点上面的姓名，或直接输入" value="'+esc(S.pub.name||"")+'">'+
+        '<div class="pubfld"><label>作者（第一作者必填，合作者选填，最多 5 人）</label>'+
+          /* ★ 多作者：第一作者 = 上面名单里选的那位（固定）；合作者在其后，可加/删/调序。
+             与详情弹窗同一套行样式（nmrow / nmrole / nm-in / nmbtn / addnm）。 */
+          '<div class="nmlist" id="pubAuthors">'+pubAuthorRows()+'</div>'+
+          '<button type="button" class="addnm" id="pubAddCo">+ 加合作者</button>'+
         '</div>'+
         (S.pub.name?'<div class="who2" id="pubWho"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg><span id="pubWhoTxt"></span></div>':'')+
       '</div>'+
@@ -705,6 +838,7 @@ function renderPublish(){
         '<h3>操作要点</h3>'+
         '<p class="hint" style="margin-bottom:0">'+
           '· 姓名必须在本班名单里 —— 作品会归到孩子名下，家长在「我的孩子」里能看到<br>'+
+          '· 多人合作：点「+ 加合作者」添第二、第三作者（最多 5 人）；第一作者必须是名单里的孩子<br>'+
           '· 类别有：绘画 / 手工 / 书法 / 科技类 / 优秀实验记录 / 爱国类，拿不准先选「其他」，发完能改<br>'+
           '· 发错了不要紧：去「已展出」找到它，可以改信息，也可以直接点红色「删除」'+
         '</p>'+
@@ -948,6 +1082,14 @@ function doPublish(){
     if(!confirm("「"+name+"」不在"+cn(g)+"年级"+c+"班的名单里，确定要发布吗？\n\n（点「取消」先去核对姓名，点「确定」继续尝试）")) return;
   }
 
+  /* ★ 多作者：第一作者 = 名单里选的那位；后面跟合作者（去空、去重、上限 5 人）。
+     单人时 names=[name]，行为与以前完全一致。 */
+  var names=[name];
+  (S.pub.coauthors||[]).forEach(function(x){
+    var v=String(x==null?"":x).trim();
+    if(v && names.indexOf(v)<0 && names.length<5) names.push(v);
+  });
+
   S.pub.busy=true;
   byId("pubBusy").style.display="";
   byId("pubGo").disabled=true;
@@ -976,7 +1118,7 @@ function doPublish(){
     pubB64(p.blob).then(function(v){ b64=v; return p.thumb?pubB64(p.thumb):""; }).then(function(v){
       thb64=v||"";
       return post("publish",{
-        g:g, c:c, name:name,
+        g:g, c:c, name:names[0], names:names,
         title:(p.title||"").trim(), cat:p.cat,
         img:b64, th:thb64, ext:p.ext, w:p.w, h:p.h
       });
@@ -1212,6 +1354,37 @@ function bind(){
   };
   byId("btnOpenSite").onclick=function(){ window.open(SITE,"_blank"); };
   byId("dClose").onclick=closeDetail;
+
+  /* ★ 多作者：详情弹窗里的作者编辑（输入 / 上移 / 下移 / 删除 / 加合作者） */
+  var dnBox=byId("dNames");
+  if(dnBox){
+    dnBox.addEventListener("input",function(e){
+      var t=e.target;
+      if(!t.classList || !t.classList.contains("nm-in")) return;
+      var row=t.closest ? t.closest(".nmrow") : null;
+      if(!row) return;
+      var idx=parseInt(row.getAttribute("data-i"),10);
+      if(idx>=0 && idx<dNames.length) dNames[idx]=t.value;
+    });
+    dnBox.addEventListener("click",function(e){
+      var t=e.target;
+      if(!t.classList || !t.classList.contains("nmbtn")) return;
+      var row=t.closest ? t.closest(".nmrow") : null;
+      if(!row) return;
+      var idx=parseInt(row.getAttribute("data-i"),10);
+      if(!(idx>=0 && idx<dNames.length)) return;
+      var tmp;
+      if(t.classList.contains("rm")) dNames.splice(idx,1);
+      else if(t.classList.contains("up") && idx>0){ tmp=dNames[idx-1]; dNames[idx-1]=dNames[idx]; dNames[idx]=tmp; }
+      else if(t.classList.contains("down") && idx<dNames.length-1){ tmp=dNames[idx+1]; dNames[idx+1]=dNames[idx]; dNames[idx]=tmp; }
+      else return;
+      if(!dNames.length) dNames=[""];
+      renderDNames();
+    });
+  }
+  var addNm=byId("dAddName");
+  if(addNm) addNm.onclick=function(){ if(dNames.length<5){ dNames.push(""); renderDNames(); } };
+
   byId("mask").onclick=function(e){ if(e.target===this) closeDetail(); };
   document.addEventListener("keydown",function(e){ if(e.key==="Escape") closeDetail(); });
 
@@ -1245,6 +1418,69 @@ function bind(){
     if(card){ openDetail(card.getAttribute("data-id")); }
   });
 
+  /* ★ 多作者（发布面板）：作者行的输入 / 拆分 / 增删 / 调序。
+     挂在 #listBox 上用事件委托 —— renderPublish 每次重绘 innerHTML，
+     逐元素绑定会丢，委托不会。 */
+  (function bindPubAuthors(){
+    var lb=byId("listBox");
+    if(!lb) return;
+    lb.addEventListener("input",function(e){
+      var t=e.target;
+      if(!t || !t.classList) return;
+      if(t.id==="pubName"){ S.pub.name=t.value.trim(); syncPubWho(); return; }
+      if(t.classList.contains("pub-co")){
+        var row=t.closest?t.closest(".nmrow"):null; if(!row) return;
+        var ci=parseInt(row.getAttribute("data-ci"),10);
+        if(ci>=0 && ci<(S.pub.coauthors||[]).length) S.pub.coauthors[ci]=t.value;
+      }
+    });
+    lb.addEventListener("change",function(e){
+      var t=e.target;
+      if(!t || !t.classList) return;
+      if(t.id==="pubName"){
+        var parts=pubSplitOne(t.value);
+        if(parts.length>1){                 /* 粘贴/输入了多个名字 → 自动拆成多作者 */
+          S.pub.name=parts[0];
+          pubSetCoauthors(-1,parts.slice(1));
+          renderPubAuthors();
+        } else {
+          S.pub.name=(parts[0]||"").trim();
+          t.value=S.pub.name;
+          syncPubWho();
+        }
+        return;
+      }
+      if(t.classList.contains("pub-co")){
+        var row=t.closest?t.closest(".nmrow"):null; if(!row) return;
+        var ci=parseInt(row.getAttribute("data-ci"),10);
+        if(!(ci>=0 && ci<(S.pub.coauthors||[]).length)) return;
+        S.pub.coauthors[ci]=t.value;                 /* 先同步输入框的值（粘贴可能不先触发 input） */
+        var ps=pubSplitOne(t.value);
+        if(ps.length>1){ pubSetCoauthors(ci,ps); renderPubAuthors(); }
+      }
+    });
+    lb.addEventListener("click",function(e){
+      var t=e.target;
+      if(!t || !t.classList) return;
+      if(t.id==="pubAddCo"){
+        if(!S.pub.coauthors) S.pub.coauthors=[];
+        if(S.pub.coauthors.length<4){ S.pub.coauthors.push(""); renderPubAuthors(); }
+        else toast("最多 5 位作者（含第一作者）");
+        return;
+      }
+      if(!t.classList.contains("nmbtn")) return;
+      var row=t.closest?t.closest(".nmrow"):null; if(!row) return;
+      var ci=parseInt(row.getAttribute("data-ci"),10);
+      if(!(ci>=0 && ci<(S.pub.coauthors||[]).length)) return;
+      var tmp;
+      if(t.classList.contains("rm")) S.pub.coauthors.splice(ci,1);
+      else if(t.classList.contains("up") && ci>0){ tmp=S.pub.coauthors[ci-1]; S.pub.coauthors[ci-1]=S.pub.coauthors[ci]; S.pub.coauthors[ci]=tmp; }
+      else if(t.classList.contains("down") && ci<S.pub.coauthors.length-1){ tmp=S.pub.coauthors[ci+1]; S.pub.coauthors[ci+1]=S.pub.coauthors[ci]; S.pub.coauthors[ci]=tmp; }
+      else return;
+      renderPubAuthors();
+    });
+  })();
+
   /* 顶部的安全条（回收站提醒 / 密码提醒）单独委托 */
   var sbBox=byId("safeBar");
   if(sbBox) sbBox.addEventListener("click",function(e){
@@ -1264,7 +1500,7 @@ function renderSettingsClear(){
 function quickApprove(id){
   var it=findItem(id);
   if(!it) return;
-  post("approve",{id:id, name:it.name, title:it.title, cat:it.cat}).then(function(r){
+  post("approve",{id:id, name:it.name, names:it.names, title:it.title, cat:it.cat}).then(function(r){
     if(r.data.ok){ toast("已通过，马上就能看到了"); reload(); }
     else toast(r.data.error||"操作失败");
   });
