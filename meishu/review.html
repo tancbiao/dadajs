@@ -68,6 +68,25 @@ button{font-family:inherit}
 .wcard .acts button{flex:1;height:34px;border-radius:10px;border:1px solid var(--line);background:#fff;font-size:13px;font-weight:600;cursor:pointer}
 .wcard .acts .yes{background:var(--main);border-color:var(--main);color:#fff}
 .wcard .acts .no{color:var(--bad);border-color:#F0CFCF}
+.wcard .acts .rm{color:var(--bad);border-color:#F0CFCF;background:#FFF8F8;flex:0 0 66px}
+.wcard .acts .rm:hover{background:#FDECEC;border-color:#F0B4B4}
+/* ★ 2026-09-23 安全条：回收站提醒 + 一键恢复 */
+.safe{margin-top:14px;border-radius:14px;padding:13px 16px;display:flex;align-items:center;
+  gap:12px;font-size:13.5px;line-height:1.6;border:1px solid transparent}
+.safe.warn{background:#FFF6F6;border-color:#F5D0D0;color:#8A3A36}
+.safe.tip{background:#FFFBF0;border-color:#F0E0BC;color:#8A6A24}
+.safe b{font-weight:700}
+.safe .grow{flex:1;min-width:0}
+.safe button{flex:none;height:36px;padding:0 16px;border-radius:10px;border:0;cursor:pointer;
+  font-size:13.5px;font-weight:700;background:var(--main);color:#fff}
+.safe button.ghost{background:#fff;color:var(--bad);border:1px solid #F0CFCF}
+.safe button.ghost:hover{background:#FDECEC}
+.safe button:active{transform:scale(.97)}
+/* 初始作品的「已撤下」角标 */
+.wcard .st.h{background:rgba(120,120,120,.92);color:#fff}
+/* 回收站卡片略微灰一点，和正常作品区分 */
+.wcard.trashed .ph img{filter:grayscale(.55) opacity(.75)}
+.wcard.trashed .tt::after{content:"（回收站）";font-weight:400;color:var(--sub)}
 .st{position:absolute;right:8px;top:8px;font-size:11.5px;font-weight:600;padding:3px 9px;border-radius:8px}
 .st.p{background:var(--warnbg);color:var(--warn)}
 .st.a{background:var(--okbg);color:var(--ok)}
@@ -203,6 +222,9 @@ button{font-family:inherit}
 
 <main class="wrap" id="app" style="display:none">
   <div class="stats" id="stats"></div>
+
+  <!-- ★ 2026-09-23 安全条：回收站有东西 / 密码太弱时才出现 -->
+  <div id="safeBar"></div>
 
   <div class="bar">
     <input id="q" type="text" placeholder="搜作品名或学生姓名">
@@ -346,11 +368,40 @@ function apply(d){
     stat("pending","待审核",d.pending.length)+
     stat("approved","已展出",d.approved.length)+
     stat("rejected","已退回",d.rejected.length)+
+    stat("static","初始作品",d.staticTotal||0)+
+    stat("trash","回收站",d.trashN||0)+
     stat("settings","设置","");
   if(d.classes) S.classes=d.classes;
   if(d.cats) fillCats(d.cats);
   if(!S.tab || S.tab==="publish") fillPubClasses();
+  renderSafeBar();
   render();
+}
+
+/* ══════════════ 安全条（★ 2026-09-23）══════════════
+   只在两种情况出现：
+     ① 回收站有东西 → 提醒"误删能恢复" + 一键恢复按钮
+     ② 管理密码太短 → 提醒换密码（后台能删作品，学生猜到就麻烦） */
+function renderSafeBar(){
+  var d=S.data||{}, box=byId("safeBar");
+  if(!box) return;
+  var html="", tn=d.trashN||0;
+  if(tn>0){
+    html += '<div class="safe warn"><span class="grow">'+
+      '<b>回收站里有 '+tn+' 幅作品。</b>删除只是把它挪进回收站，图片还留在服务器上，'+
+      '随时能放回去。</span>'+
+      '<button data-safebar="restoreAll">一键恢复全部</button>'+
+      '<button class="ghost" data-safebar="goto-trash">去看看</button>'+
+      '</div>';
+  }
+  if(d.pwWeak){
+    html += '<div class="safe tip"'+(tn>0?' style="margin-top:10px"':'')+'><span class="grow">'+
+      '<b>管理密码偏短。</b>后台能删作品、也能改密码 —— 建议在「设置」里换成 8 位以上、'+
+      '别用生日或班级号，学生猜得到的密码等于没设。</span>'+
+      '<button class="ghost" data-safebar="goto-settings">去改密码</button>'+
+      '</div>';
+  }
+  box.innerHTML=html;
 }
 
 /* 图标 tab：第 3 个参数传图标字符时，n 位显示图标而不是数字 */
@@ -364,7 +415,9 @@ function curList(){
   if(!S.data) return [];
   var a = S.tab==="pending" ? S.data.pending
         : S.tab==="approved" ? S.data.approved
-        : S.tab==="rejected" ? S.data.rejected : [];
+        : S.tab==="rejected" ? S.data.rejected
+        : S.tab==="static" ? (S.data.staticList||[])
+        : S.tab==="trash" ? (S.data.trashList||[]) : [];
   var q=S.q.toLowerCase(), cat=S.cat;
   return a.filter(function(it){
     if(cat && it.cat!==cat) return false;
@@ -387,30 +440,80 @@ function render(){
   var box=byId("listBox");
 
   if(!list.length){
-    box.innerHTML='<div class="empty"><b>'+
-      (S.tab==="pending"?"暂时没有待审作品":S.tab==="approved"?"还没有展出作品":"没有被退回的作品")+
-      "</b>"+(S.tab==="pending"?"家长投稿后会出现在这里。":"")+"</div>";
+    var em = S.tab==="pending" ? ["暂时没有待审作品","家长投稿后会出现在这里。"]
+           : S.tab==="approved" ? ["还没有展出作品",""]
+           : S.tab==="rejected" ? ["没有被退回的作品",""]
+           : S.tab==="static" ? ["没有被撤下的初始作品","这些是建站时的示例作品，撤下后会从首页消失。"]
+           : S.tab==="trash" ? ["回收站是空的","删掉的作品会先来这里，随时可以恢复。"]
+           : ["没有内容",""];
+    var bars = "";
+    if(S.tab==="static" && (S.data.staticList||[]).length){
+      bars = '<div class="safe tip" style="margin-bottom:14px"><span class="grow">'+
+        '<b>这些是建站时的示例作品（共 '+(S.data.staticTotal||0)+' 幅）。</b>'+
+        '撤下后首页就不再显示它们，随时可以恢复。</span>'+
+        '<button class="ghost" data-staticall="hide">全部撤下</button>'+
+        '<button class="ghost" data-staticall="show">全部恢复</button></div>';
+    }
+    box.innerHTML=bars+'<div class="empty"><b>'+em[0]+"</b>"+em[1]+"</div>";
     return;
   }
 
-  box.innerHTML='<div class="grid">'+list.map(function(it){
+  var head = "";
+  if(S.tab==="static"){
+    head = '<div class="safe tip" style="margin-bottom:14px"><span class="grow">'+
+      '<b>这些是建站时的示例作品（共 '+(S.data.staticTotal||0)+' 幅）。</b>'+
+      '撤下后首页就不再显示它们，随时可以恢复。</span>'+
+      '<button class="ghost" data-staticall="hide">全部撤下</button>'+
+      '<button class="ghost" data-staticall="show">全部恢复</button></div>';
+  } else if(S.tab==="trash"){
+    head = '<div class="safe warn" style="margin-bottom:14px"><span class="grow">'+
+      '<b>回收站里有 '+(S.data.trashN||0)+' 幅。</b>'+
+      '删除只是挪进这里，图片还在服务器上，可以随时放回去。</span>'+
+      '<button data-safebar="restoreAll">一键恢复全部</button>'+
+      '<button class="ghost" data-safebar="trashEmpty">清空（真删除）</button></div>';
+  }
+
+  box.innerHTML=head+'<div class="grid">'+list.map(function(it){
     var stt = it.status==="approved" ? {c:"a",t:"已展出"}
-            : it.status==="rejected" ? {c:"r",t:"已退回"} : {c:"p",t:"待审"};
+            : it.status==="rejected" ? {c:"r",t:"已退回"}
+            : it.status==="static"   ? (it.hidden ? {c:"h",t:"已撤下"} : {c:"a",t:"展出中"})
+            : {c:"p",t:"待审"};
     var acts = S.tab==="pending"
       ? '<div class="acts"><button class="yes" data-yes="'+it.id+'">通过</button>'+
         '<button class="no" data-no="'+it.id+'">退回</button></div>'
       : S.tab==="approved"
-      ? '<div class="acts"><button data-open="'+it.id+'">查看 / 撤下</button></div>'
-      : '<div class="acts"><button data-open="'+it.id+'">查看理由</button></div>';
-    return '<div class="wcard" data-id="'+it.id+'">'+
+      ? '<div class="acts">'+
+          '<button data-info="'+it.id+'">改信息</button>'+
+          '<button class="rm" data-rm="'+it.id+'">删除</button>'+
+        '</div>'
+      : S.tab==="static"
+      ? '<div class="acts">'+
+          (it.hidden
+            ? '<button class="yes" data-unhide="'+it.id+'">恢复显示</button>'
+            : '<button class="rm" data-hide="'+it.id+'">撤下</button>')+
+        '</div>'
+      : S.tab==="trash"
+      ? '<div class="acts">'+
+          '<button class="yes" data-restore="'+it.id+'">恢复</button>'+
+        '</div>'
+      : '<div class="acts">'+
+          '<button data-info="'+it.id+'">查看理由</button>'+
+          '<button class="rm" data-rm="'+it.id+'">删除</button>'+
+        '</div>';
+    /* 静态作品的图在 GitHub 上（已经是绝对地址），不能再拼后端前缀 */
+    var thumb = it.source==="static" ? it.th
+              : S.tab==="trash" ? API+"/api/trashimg/"+it.id+"?s=1"
+              : it.th;
+    var who = it.name ? (esc(it.name)+" · "+className(it.g,it.c)) : className(it.g,it.c);
+    return '<div class="wcard'+(S.tab==="trash"?" trashed":"")+'" data-id="'+it.id+'">'+
       '<div class="ph">'+
-        '<img loading="lazy" src="'+esc(it.th)+'" alt="" onerror="this.style.opacity=.3">'+
+        '<img loading="lazy" src="'+esc(thumb)+'" alt="" onerror="this.style.opacity=.3">'+
         '<span class="cat">'+esc(it.cat||"其他")+'</span>'+
-        (S.tab==="pending"?"":'<span class="st '+stt.c+'">'+stt.t+"</span>")+
+        (S.tab==="pending"?'':'<span class="st '+stt.c+'">'+stt.t+"</span>")+
       "</div>"+
       '<div class="bd">'+
         '<div class="tt">'+esc(it.title||"未命名")+"</div>"+
-        '<div class="aa">'+esc(it.name)+" · "+className(it.g,it.c)+"</div>"+
+        '<div class="aa">'+who+"</div>"+
         acts+
       "</div>"+
     "</div>";
@@ -462,7 +565,7 @@ function openDetail(id){
   } else if(it.status==="approved"){
     fld.style.display="none";
     acts.innerHTML=
-      '<button class="del" id="aDel">撤下</button>'+
+      '<button class="del" id="aDel">删除</button>'+
       '<button class="yes" id="aSave">保存修改</button>';
     byId("aSave").onclick=function(){ doApprove(it,true); };
     byId("aDel").onclick=function(){ doRemove(it); };
@@ -508,7 +611,8 @@ function doReject(it){
   });
 }
 function doRemove(it){
-  if(!confirm("确定要删除这幅作品吗？删除后无法恢复。")) return;
+  /* ★ 2026-09-23：删除不再不可逆 —— 会先进回收站 */
+  if(!confirm("确定要删除这幅作品吗？\n\n删掉后会先进「回收站」，随时能恢复。")) return;
   post("remove", {id:it.id}).then(function(r){ after(r, "已删除"); });
 }
 function doRequeue(it){
@@ -602,7 +706,11 @@ function renderPublish(){
         '<p class="hint" style="margin-bottom:0">'+
           '· 姓名必须在本班名单里 —— 作品会归到孩子名下，家长在「我的孩子」里能看到<br>'+
           '· 类别有：绘画 / 手工 / 书法 / 科技类 / 优秀实验记录 / 爱国类，拿不准先选「其他」，发完能改<br>'+
-          '· 发错了不要紧：去「已展出」找到它，可以改信息或「撤下」'+
+          '· 发错了不要紧：去「已展出」找到它，可以改信息，也可以直接点红色「删除」'+
+        '</p>'+
+        '<p class="hint" style="margin-top:8px;margin-bottom:0">'+
+          '· <b>测试用的、不满意的作品</b>：切到「已展出」或「已退回」，卡片上就有红色「删除」按钮，<br>'+
+          '&nbsp;&nbsp;点一下确认即可彻底清掉（图片也会一起删除，不能恢复）'+
         '</p>'+
       '</div>'+
       '<div class="pubcard" style="margin-top:16px">'+
@@ -1049,15 +1157,33 @@ function bind(){
 
   byId("listBox").addEventListener("click",function(e){
     var t=e.target;
-    var y=t.getAttribute && t.getAttribute("data-yes");
-    var n=t.getAttribute && t.getAttribute("data-no");
-    var o=t.getAttribute && t.getAttribute("data-open");
+    var at=function(k){ return t.getAttribute && t.getAttribute(k); };
+    var y=at("data-yes"), n=at("data-no"), i=at("data-info"), m=at("data-rm");
+    var hd=at("data-hide"), uh=at("data-unhide"), rs=at("data-restore");
+    var sa=at("data-staticall"), sb=at("data-safebar");
     if(y){ e.stopPropagation(); quickApprove(y); return; }
     if(n){ e.stopPropagation(); openDetail(n);
       setTimeout(function(){ var b=byId("aReject"); if(b) b.click(); },60); return; }
-    if(o){ openDetail(o); return; }
+    if(i){ e.stopPropagation(); openDetail(i); return; }
+    if(m){ e.stopPropagation(); quickRemove(m); return; }
+    /* ▼ 2026-09-23：静态作品 / 回收站 / 安全条按钮 */
+    if(hd){ e.stopPropagation(); quickHideStatic(hd); return; }
+    if(uh){ e.stopPropagation(); quickUnhideStatic(uh); return; }
+    if(rs){ e.stopPropagation(); quickRestore(rs); return; }
+    if(sa){ e.stopPropagation(); staticAll(sa); return; }
+    if(sb){ e.stopPropagation(); safeBarAct(sb); return; }
     var card=t.closest ? t.closest(".wcard") : null;
     if(card){ openDetail(card.getAttribute("data-id")); }
+  });
+
+  /* 顶部的安全条（回收站提醒 / 密码提醒）单独委托 */
+  var sbBox=byId("safeBar");
+  if(sbBox) sbBox.addEventListener("click",function(e){
+    var t=e.target;
+    var sb=t.getAttribute && t.getAttribute("data-safebar");
+    var tb=t.getAttribute && t.getAttribute("data-tab");
+    if(sb){ e.stopPropagation(); safeBarAct(sb); return; }
+    if(tb){ e.stopPropagation(); goto(tb); }
   });
 
   byId("q").oninput=function(){ S.q=this.value.trim(); clearTimeout(this._t); this._t=setTimeout(render,160); };
@@ -1073,6 +1199,103 @@ function quickApprove(id){
     if(r.data.ok){ toast("已通过，马上就能看到了"); reload(); }
     else toast(r.data.error||"操作失败");
   });
+}
+
+/* 列表上直接删除（测试作品、发错的、不满意的）—— 不用先进弹窗。
+   ★ 2026-09-23：删除改为进"回收站"，不再不可逆，所以确认文案也放宽了。 */
+function quickRemove(id){
+  var it=findItem(id);
+  if(!it) return;
+  var who=(it.name||"这位同学")+(it.title?"《"+it.title+"》":"的作品");
+  if(!confirm("确定删除 "+who+" 吗？\n\n放心，删掉的作品会先进「回收站」，随时可以恢复。")) return;
+  post("remove",{id:id}).then(function(r){
+    if(r.data && r.data.ok){
+      toast("已删除（在回收站里，可恢复）");
+      reload();
+    } else toast((r.data && r.data.error) || "删除失败，再试一次");
+  });
+}
+
+/* ══════════════ 静态作品：撤下 / 恢复（★ 2026-09-23）══════════════
+   这些是建站时的示例作品，记录在 GitHub 静态站里，后端不能真删。
+   "撤下" = 记进 hidden.json，首页合并时过滤掉；随时能恢复。 */
+function quickHideStatic(id){
+  var it=findStatic(id);
+  var who=it ? ((it.name||"")+" 《"+(it.title||"未命名")+"》") : id;
+  if(!confirm("确定撤下 "+who+" 吗？\n\n它不会再出现在首页，但数据还在，随时能恢复。")) return;
+  post("hide",{id:id}).then(function(r){
+    if(r.data && r.data.ok){ toast("已撤下"); reload(); }
+    else toast((r.data && r.data.error) || "操作失败");
+  });
+}
+function quickUnhideStatic(id){
+  post("unhide",{id:id}).then(function(r){
+    if(r.data && r.data.ok){ toast("已恢复显示"); reload(); }
+    else toast((r.data && r.data.error) || "操作失败");
+  });
+}
+function findStatic(id){
+  var a=(S.data && S.data.staticList) || [];
+  for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; }
+  return null;
+}
+/* 一键撤下/恢复全部静态作品 */
+function staticAll(mode){
+  var n=(S.data && S.data.staticTotal) || 0;
+  if(mode==="hide"){
+    if(!confirm("确定把全部 "+n+" 幅初始作品都撤下吗？\n\n它们会从首页消失（数据仍在，随时能恢复）。")) return;
+    post("hideAllStatic",{}).then(function(r){
+      if(r.data && r.data.ok){ toast("已撤下全部初始作品"); reload(); }
+      else toast((r.data && r.data.error) || "操作失败");
+    });
+  } else {
+    post("showAllStatic",{}).then(function(r){
+      if(r.data && r.data.ok){ toast("已恢复全部初始作品"); reload(); }
+      else toast((r.data && r.data.error) || "操作失败");
+    });
+  }
+}
+
+/* ══════════════ 回收站：恢复（★ 2026-09-23）══════════════ */
+function findTrash(id){
+  var a=(S.data && S.data.trashList) || [];
+  for(var i=0;i<a.length;i++){ if(a[i].id===id) return a[i]; }
+  return null;
+}
+function quickRestore(id){
+  post("restore",{id:id}).then(function(r){
+    if(r.data && r.data.ok){ toast("已恢复"); reload(); }
+    else toast((r.data && r.data.error) || "恢复失败");
+  });
+}
+/* ★ 谭谭要的"一键恢复"：出事后点这一个按钮 */
+function restoreAll(){
+  var n=(S.data && S.data.trashN) || 0;
+  if(!n){ toast("回收站是空的"); return; }
+  if(!confirm("把回收站里的 "+n+" 幅作品全部恢复吗？\n\n它们会重新出现在首页。")) return;
+  post("restoreAll",{}).then(function(r){
+    if(r.data && r.data.ok){ toast("已恢复 "+r.data.restored+" 幅"); reload(); }
+    else toast((r.data && r.data.error) || "恢复失败");
+  });
+}
+function trashEmpty(){
+  var n=(S.data && S.data.trashN) || 0;
+  if(!n){ toast("回收站是空的"); return; }
+  if(!confirm("确定要清空回收站吗？\n\n这会**真正删除**这 "+n+" 幅作品的图片，之后无法恢复！")) return;
+  if(!confirm("再确认一次：真的要永久删除吗？")) return;
+  post("trashEmpty",{}).then(function(r){
+    if(r.data && r.data.ok){ toast("回收站已清空"); reload(); }
+    else toast((r.data && r.data.error) || "操作失败");
+  });
+}
+function goto(tab){ S.tab=tab; S.q=""; S.cat=""; byId("q").value=""; byId("fCat").value=""; render(); }
+
+/* 安全条上的按钮统一入口 */
+function safeBarAct(k){
+  if(k==="restoreAll") restoreAll();
+  else if(k==="trashEmpty") trashEmpty();
+  else if(k==="goto-trash") goto("trash");
+  else if(k==="goto-settings") goto("settings");
 }
 
 function init(){

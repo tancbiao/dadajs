@@ -69,6 +69,32 @@ button{font-family:inherit}
 .wa{font-size:12px;color:var(--sub);margin:3px 0 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wtag{display:inline-block;font-size:11px;line-height:18px;padding:0 8px;border-radius:9px;margin-top:7px}
 
+/* ★ 点赞（2026-09-22）。卡片右下角一个小红心，点一下就是给这个同学点赞。
+   每台手机每天对同一幅作品只能点一次，点过之后红心是实心的。 */
+.wfoot{display:flex;align-items:center;gap:8px;margin-top:9px}
+.wfoot .wtag{margin-top:0}
+.like{margin-left:auto;flex:none;display:flex;align-items:center;gap:4px;height:26px;padding:0 9px;
+  border-radius:13px;border:1px solid var(--line);background:#fff;color:var(--sub);
+  font-size:12px;font-weight:600;cursor:pointer;transition:.16s;-webkit-tap-highlight-color:transparent}
+.like svg{width:14px;height:14px;flex:none;transition:transform .16s}
+.like:active{transform:scale(.94)}
+.like.on{background:#FDECEC;border-color:#F7C8CA;color:#C9453F}
+.like.on svg{fill:#E0524F;stroke:#E0524F}
+.like.pop svg{transform:scale(1.45)}
+.like .n{min-width:12px;text-align:center}
+.like[disabled]{opacity:.6;cursor:default}
+
+/* 大图里的点赞按钮，大一点好点 */
+.vlike{display:inline-flex;align-items:center;gap:7px;margin-top:12px;height:40px;padding:0 18px;
+  border-radius:20px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.12);
+  color:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:.16s;
+  -webkit-tap-highlight-color:transparent}
+.vlike svg{width:17px;height:17px;transition:transform .16s}
+.vlike:active{transform:scale(.95)}
+.vlike.on{background:#FDECEC;border-color:#FDECEC;color:#C9453F}
+.vlike.on svg{fill:#E0524F;stroke:#E0524F}
+.vlike.pop svg{transform:scale(1.5)}
+
 .empty{text-align:center;color:var(--sub);padding:60px 20px;font-size:14px}
 .loadmore{display:flex;align-items:center;justify-content:center;gap:9px;padding:20px 0 6px;color:var(--sub);font-size:13px}
 .loadmore .spin{width:15px;height:15px;flex:none;border-radius:50%;border:2px solid var(--line);border-top-color:var(--main);animation:spin .7s linear infinite}
@@ -194,11 +220,12 @@ button{font-family:inherit}
     <h3 id="vTitle"></h3>
     <p id="vMeta"></p>
     <div class="vnote" id="vNote" style="display:none"></div>
+    <button class="vlike" id="vLike" data-like=""></button>
   </div>
 </div>
 
 <script>
-var DATA = /*@DATA_START@*/{"school":"天等县城西小学","title":"优秀作品馆","updated":"2026-09-22","categories":["绘画","手工","书法","科技类","优秀实验记录","爱国类","其他"],"classes":[[1,1],[1,2],[1,3],[1,4],[1,5],[2,1],[2,2],[2,3],[2,4],[2,5],[3,1],[3,2],[3,3],[3,4],[3,5],[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7],[4,8],[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],[5,7],[5,8],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6],[6,7],[6,8]],"works":[{"id":"w0011","t":"太空电梯","a":"郑欣怡","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0011.webp","th":"images/g4c5/w0011_t.webp","w":1000,"h":1600,"date":"2026-09-14","note":""},{"id":"w0010","t":"智能垃圾分类车","a":"吴俊杰","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0010.webp","th":"images/g4c5/w0010_t.webp","w":1600,"h":1050,"date":"2026-09-14","note":""},{"id":"w0009","t":"校园一角","a":"黄浩然","g":4,"c":5,"cat":"其他","img":"images/g4c5/w0009.webp","th":"images/g4c5/w0009_t.webp","w":1500,"h":1150,"date":"2026-09-14","note":""},{"id":"w0008","t":"未来城市","a":"陈思远","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0008.webp","th":"images/g3c2/w0008_t.webp","w":1400,"h":1400,"date":"2026-09-14","note":""},{"id":"w0007","t":"会跳舞的机器人","a":"王小红","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0007.webp","th":"images/g3c2/w0007_t.webp","w":1600,"h":1100,"date":"2026-09-14","note":""},{"id":"w0006","t":"太阳能小车","a":"李小明","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0006.webp","th":"images/g3c2/w0006_t.webp","w":1200,"h":1600,"date":"2026-09-14","note":""},{"id":"w0005","t":"我爱我的祖国","a":"李小明","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0005.webp","th":"images/g3c2/w0005_t.webp","w":1200,"h":1500,"date":"2026-09-14","note":""},{"id":"w0004","t":"天安门广场","a":"刘雨桐","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0004.webp","th":"images/g3c2/w0004_t.webp","w":1600,"h":1000,"date":"2026-09-14","note":""},{"id":"w0003","t":"我的家乡","a":"赵一涵","g":3,"c":2,"cat":"其他","img":"images/g3c2/w0003.webp","th":"images/g3c2/w0003_t.webp","w":1300,"h":1300,"date":"2026-09-14","note":""},{"id":"w0002","t":"火星基地","a":"周子墨","g":3,"c":1,"cat":"科技类","img":"images/g3c1/w0002.webp","th":"images/g3c1/w0002_t.webp","w":1100,"h":1500,"date":"2026-09-14","note":""},{"id":"w0001","t":"五星红旗","a":"孙悦","g":3,"c":1,"cat":"爱国类","img":"images/g3c1/w0001.webp","th":"images/g3c1/w0001_t.webp","w":1000,"h":1400,"date":"2026-09-14","note":""}]}/*@DATA_END@*/;
+var DATA = /*@DATA_START@*/{"school":"天等县城西小学","title":"优秀作品馆","updated":"2026-09-23","categories":["绘画","手工","书法","科技类","优秀实验记录","爱国类","其他"],"classes":[[1,1],[1,2],[1,3],[1,4],[1,5],[2,1],[2,2],[2,3],[2,4],[2,5],[3,1],[3,2],[3,3],[3,4],[3,5],[4,1],[4,2],[4,3],[4,4],[4,5],[4,6],[4,7],[4,8],[5,1],[5,2],[5,3],[5,4],[5,5],[5,6],[5,7],[5,8],[6,1],[6,2],[6,3],[6,4],[6,5],[6,6],[6,7],[6,8]],"works":[{"id":"w0011","t":"太空电梯","a":"郑欣怡","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0011.webp","th":"images/g4c5/w0011_t.webp","w":1000,"h":1600,"date":"2026-09-14","note":""},{"id":"w0010","t":"智能垃圾分类车","a":"吴俊杰","g":4,"c":5,"cat":"科技类","img":"images/g4c5/w0010.webp","th":"images/g4c5/w0010_t.webp","w":1600,"h":1050,"date":"2026-09-14","note":""},{"id":"w0009","t":"校园一角","a":"黄浩然","g":4,"c":5,"cat":"其他","img":"images/g4c5/w0009.webp","th":"images/g4c5/w0009_t.webp","w":1500,"h":1150,"date":"2026-09-14","note":""},{"id":"w0008","t":"未来城市","a":"陈思远","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0008.webp","th":"images/g3c2/w0008_t.webp","w":1400,"h":1400,"date":"2026-09-14","note":""},{"id":"w0007","t":"会跳舞的机器人","a":"王小红","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0007.webp","th":"images/g3c2/w0007_t.webp","w":1600,"h":1100,"date":"2026-09-14","note":""},{"id":"w0006","t":"太阳能小车","a":"李小明","g":3,"c":2,"cat":"科技类","img":"images/g3c2/w0006.webp","th":"images/g3c2/w0006_t.webp","w":1200,"h":1600,"date":"2026-09-14","note":""},{"id":"w0005","t":"我爱我的祖国","a":"李小明","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0005.webp","th":"images/g3c2/w0005_t.webp","w":1200,"h":1500,"date":"2026-09-14","note":""},{"id":"w0004","t":"天安门广场","a":"刘雨桐","g":3,"c":2,"cat":"爱国类","img":"images/g3c2/w0004.webp","th":"images/g3c2/w0004_t.webp","w":1600,"h":1000,"date":"2026-09-14","note":""},{"id":"w0003","t":"我的家乡","a":"赵一涵","g":3,"c":2,"cat":"其他","img":"images/g3c2/w0003.webp","th":"images/g3c2/w0003_t.webp","w":1300,"h":1300,"date":"2026-09-14","note":""},{"id":"w0002","t":"火星基地","a":"周子墨","g":3,"c":1,"cat":"科技类","img":"images/g3c1/w0002.webp","th":"images/g3c1/w0002_t.webp","w":1100,"h":1500,"date":"2026-09-14","note":""},{"id":"w0001","t":"五星红旗","a":"孙悦","g":3,"c":1,"cat":"爱国类","img":"images/g3c1/w0001.webp","th":"images/g3c1/w0001_t.webp","w":1000,"h":1400,"date":"2026-09-14","note":""}]}/*@DATA_END@*/;
 
 /* 投稿后端（腾讯云）。老师审核通过的新作品从这里即时拉取，
    不用等 GitHub Pages 重新部署 —— 老师一点通过，家长打开就能看到 */
@@ -301,6 +328,90 @@ function filtered(){
   });
 }
 
+/* 红心图标（内联 SVG，不用图标库） */
+function heartSVG(){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+    + '<path d="M12 20.5S3.5 14.8 3.5 9.2a4.7 4.7 0 0 1 8.5-2.8 4.7 4.7 0 0 1 8.5 2.8c0 5.6-8.5 11.3-8.5 11.3z"/></svg>';
+}
+
+/* 这台设备今天已经点过的作品 id：{"w001":1}
+   ★ 本地先记一份，是为了页面一打开就点亮红心（不然要等网络回来才知道）——
+     真正的判定在服务器，这里只是"乐观显示"，服务器说点过了就以服务器为准。 */
+var LIKED = {};
+try{
+  var raw=localStorage.getItem("gallery_liked");
+  if(raw){ var o=JSON.parse(raw); if(o && o.d===dayStr()) LIKED=o.ids||{}; }
+}catch(e){ LIKED={}; }
+
+function dayStr(){
+  var d=new Date();
+  return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2);
+}
+function saveLiked(){
+  try{ localStorage.setItem("gallery_liked", JSON.stringify({d:dayStr(), ids:LIKED})); }catch(e){}
+}
+
+/* 点赞数。0 也要显示，不然刚发的作品会缺一块 */
+function likeHTML(w){
+  var on = LIKED[w.id] ? " on" : "";
+  return '<button class="like'+on+'" data-like="'+esc(w.id)+'" aria-label="给'+esc(w.a||"这位同学")+'点赞">'
+    + heartSVG() + '<span class="n">'+ (w.likes|0) +'</span></button>';
+}
+
+/* 给某幅作品点赞。
+   服务器按 IP + 日期去重，所以同一天第二次点会回 already:true，
+   这时把红心点亮但不重复加数，并提示一句"今天点过啦"。 */
+function doLike(id, btn){
+  if(!id) return;
+  if(LIKED[id]){
+    toast("今天已经给这位同学点过赞啦，明天再来～");
+    return;
+  }
+  if(!GAPI || !window.fetch){ toast("暂时连不上服务器，等会儿再试"); return; }
+  if(btn) btn.disabled=true;
+  fetch(GAPI+"/api/like", {
+    method:"POST",
+    headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({id:id})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if(btn) btn.disabled=false;
+    if(!d || !d.ok){
+      toast((d && d.error) || "点赞没成功，再试一次");
+      return;
+    }
+    LIKED[id]=1; saveLiked();
+    applyLikes(id, d.likes|0, true);
+    if(d.already){
+      toast("今天已经给这位同学点过赞啦，明天再来～");
+    } else {
+      toast("点赞成功，谢谢你的鼓励！");
+    }
+  }).catch(function(){
+    if(btn) btn.disabled=false;
+    toast("网络不太好，等会儿再试");
+  });
+}
+
+/* 把某一幅作品的点赞数/红心状态刷到页面上所有出现它的地方
+   （卡片一遍、大图一遍） */
+function applyLikes(id, n, pop){
+  /* 数据源也更新，这样翻页/重渲染不会丢 */
+  for(var i=0;i<DATA.works.length;i++){
+    if(DATA.works[i].id===id) DATA.works[i].likes=n;
+  }
+  var els=document.querySelectorAll('[data-like="'+id+'"]');
+  for(var k=0;k<els.length;k++){
+    var el=els[k];
+    var span=el.querySelector(".n");
+    if(span) span.textContent=n;
+    if(LIKED[id]) el.classList.add("on");
+    if(pop && !el.classList.contains("pop")){
+      el.classList.add("pop");
+      (function(e){ setTimeout(function(){ e.classList.remove("pop"); },200); })(el);
+    }
+  }
+}
+
 function cardHTML(w,i){
   var col=catColor(w.cat);
   var ar=(w.w&&w.h)?(w.w/w.h):0.8;
@@ -311,7 +422,10 @@ function cardHTML(w,i){
     '<div class="wmeta">'+
       '<p class="wt">'+esc(w.t||"未命名")+'</p>'+
       '<p class="wa">'+esc(w.a||"")+' · '+className(w.g,w.c)+'</p>'+
-      '<span class="wtag" style="background:'+col[0]+';color:'+col[1]+'">'+esc(w.cat||"其他")+'</span>'+
+      '<div class="wfoot">'+
+        '<span class="wtag" style="background:'+col[0]+';color:'+col[1]+'">'+esc(w.cat||"其他")+'</span>'+
+        likeHTML(w)+
+      '</div>'+
     '</div></div>';
 }
 
@@ -384,6 +498,13 @@ function paintViewer(){
   byId("vMeta").textContent=(w.a||"")+" · "+className(w.g,w.c)+" · "+(w.cat||"其他")+(w.date?" · "+w.date:"");
   var note=byId("vNote");
   if(w.note){ note.style.display=""; note.textContent="创作说明："+w.note; } else { note.style.display="none"; }
+  /* 大图里也给一个点赞按钮（看得清的时候更想点） */
+  var vb=byId("vLike");
+  if(vb){
+    vb.className="vlike"+(LIKED[w.id]?" on":"");
+    vb.innerHTML=heartSVG()+'<span>点赞</span><span class="n">'+(w.likes|0)+'</span>';
+    vb.setAttribute("data-like", w.id);
+  }
   byId("vPrev").style.visibility = S.list.length>1 ? "visible" : "hidden";
   byId("vNext").style.visibility = S.list.length>1 ? "visible" : "hidden";
 }
@@ -530,14 +651,30 @@ function init(){
     }
     return null;
   }
+  /* 从点击目标往上找"红心按钮" */
+  function closestLike(node, root){
+    while(node && node!==root){
+      if(node.getAttribute && node.getAttribute("data-like")) return node;
+      node=node.parentNode;
+    }
+    return null;
+  }
   byId("grid").addEventListener("click",function(e){
+    /* ★ 先看是不是点了红心 —— 是的话只点赞，不要打开大图 */
+    var lk=closestLike(e.target,this);
+    if(lk){ doLike(lk.getAttribute("data-like"), lk); return; }
     var el=closestWork(e.target,this);
     if(el) openViewer(S.gList,+el.getAttribute("data-i"));
   });
   byId("mGrid").addEventListener("click",function(e){
+    var lk=closestLike(e.target,this);
+    if(lk){ doLike(lk.getAttribute("data-like"), lk); return; }
     var el=closestWork(e.target,this);
     if(el) openViewer(S.mList,+el.getAttribute("data-i"));
   });
+  /* 大图里的点赞按钮 */
+  var vlike=byId("vLike");
+  if(vlike) vlike.onclick=function(){ doLike(this.getAttribute("data-like"), this); };
 
   /* 滚到底自动续下一批 */
   if("IntersectionObserver" in window){
@@ -570,37 +707,88 @@ function init(){
   fromHash();
 }
 
-/* 把老师新审核通过的作品并进画廊。
+/* 把老师新审核通过的作品并进画廊，并按"撤下名单"过滤掉被撤下的静态作品。
    静默补：网络不通就当没有，绝不影响本地已有的内容。 */
 function mergeRemoteWorks(){
   if(!GAPI || !window.fetch) return;
-  fetch(GAPI+"/api/works").then(function(r){ return r.json(); }).then(function(d){
-    var list=(d && d.list) || [];
-    if(!list.length) return;
-    /* ★ 双保险：图片地址一律按 id 自己拼，不用服务器下发的 img/th。
-       服务器在 nginx 子路径下（/gallery/）拼绝对地址时，一旦忘了补前缀就会
-       给出 .../api/img/xxx（少 /gallery）→ 404 → 整墙裂图。自己拼就不会踩。
-       规则与 server.js 的 publicItem 保持一致。 */
-    list.forEach(function(w){
-      w.img = GAPI + "/api/img/" + w.id;
-      w.th  = GAPI + "/api/img/" + w.id + "?s=1";
-    });
-    var have={};
-    DATA.works.forEach(function(w){ have[w.id]=1; });
-    var fresh=list.filter(function(w){ return !have[w.id]; });
-    if(!fresh.length) return;
-    DATA.works = fresh.concat(DATA.works);
-    fresh.forEach(function(w){
-      if((DATA.categories||[]).indexOf(w.cat)<0) DATA.categories.push(w.cat);
-    });
-    CMAP={};
-    (DATA.categories||[]).forEach(function(c,i){ CMAP[c]=PAL[i%PAL.length]; });
-    renderStats(); renderChips(); renderGrid();
-    /* ★ 2026-09-22：页脚也要跟着刷。之前只刷了网格，
-       导致页脚「共收录 N 幅」停留在静态站的数量，
-       跟上方统计条（含后端即时作品）对不上。 */
-    renderFoot();
+  var pHid = fetch(GAPI+"/api/hidden").then(function(r){ return r.json(); })
+               .catch(function(){ return {}; });
+  var pWk  = fetch(GAPI+"/api/works").then(function(r){ return r.json(); })
+               .catch(function(){ return {}; });
+  Promise.all([pHid, pWk]).then(function(res){
+    var hid = {};
+    ((res[0] && res[0].hidden) || []).forEach(function(id){ hid[id] = 1; });
+
+    /* ★ 2026-09-23：老师撤下的静态作品要在这里剔掉。
+       那些作品的记录还在 GitHub 静态站的 data.json 里（没重新部署），
+       只在显示层过滤 —— 不剔的话会出现"撤了又自己回来"的怪事。 */
+    var changed = false;
+    if(Object.keys(hid).length){
+      var n0 = DATA.works.length;
+      DATA.works = DATA.works.filter(function(w){ return !hid[w.id]; });
+      if(DATA.works.length !== n0) changed = true;
+    }
+
+    var list = (res[1] && res[1].list) || [];
+    if(list.length){
+      /* ★ 双保险：图片地址一律按 id 自己拼，不用服务器下发的 img/th。
+         服务器在 nginx 子路径下（/gallery/）拼绝对地址时，一旦忘了补前缀就会
+         给出 .../api/img/xxx（少 /gallery）→ 404 → 整墙裂图。自己拼就不会踩。
+         规则与 server.js 的 publicItem 保持一致。 */
+      list.forEach(function(w){
+        w.img = GAPI + "/api/img/" + w.id;
+        w.th  = GAPI + "/api/img/" + w.id + "?s=1";
+      });
+      var have = {};
+      DATA.works.forEach(function(w){ have[w.id] = 1; });
+      var fresh = list.filter(function(w){ return !have[w.id]; });
+      if(fresh.length){
+        DATA.works = fresh.concat(DATA.works);
+        fresh.forEach(function(w){
+          if((DATA.categories||[]).indexOf(w.cat) < 0) DATA.categories.push(w.cat);
+        });
+        CMAP = {};
+        (DATA.categories||[]).forEach(function(c,i){ CMAP[c] = PAL[i%PAL.length]; });
+        changed = true;
+      }
+    }
+
+    /* ★ 只要内容有变（并入新作品 或 剔掉撤下的）就要重渲染。
+       以前是"没有新作品就直接 return"，那样撤下操作不会即时生效。 */
+    if(changed){
+      renderStats(); renderChips(); renderGrid();
+      /* 页脚也要跟着刷，否则「共收录 N 幅」会跟统计条对不上 */
+      renderFoot();
+    }
+    syncLiked();   /* 顺带问一下服务器：这台设备今天点过哪些 */
   }).catch(function(){});
+}
+
+/* 拉服务器端"这台设备今天点过哪些作品"。
+   ★ 为什么要问服务器：localStorage 可能被清、或者换了浏览器。
+     服务器按 IP + 日期记的才是准的；本地那份只是"先点亮"的乐观显示。
+   两边不一致时**以服务器为准**（服务器说点过 → 点亮；服务器说没点过 → 熄灭）。 */
+function syncLiked(){
+  if(!GAPI || !window.fetch) return;
+  fetch(GAPI+"/api/liked").then(function(r){ return r.json(); }).then(function(d){
+    if(!d || !d.ok || !d.liked) return;
+    var srv=d.liked, changed=false;
+    /* 服务器说点过的，补进本地 */
+    for(var id in srv){
+      if(srv.hasOwnProperty(id) && !LIKED[id]){ LIKED[id]=1; changed=true; }
+    }
+    if(changed){
+      saveLiked();
+      /* 只把新点亮的那些刷一下，不用整墙重渲染 */
+      for(var id2 in srv){
+        if(srv.hasOwnProperty(id2)) applyLikes(id2, likeCountOf(id2), false);
+      }
+    }
+  }).catch(function(){});
+}
+function likeCountOf(id){
+  for(var i=0;i<DATA.works.length;i++) if(DATA.works[i].id===id) return DATA.works[i].likes|0;
+  return 0;
 }
 
 function boot(){ init(); mergeRemoteWorks(); }
