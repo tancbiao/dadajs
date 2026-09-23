@@ -1048,19 +1048,43 @@ function renderSettings(){
         '<button class="btn2" id="btnArchive">标记已固化</button>'+
       "</div>"+
       '<div class="setrow">'+
+        '<div class="sl"><b>取消固化</b><span>点错了、或者想重新让服务器接管这些作品时用。会把所有"已固化"标记清掉，作品重新出现在首页</span></div>'+
+        '<button class="btn2" id="btnUnarchive">取消固化</button>'+
+      "</div>"+
+      '<div class="setrow">'+
         '<div class="sl"><b>当前状态</b><span id="archStat"></span></div>'+
         '<button class="btn2" id="btnStats">刷新</button>'+
+      "</div>"+
+    "</div>"+
+
+    '<p class="settitle">数据体检</p>'+
+    '<div class="setbox">'+
+      '<div class="setrow">'+
+        '<div class="sl"><b>检查数据是否健康</b><span id="docStat">看有没有"裂图"（有记录没图片）和"孤儿图片"（有图片没记录）</span></div>'+
+        '<button class="btn2" id="btnDoctor">开始检查</button>'+
+      "</div>"+
+      '<div class="setrow" id="docRow" style="display:none;padding-top:0">'+
+        '<div class="sl" id="docResult"></div>'+
+        '<button class="btn2" id="btnClean" style="display:none">清理孤儿图片</button>'+
       "</div>"+
     "</div>"+
 
     '<p class="settitle">安全</p>'+
     '<div class="setbox">'+
       '<div class="setrow">'+
-        '<div class="sl"><b>修改管理密码</b><span>建议改成自己的密码，别用默认的</span></div>'+
+        '<div class="sl"><b>修改管理密码</b><span>建议 8 位以上、别用生日或班级号 —— 学生猜得到的密码等于没设</span></div>'+
       "</div>"+
       '<div class="setrow" style="padding-top:0">'+
-        '<input class="setinput" id="setPw" type="text" placeholder="输入新密码（4~24位）">'+
+        '<input class="setinput" id="setPw" type="text" placeholder="输入新密码（至少 6 位，建议 8 位以上）">'+
         '<button class="btn2" id="savePw">修改</button>'+
+      "</div>"+
+      '<div class="setrow">'+
+        '<div class="sl"><b>万一密码不对／被人改了</b><span>不用慌：密码存在服务器上，可以请技术老师重置。'+
+          '建议顺手记一份在这里（只有你自己看得到，不会上传）</span></div>'+
+      "</div>"+
+      '<div class="setrow" style="padding-top:0">'+
+        '<input class="setinput" id="pwMemo" type="text" placeholder="记一下当前密码，方便日后查找">'+
+        '<button class="btn2" id="saveMemo">记下</button>'+
       "</div>"+
     "</div>"+
 
@@ -1090,10 +1114,54 @@ function renderSettings(){
   };
   byId("savePw").onclick=function(){
     var np=byId("setPw").value.trim();
-    if(np.length<4){ toast("密码至少 4 位"); return; }
+    if(np.length<6){ toast("密码至少 6 位（建议 8 位以上）"); return; }
     post("settings",{newPw:np}).then(function(r){
       if(r.data.ok){ S.pw=np; try{ localStorage.setItem("gallery_pw",np); }catch(e){} byId("setPw").value=""; toast("密码已修改"); }
       else toast(r.data.error||"修改失败");
+    });
+  };
+  /* 密码备忘：只存在这台电脑的浏览器里，不上传服务器。
+     ★ 为什么要有：万一密码被人改了，老师手里没有记录就只能找技术老师重置。
+       留一份本地备忘，是最省事的兜底。 */
+  var memoEl=byId("pwMemo");
+  if(memoEl){
+    try{ memoEl.value=localStorage.getItem("gallery_pw_memo")||""; }catch(e){}
+    byId("saveMemo").onclick=function(){
+      try{ localStorage.setItem("gallery_pw_memo", memoEl.value); toast("已记在这台电脑上"); }
+      catch(e){ toast("这台电脑不让记，请自己抄下来"); }
+    };
+  }
+  byId("btnUnarchive").onclick=function(){
+    if(!confirm("取消所有「已固化」标记吗？\n\n取消后，这些作品会重新从服务器下发、出现在首页。\n（和正式馆里的可能会重复，确认那边已经删掉或不用了再操作）")) return;
+    post("unarchive").then(function(r){
+      if(r.data.ok){ toast("已取消固化，共 "+r.data.unarchived+" 幅"); reload(); }
+      else toast(r.data.error||"操作失败");
+    });
+  };
+  byId("btnDoctor").onclick=function(){
+    byId("btnDoctor").disabled=true; byId("btnDoctor").textContent="检查中…";
+    post("doctor").then(function(r){
+      byId("btnDoctor").disabled=false; byId("btnDoctor").textContent="重新检查";
+      if(!r.data.ok){ toast("检查失败"); return; }
+      var d=r.data;
+      byId("docRow").style.display="";
+      var msg="共 "+d.items+" 幅记录。";
+      var bad=[];
+      if(d.missingN){ bad.push('<b style="color:#A32D2D">'+d.missingN+' 幅有记录但图片缺失</b>（首页会显示成破图）'); }
+      if(d.orphanN){ bad.push('<b style="color:#B4832F">'+d.orphanN+' 组孤儿图片</b>（没人认领，白占空间）'); }
+      if(d.badN){ bad.push('<b style="color:#A32D2D">'+d.badN+' 条记录字段不全</b>'); }
+      if(!bad.length){ msg+='<b style="color:#3F8F72">数据健康，没有发现问题 ✓</b>'; }
+      else { msg+="发现：<br>"+bad.join("<br>"); }
+      if(d.trashN) msg += "<br>回收站里还有 "+d.trashN+" 幅（不算问题）。";
+      byId("docResult").innerHTML=msg;
+      byId("btnClean").style.display = d.orphanN ? "" : "none";
+    });
+  };
+  byId("btnClean").onclick=function(){
+    if(!confirm("删除这些没有归属的孤儿图片吗？\n\n它们不在任何作品记录里，删掉不影响首页显示。")) return;
+    post("doctor",{cleanup:true}).then(function(r){
+      if(r.data.ok){ toast("已清理，释放 "+(r.data.cleaned||0)+" 字节"); byId("btnClean").style.display="none"; byId("btnDoctor").click(); }
+      else toast("清理失败");
     });
   };
   byId("btnExport").onclick=function(){
@@ -1129,7 +1197,8 @@ function loadStats(){
     var d=r.data;
     var el=byId("archStat");
     if(el) el.textContent="总计 "+d.total+" 幅：待审 "+d.pending+" / 已展出 "+d.approved+" / 已退回 "+d.rejected+
-      "；其中已固化 "+(S.data.archived||0)+" 幅";
+      "；其中已固化 "+(S.data.archived||0)+" 幅"+
+      "；回收站 "+(d.trash||0)+" 幅（可恢复）；快照 "+(d.snaps||0)+" 份";
   });
 }
 
