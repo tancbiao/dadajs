@@ -97,6 +97,22 @@ footer a:hover{color:var(--ink)}
   display:inline-block;background:var(--card);border:1px solid var(--line);border-radius:999px;
   padding:4px 14px;font-size:12px;margin-top:10px;
 }
+.notice{
+  margin:22px 0 4px;padding:15px 18px;border-radius:18px;
+  background:linear-gradient(180deg,#FFF8E6,#FFFDF6);
+  border:1px solid #F1D79E;box-shadow:var(--shadow);
+  font-size:13.5px;color:#6b5a3e;line-height:1.9;
+}
+.notice .ntitle{font-weight:800;color:#9a6f1c;font-size:14.5px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.notice b{color:#8a6a22}
+.dl-btn{
+  margin-top:12px;width:100%;font-family:inherit;font-size:12.5px;font-weight:700;
+  color:#fff;background:var(--accent);border:none;border-radius:11px;
+  padding:9px 10px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;
+  box-shadow:0 3px 0 rgba(0,0,0,.12);transition:transform .12s,filter .12s;
+}
+.dl-btn:hover{filter:brightness(1.06)}
+.dl-btn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.12)}
 @media(max-width:560px){
   header{padding:34px 0 22px}
   .grid{grid-template-columns:1fr}
@@ -112,6 +128,12 @@ footer a:hover{color:var(--ink)}
     <h1>小学<span class="em">教师工作台</span></h1>
     <p class="sub">通用打底 · 按学科进入，目前上线 <b id="cnt">5</b> 个工具</p>
   </header>
+
+  <div class="notice">
+    <div class="ntitle">📣 关于这些工具的说明</div>
+    <div>这些都是 <b>培训生成的 1.0 版本</b>，还没经过迭代打磨。老师们下载使用后如果做了优化，请让自己的 WorkBuddy 生成一份「<b>技能包 / 提示词</b>」，<b>署上您的名字</b>发回 <b>1572403714@qq.com</b>，我们一起把网页上的工具更新得更好用～</div>
+    <div style="margin-top:7px">每张卡片右下角的「<b>⬇ 技能包 / 提示词</b>」按钮，点一下就能把这份提示词下载下来，交给你的 WorkBuddy 去优化。</div>
+  </div>
 
   <main id="main"></main>
 
@@ -198,6 +220,162 @@ function esc(s){
   });
 }
 
+/* ========== 技能包 / 提示词下载内容 ========== */
+var CONTACT_EMAIL = '1572403714@qq.com';
+var SKILLS = {
+  '/dada/': {
+    file:'dadajs-通用工作台-技能包与提示词.md',
+    what:[
+      '13 个效率模块：今日计划、教研助手、课程表、学生追踪、午托晚托及值日、倒计时、家校沟通、会议记录、每周思政、项目式学习、630 台账、其他工作、首页看板',
+      '数据全部存在浏览器本地（localStorage），单文件离线可用',
+      '马卡龙配色、可切皮肤，点卡片进入对应模块'
+    ],
+    build:'单文件 HTML + 内联 CSS/JS + localStorage；按 miffy-workbench-builder 范式搭建'
+  },
+  '/she/': {
+    file:'dadajs-社团选课系统-技能包与提示词.md',
+    what:[
+      '家长端按「班级+姓名」抢社团名额',
+      '全校名单校验防冒名、防超额；内定社团锁定不开放',
+      '班主任补选专场（跨班共享名额）',
+      '管理后台 /she/admin.html：管理名额、名单、内定台账'
+    ],
+    build:'前端静态站点（public/index.html + admin.html），数据存本地/服务器；用 school-club-selection 技能范式'
+  },
+  '/paike/': {
+    file:'dadajs-智能排课系统-技能包与提示词.md',
+    what:[
+      '39 个班一键自动排课',
+      '教师防撞课、教研避让、功能室约束、合堂大课、课时方案与冲突检查',
+      '可导出 Excel'
+    ],
+    build:'前端 + 排课引擎（assets/engine.js 等），用 chengxi-paike 技能范式；一键排课、零硬性冲突'
+  },
+  '/yuwen/': {
+    file:'dadajs-一五班工作台-技能包与提示词.md',
+    what:[
+      '座位表、加减分、随机抽签、课程表',
+      '服务班主任与语文老师日常班级管理'
+    ],
+    build:'单文件工作台，参照 dada 工作台的模块范式、按班级定制'
+  },
+  '/yuwen/zuowen/': {
+    file:'dadajs-AI作文批改助手-技能包与提示词.md',
+    what:[
+      '拍照转文字、一键批改全班',
+      '自动评语与讲评数据',
+      '离线可跑'
+    ],
+    build:'单文件 HTML，调用本地/离线 AI 或内置规则批改，用 ai-essay-grading 技能范式'
+  },
+  '/yingyu/': {
+    file:'dadajs-英语工作台-技能包与提示词.md',
+    what:[
+      '今日计划、课程表、学生追踪、教研助手等 13 个效率模块（英语学科版）'
+    ],
+    build:'单文件工作台，参照 dada 工作台范式、按英语学科定制'
+  },
+  '/yingyu/game/': {
+    file:'dadajs-英语互动课堂-技能包与提示词.md',
+    what:[
+      '外研版（2024 新版）三上/四上共 12 单元',
+      '每单元 5 类游戏：对对碰、闪电判断、句子拼装、角色对话、小组抢答',
+      '计时器 / 随机点名 / 分组计分，大屏全班互动'
+    ],
+    build:'单文件 HTML 游戏，用 english-interactive-class 技能范式'
+  },
+  '/shuxue/game/': {
+    file:'dadajs-数学勇者大冒险-技能包与提示词.md',
+    what:[
+      '人教版五年级全学年 15 单元 105 题打怪闯关',
+      '含错题本与教师工作台',
+      '创意来自沙富小学杨翔龙老师'
+    ],
+    build:'单文件闯关游戏 + 教师端，参照互动课堂游戏范式'
+  },
+  '/kexue/': {
+    file:'dadajs-科学工作台教案版-技能包与提示词.md',
+    what:[
+      '教科版四上/五上全册教案，共 52 份',
+      '随备随查，含教案阅读与教学进度管理'
+    ],
+    build:'单文件教案工作台，内置 52 份教案数据 + 阅读/进度管理'
+  },
+  '/meishu/': {
+    file:'dadajs-优秀作品馆-技能包与提示词.md',
+    what:[
+      '全校学生优秀作品展：绘画/手工/书法/科技/实验记录等',
+      '按班级自动归档；家长选班级+输姓名即可看自家孩子作品',
+      '含投稿、教师审核、后台发布'
+    ],
+    build:'前端站点（index/submit/teacher/review + 后端），用 school-online-gallery 技能范式'
+  }
+};
+
+function findItem(path){
+  var found=null;
+  GROUPS.forEach(function(g){ g.items.forEach(function(it){ if(it.path===path) found=it; }); });
+  return found;
+}
+
+function buildSkillMD(it, sk){
+  var L=[];
+  L.push('# 【dadajs 技能包 / 提示词】'+it.name);
+  L.push('');
+  L.push('> 来自 dadajs.cn 小学教师工作台 · 培训生成的 **1.0 版本（未经迭代）**');
+  L.push('');
+  L.push('## 这是什么');
+  L.push(it.desc);
+  L.push('');
+  L.push('## 工具说明（给 AI 看的背景）');
+  L.push('- 访问地址：https://dadajs.cn'+it.path);
+  L.push('- 功能要点：');
+  sk.what.forEach(function(w){ L.push('  - '+w); });
+  L.push('- 技术形态：'+sk.build);
+  L.push('');
+  L.push('## 给 WorkBuddy 的优化提示词');
+  L.push('你是我的 AI 助教。下面这个工具是培训生成的 1.0 版本，还没经过迭代打磨：');
+  L.push('');
+  L.push('【工具名称】'+it.name);
+  L.push('【用途】'+it.desc);
+  L.push('【现有功能】');
+  sk.what.forEach(function(w){ L.push('- '+w); });
+  L.push('【技术形态】'+sk.build);
+  L.push('');
+  L.push('请帮我优化 / 迭代这个工具，可从这些方向入手（任选或补充）：');
+  L.push('1. 交互与界面更顺手，更适合大屏或手机；');
+  L.push('2. 增加或改进某块功能；');
+  L.push('3. 修复可能存在的问题；');
+  L.push('4. 让它更贴课堂实际、更好用。');
+  L.push('');
+  L.push('请直接产出可以运行的成品（单文件 HTML 优先），并说明你改了什么。');
+  L.push('');
+  L.push('## 一起把它变得更好用 🤝');
+  L.push('这个工具是**培训生成的 1.0 版本，未经迭代**。如果你下载使用后做了优化：');
+  L.push('- 请让你的 WorkBuddy 生成一份「技能包 / 提示词」（就像这份文件一样）；');
+  L.push('- **署上你的名字**（方便我们一起致谢与追溯）；');
+  L.push('- 发回 **'+CONTACT_EMAIL+'**；');
+  L.push('- 我们会一起把 dadajs.cn 网页上的工具更新得更好用。');
+  L.push('');
+  L.push('优化者署名：__________');
+  L.push('');
+  L.push('---');
+  L.push('dadajs.cn · 谭政 制作 · 一起共建教师效率工具');
+  return L.join('\n');
+}
+
+function downloadSkill(key){
+  var it=findItem(key), sk=SKILLS[key];
+  if(!it||!sk){ return; }
+  var md=buildSkillMD(it, sk);
+  var blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=sk.file;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 120);
+}
+
 function render(){
   var live = 0, html = '';
   GROUPS.forEach(function(g){
@@ -213,6 +391,7 @@ function render(){
         + '</div>'
         + '<p class="desc">' + esc(it.desc) + '</p>'
         + '<span class="path">dadajs.cn' + esc(it.path || '/待建') + '</span>'
+        + (on ? '<button class="dl-btn" type="button" onclick="event.preventDefault();event.stopPropagation();downloadSkill(\'' + it.path + '\')">⬇ 技能包 / 提示词</button>' : '')
         + '</a>';
     }).join('');
     html += '<section class="group">'
