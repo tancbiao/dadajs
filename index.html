@@ -218,7 +218,9 @@ var GROUPS = [
     name:'更多学科', accent:'#5F5E5A', tint:'#F1EFE8',
     items:[
       { icon:'🎨', name:'综合 / 班会', tag:'待建', path:'',
-        desc:'道法、综合实践、班会课工具，预留' }
+        desc:'道法、综合实践、班会课工具，预留' },
+      { icon:'🏡', name:'家乡文化二维码', tag:'课堂', path:'https://hometown-culture-qr.app.workbuddy.host/',
+        desc:'四年级家乡文化课：选主题→点词拼句→生成专属二维码，扫码看作品墙；纯拼句零 AI，适合小学生' }
     ]
   }
 ];
@@ -391,6 +393,7 @@ function render(){
     g.items.forEach(function(it){ if(it.path) live++; });
     var cards = g.items.map(function(it){
       var on = !!it.path;
+      var ext = on && it.path.indexOf('http') === 0;
       return '<div class="card' + (on ? '' : ' soon') + '"'
         + ' style="--accent:' + g.accent + ';--tint:' + g.tint + '">'
         + '<div class="ic">' + it.icon + '</div>'
@@ -398,11 +401,11 @@ function render(){
         + (it.tag ? '<span class="tag">' + esc(it.tag) + '</span>' : '')
         + '</div>'
         + '<p class="desc">' + esc(it.desc) + '</p>'
-        + '<span class="path">dadajs.cn' + esc(it.path || '/待建') + '</span>'
+        + '<span class="path">' + (ext ? esc(it.path.replace(/^https?:\/\//, '')) : 'dadajs.cn' + esc(it.path || '/待建')) + '</span>'
         + (on
             ? '<div class="acts">'
               + '<a class="open-btn" href="' + esc(it.path) + '" target="_blank" rel="noopener noreferrer">打开工具 ↗</a>'
-              + '<button class="dl-btn" type="button" onclick="downloadSkill(\'' + it.path + '\')">⬇ 技能包 / 提示词</button>'
+              + (ext ? '' : '<button class="dl-btn" type="button" onclick="downloadSkill(\'' + it.path + '\')">⬇ 技能包 / 提示词</button>')
             + '</div>'
             : '')
         + '</div>';
