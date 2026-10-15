@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>24 点决斗 · 管理后台</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛠</text></svg>">
+<style>
+:root{
+  --ink:#5A4A5E; --ink-l:#8A7A8E; --ink-h:#3C3440;
+  --gold:#B7791F; --gold-l:#FBF3DF; --gold-d:#8a5a13;
+  --ok:#3E9B54; --ok-bg:#F2FBF3; --warn:#C9772B; --warn-bg:#FFF8E6;
+  --bad:#C0392B; --bad-bg:#FDECEC; --line:rgba(90,74,94,.13);
+  --card:#FFFDFD; --shadow:0 4px 18px rgba(150,120,140,.10);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  color:var(--ink);line-height:1.6;min-height:100vh;
+  background:linear-gradient(180deg,#FFFDF7 0%,#FFFBF2 100%);
+  padding:0 16px 60px;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:1080px;margin:0 auto}
+header{text-align:center;padding:44px 0 24px}
+h1{font-size:clamp(22px,4vw,32px);margin:0 0 6px;color:var(--ink-h);font-weight:800}
+h1 .em{background:linear-gradient(96deg,#E0A44A,#B7791F);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--ink-l);font-size:14px;margin:0}
+.sub code{background:var(--gold-l);color:var(--gold-d);padding:1px 6px;border-radius:5px;font-size:12.5px}
+
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;
+  padding:20px 22px;box-shadow:var(--shadow);margin-bottom:16px}
+.card h2{font-size:16.5px;margin:0 0 14px;color:var(--ink-h);display:flex;align-items:center;gap:8px}
+.card h2 .n{font-size:12px;color:var(--ink-l);font-weight:500}
+
+/* 登录 */
+#gate{max-width:420px;margin:60px auto;text-align:center}
+#gate input{width:100%;padding:14px 16px;font-size:17px;font-family:inherit;
+  border:2px solid var(--line);border-radius:13px;outline:none;background:#FCFAF6;color:var(--ink-h);text-align:center;letter-spacing:2px}
+#gate input:focus{border-color:var(--gold);background:#fff}
+.btn{border:none;border-radius:12px;padding:12px 20px;font-size:15px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:all .16s;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:var(--gold);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--gold-d)}
+.btn-ghost{background:#F5F0E8;color:#6B6359}
+.btn-ghost:hover:not(:disabled){background:#EBE3D6}
+.btn-danger{background:var(--bad);color:#fff}
+.btn-danger:hover:not(:disabled){background:#a5301f}
+.btn-sm{padding:6px 12px;font-size:13px;border-radius:9px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+
+/* 概览 */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--gold-l);border:1px solid #EFDFB8;border-radius:14px;padding:14px 16px}
+.stat .k{font-size:12.5px;color:var(--gold-d);letter-spacing:.5px}
+.stat .v{font-size:26px;font-weight:800;color:var(--gold-d);font-variant-numeric:tabular-nums}
+
+/* 表格 */
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px}
+.tbl th{text-align:left;font-size:12px;color:var(--ink-l);font-weight:600;letter-spacing:.5px;
+  padding:7px 10px;border-bottom:2px solid #F0E6DA;white-space:nowrap}
+.tbl td{padding:9px 10px;border-bottom:1px solid #F6F0E7}
+.tbl tr:hover td{background:#FFFCF5}
+.tbl .num{font-variant-numeric:tabular-nums;font-weight:700;color:var(--gold-d)}
+.tbl .soft{color:var(--ink-l);font-size:13px;white-space:nowrap}
+.tbl .medal{font-size:17px;width:42px}
+.empty{text-align:center;color:#B9B0A4;padding:26px 0;font-size:15px}
+.scroll{max-height:460px;overflow:auto;border-radius:12px}
+
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px}
+.tag.auto{background:#EEF2FF;color:#4B5FB5}
+.tag.manual{background:var(--gold-l);color:var(--gold-d)}
+
+.msg{margin-top:12px;padding:11px 15px;border-radius:12px;font-size:14px;display:none}
+.msg.show{display:block}
+.msg.ok{background:var(--ok-bg);border:1px solid #BFE3C8;color:#2C7A41}
+.msg.bad{background:var(--bad-bg);border:1px solid #F2C4C0;color:#9F2D20}
+.msg.warn{background:var(--warn-bg);border:1px solid #F1D79E;color:#8a6a22}
+
+.danger{border-color:#F2C4C0;background:#FFFAF9}
+.danger h2{color:var(--bad)}
+.note{background:var(--warn-bg);border:1px solid #F1D79E;border-radius:12px;
+  padding:11px 15px;font-size:13.5px;color:#8a6a22;line-height:1.75;margin-bottom:14px}
+footer{text-align:center;color:var(--ink-l);font-size:12.5px;margin-top:30px;line-height:1.9}
+footer a{color:var(--ink-l)}
+.hide{display:none !important}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>24 点决斗 · <span class="em">管理后台</span></h1>
+    <p class="sub">云端榜单存放：<code>api.kexvefuxi.cn/dian24</code> · 服务 <code>dian24-rank</code></p>
+  </header>
+
+  <!-- 登录 -->
+  <div class="card" id="gate">
+    <h2 style="justify-content:center">🔑 请输入管理密码</h2>
+    <input id="pw" type="password" placeholder="密码" autocomplete="off">
+    <div class="row" style="justify-content:center;margin-top:14px">
+      <button class="btn btn-primary" id="btnLogin" style="min-width:160px">进入后台</button>
+    </div>
+    <div class="msg bad" id="gateMsg"></div>
+  </div>
+
+  <!-- 主面板 -->
+  <div id="panel" class="hide">
+
+    <div class="card">
+      <h2>📊 当前数据概览</h2>
+      <div class="stats">
+        <div class="stat"><div class="k">原始记录</div><div class="v" id="stRec">–</div></div>
+        <div class="stat"><div class="k">参与人数（去重）</div><div class="v" id="stPly">–</div></div>
+        <div class="stat"><div class="k">历史快照</div><div class="v" id="stSnap">–</div></div>
+        <div class="stat"><div class="k">最近更新</div><div class="v" id="stUpd" style="font-size:15px;padding-top:8px">–</div></div>
+      </div>
+      <div class="msg" id="msg"></div>
+    </div>
+
+    <div class="card">
+      <h2>🧰 常用操作</h2>
+      <div class="row">
+        <button class="btn btn-primary" id="btnSnap">📸 立即快照（存档当前数据）</button>
+        <button class="btn btn-ghost" id="btnRefresh">🔄 刷新</button>
+        <button class="btn btn-ghost" id="btnCsv">⬇ 导出成绩 CSV</button>
+      </div>
+      <div style="margin-top:12px">
+        <input id="snapNote" placeholder="快照备注（可选，例如：周五六年级比赛后）" maxlength="60"
+          style="width:100%;padding:10px 14px;font-size:14.5px;font-family:inherit;border:2px solid var(--line);border-radius:11px;background:#FCFAF6;outline:none;color:var(--ink-h)">
+      </div>
+      <div class="note" style="margin:14px 0 0">
+        💡 <b>快照</b>会把当前全部成绩原样存成一份带时间戳的存档，永久保留（只留最近 100 份），
+        随时可以查看 / 下载 / 恢复。担心学生成绩被覆盖或误删时，先点一下快照。
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>🏆 排行榜预览 <span class="n" id="rankCount"></span></h2>
+      <div class="scroll"><div id="rankBox" class="empty">加载中…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>📋 全部原始记录 <span class="n" id="recCount"></span></h2>
+      <div class="scroll"><div id="recBox" class="empty">加载中…</div></div>
+    </div>
+
+    <div class="card">
+      <h2>🗂 历史快照 <span class="n" id="snapCount"></span></h2>
+      <div class="scroll"><div id="snapBox" class="empty">加载中…</div></div>
+    </div>
+
+    <div class="card danger">
+      <h2>⚠️ 危险操作</h2>
+      <div class="note" style="background:var(--bad-bg);border-color:#F2C4C0;color:#9F2D20">
+        清空会删掉<b>全部原始成绩</b>，排行榜随之归零。<br>
+        <b>系统会在清空前自动存一份快照</b>，万一后悔可以从下面「历史快照」里恢复。
+      </div>
+      <div class="row">
+        <input id="clearWord" placeholder='输入 CLEAR 确认' maxlength="10"
+          style="padding:10px 14px;font-size:14.5px;font-family:inherit;border:2px solid #F2C4C0;border-radius:11px;background:#fff;outline:none;color:var(--ink-h);width:200px">
+        <button class="btn btn-danger" id="btnClear" disabled>清空全部成绩</button>
+      </div>
+    </div>
+
+    <footer>
+      dadajs.cn · 谭政 制作 · 学生端没有任何删除入口<br>
+      <a href="/dian24/">← 回到 24 点决斗游戏</a>
+    </footer>
+  </div>
+</div>
+
+<script>
+/* ============ 配置 ============ */
+var API = 'https://api.kexvefuxi.cn/dian24/api';
+var PW = '';                      // 密码只放在内存 + sessionStorage
+var LV_NAME = { 1: '入门', 2: '进阶', 3: '困难', 4: '地狱' };
+var state = { records: [], snapshots: [], rank: [] };
+
+/* ============ 工具 ============ */
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function fdate(ts) {
+  if (!ts) return '–';
+  var d = new Date(ts);
+  function p(n) { return String(n).padStart(2, '0'); }
+  return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+function fsize(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+  return (n / 1048576).toFixed(2) + ' MB';
+}
+function msg(text, kind) {
+  var el = $('msg');
+  if (!text) { el.className = 'msg'; el.textContent = ''; return; }
+  el.className = 'msg show ' + (kind || 'warn');
+  el.textContent = text;
+  if (kind === 'ok') setTimeout(function () { el.className = 'msg'; }, 4000);
+}
+
+function call(action, body, method) {
+  if (typeof fetch === 'undefined') return Promise.resolve({ code: 0, body: null });
+  var url = API + '?action=' + encodeURIComponent(action);
+  var opt = { cache: 'no-store', method: method || (body ? 'POST' : 'GET') };
+  if (body) {
+    opt.headers = { 'Content-Type': 'application/json' };
+    opt.body = JSON.stringify(Object.assign({ action: action, password: PW }, body));
+  }
+  return fetch(url, opt).then(function (r) {
+    return r.json().then(function (j) { return { code: r.status, body: j }; });
+  }).catch(function () { return { code: 0, body: null }; });
+}
+
+/* ============ 登录 ============ */
+function login() {
+  var pw = $('pw').value.trim();
+  if (!pw) return;
+  PW = pw;
+  $('btnLogin').disabled = true;
+  $('btnLogin').textContent = '验证中…';
+  call('admin_list', {}).then(function (r) {
+    $('btnLogin').disabled = false;
+    $('btnLogin').textContent = '进入后台';
+    if (r.code === 200 && r.body && r.body.ok) {
+      try { sessionStorage.setItem('dian24_admin_pw', pw); } catch (e) {}
+      $('gate').classList.add('hide');
+      $('panel').classList.remove('hide');
+      apply(r.body);
+      loadSnapshots();
+    } else if (r.code === 401) {
+      PW = '';
+      $('gateMsg').className = 'msg bad show';
+      $('gateMsg').textContent = '密码不对';
+    } else {
+      PW = '';
+      $('gateMsg').className = 'msg bad show';
+      $('gateMsg').textContent = '连不上服务器（' + (r.code || '网络错误') + '），请检查网络后重试';
+    }
+  });
+}
+
+/* ============ 渲染 ============ */
+function apply(data) {
+  state.records = data.records || [];
+  // 前端也做一次去重（跟后端同规则），用于排行预览
+  var best = {};
+  state.records.forEach(function (r) {
+    var cur = best[r.name];
+    if (!cur || r.score > cur.score || (r.score === cur.score && r.ts < cur.ts)) best[r.name] = r;
+  });
+  state.rank = Object.keys(best).map(function (k) { return best[k]; })
+    .sort(function (a, b) { return (b.score - a.score) || (b.solved - a.solved) || (a.ts - b.ts); });
+
+  $('stRec').textContent = state.records.length;
+  $('stPly').textContent = state.rank.length;
+  $('stUpd').textContent = data.updatedAt ? fdate(new Date(data.updatedAt).getTime()) : '–';
+
+  renderRank();
+  renderRecords();
+}
+
+function renderRank() {
+  $('rankCount').textContent = '去重后 ' + state.rank.length + ' 人';
+  if (!state.rank.length) { $('rankBox').className = 'empty'; $('rankBox').textContent = '还没有成绩'; return; }
+  $('rankBox').className = '';
+  var h = '<table class="tbl"><thead><tr><th>#</th><th>姓名</th><th>得分</th><th>解题</th><th>难度</th><th>时间</th></tr></thead><tbody>';
+  state.rank.slice(0, 30).forEach(function (r, i) {
+    var medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
+    h += '<tr><td class="medal">' + medal + '</td><td><b>' + esc(r.name) + '</b></td>'
+      + '<td class="num">' + r.score + '</td><td class="soft">' + r.solved + ' 题</td>'
+      + '<td class="soft">' + (LV_NAME[r.lv] || '-') + '</td><td class="soft">' + fdate(r.ts) + '</td></tr>';
+  });
+  h += '</tbody></table>';
+  $('rankBox').innerHTML = h;
+}
+
+function renderRecords() {
+  $('recCount').textContent = '共 ' + state.records.length + ' 条（最新的在上面）';
+  if (!state.records.length) { $('recBox').className = 'empty'; $('recBox').textContent = '还没有记录'; return; }
+  $('recBox').className = '';
+  var h = '<table class="tbl"><thead><tr><th>时间</th><th>姓名</th><th>得分</th><th>解题</th><th>难度</th></tr></thead><tbody>';
+  state.records.slice(0, 500).forEach(function (r) {
+    h += '<tr><td class="soft">' + fdate(r.ts) + '</td><td>' + esc(r.name) + '</td>'
+      + '<td class="num">' + r.score + '</td><td class="soft">' + r.solved + ' 题</td>'
+      + '<td class="soft">' + (LV_NAME[r.lv] || '-') + '</td></tr>';
+  });
+  h += '</tbody></table>';
+  $('recBox').innerHTML = h;
+}
+
+function loadSnapshots() {
+  call('snapshots', {}, 'POST').then(function (r) {
+    if (!(r.code === 200 && r.body && r.body.ok)) {
+      $('snapBox').className = 'empty'; $('snapBox').textContent = '读不到快照列表'; return;
+    }
+    state.snapshots = r.body.snapshots || [];
+    $('stSnap').textContent = state.snapshots.length;
+    $('snapCount').textContent = '共 ' + state.snapshots.length + ' 份（最近 100 份保留）';
+    if (!state.snapshots.length) {
+      $('snapBox').className = 'empty'; $('snapBox').textContent = '还没有快照，点上面的「📸 立即快照」存一份';
+      return;
+    }
+    $('snapBox').className = '';
+    var h = '<table class="tbl"><thead><tr><th>时间</th><th>备注</th><th>条数</th><th>大小</th><th>操作</th></tr></thead><tbody>';
+    state.snapshots.forEach(function (s) {
+      var auto = /自动备份/.test(s.note || '');
+      h += '<tr><td class="soft">' + fdate(s.ts) + '</td>'
+        + '<td>' + (auto ? '<span class="tag auto">系统自动</span> ' : '<span class="tag manual">手动</span> ')
+        + esc(s.note || '') + '</td>'
+        + '<td class="num">' + s.count + '</td><td class="soft">' + fsize(s.size) + '</td>'
+        + '<td class="soft"><button class="btn btn-ghost btn-sm" data-dl="' + esc(s.file) + '">下载</button> '
+        + '<button class="btn btn-ghost btn-sm" data-rs="' + esc(s.file) + '">恢复</button></td></tr>';
+    });
+    h += '</tbody></table>';
+    $('snapBox').innerHTML = h;
+    $('snapBox').querySelectorAll('[data-dl]').forEach(function (b) {
+      b.onclick = function () { downloadSnap(b.getAttribute('data-dl')); };
+    });
+    $('snapBox').querySelectorAll('[data-rs]').forEach(function (b) {
+      b.onclick = function () { restoreSnap(b.getAttribute('data-rs')); };
+    });
+  });
+}
+
+function reload() {
+  call('admin_list', {}).then(function (r) {
+    if (r.code === 200 && r.body && r.body.ok) { apply(r.body); loadSnapshots(); }
+  });
+}
+
+/* ============ 操作 ============ */
+function doSnapshot() {
+  var note = $('snapNote').value.trim();
+  var btn = $('btnSnap');
+  btn.disabled = true; btn.textContent = '正在存档…';
+  call('snapshot', { note: note }).then(function (r) {
+    btn.disabled = false; btn.textContent = '📸 立即快照（存档当前数据）';
+    if (r.code === 200 && r.body && r.body.ok) {
+      $('snapNote').value = '';
+      msg('✅ 已存档：' + r.body.file + '（' + r.body.count + ' 条记录）', 'ok');
+      loadSnapshots();
+    } else {
+      msg('存档失败：' + (r.code === 401 ? '密码失效，请重新登录' : '网络错误 ' + r.code), 'bad');
+    }
+  });
+}
+
+function downloadSnap(file) {
+  call('snapshot_get', { file: file }).then(function (r) {
+    if (!(r.code === 200 && r.body && r.body.ok)) { msg('下载失败', 'bad'); return; }
+    var blob = new Blob([JSON.stringify(r.body, null, 1)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = file;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+    msg('已下载 ' + file, 'ok');
+  });
+}
+
+function restoreSnap(file) {
+  if (!confirm('确定用「' + file + '」覆盖当前数据吗？\n\n当前数据会先被自动存一份快照，所以后悔还能救回来。')) return;
+  call('restore', { file: file }).then(function (r) {
+    if (r.code === 200 && r.body && r.body.ok) {
+      msg('✅ 已从 ' + file + ' 恢复，共 ' + r.body.count + ' 条', 'ok');
+      reload();
+    } else {
+      msg('恢复失败：' + r.code, 'bad');
+    }
+  });
+}
+
+function doClear() {
+  if ($('clearWord').value.trim() !== 'CLEAR') return;
+  if (!confirm('最后确认：真的要清空全部成绩吗？\n\n（清空前会自动存一份快照）')) return;
+  var btn = $('btnClear');
+  btn.disabled = true; btn.textContent = '正在清空…';
+  call('clear', { confirm: 'CLEAR' }).then(function (r) {
+    btn.disabled = false; btn.textContent = '清空全部成绩';
+    $('clearWord').value = '';
+    if (r.code === 200 && r.body && r.body.ok) {
+      msg('✅ 已清空。' + (r.body.backup ? '清空前的数据已自动存为 ' + r.body.backup : ''), 'ok');
+      reload();
+    } else {
+      msg('清空失败：' + r.code, 'bad');
+    }
+  });
+}
+
+function exportCsv() {
+  if (!state.rank.length) { msg('还没有成绩可以导出', 'warn'); return; }
+  var q = function (s) { return '"' + String(s == null ? '' : s).replace(/"/g, '""') + '"'; };
+  var csv = '\ufeff排名,姓名,得分,解题数,难度,时间\n';
+  state.rank.forEach(function (r, i) {
+    csv += [i + 1, q(r.name), r.score, r.solved, q(LV_NAME[r.lv] || ''), q(new Date(r.ts).toLocaleString('zh-CN'))].join(',') + '\n';
+  });
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  var d = new Date();
+  a.download = '24点挑战成绩_' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.csv';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  msg('已导出 ' + state.rank.length + ' 人成绩', 'ok');
+}
+
+/* ============ 事件 ============ */
+$('btnLogin').onclick = login;
+$('pw').addEventListener('keydown', function (e) { if (e.key === 'Enter') login(); });
+$('btnSnap').onclick = doSnapshot;
+$('btnRefresh').onclick = function () { msg('正在刷新…', 'warn'); reload(); setTimeout(function () { msg(''); }, 800); };
+$('btnCsv').onclick = exportCsv;
+$('clearWord').addEventListener('input', function () {
+  $('btnClear').disabled = ($('clearWord').value.trim() !== 'CLEAR');
+});
+$('btnClear').onclick = doClear;
+
+// 自动恢复登录态（同一个标签页内刷新不用重输）
+(function () {
+  try {
+    var saved = sessionStorage.getItem('dian24_admin_pw');
+    if (saved) { $('pw').value = saved; login(); }
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>

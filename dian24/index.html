@@ -232,6 +232,9 @@ footer{
 .rank .sc{font-variant-numeric:tabular-nums;font-weight:800;color:#B25E10;font-size:19px}
 .rank .meta{color:#A79E94;font-size:14px;white-space:nowrap}
 .empty-rank{text-align:center;color:#B9B0A4;padding:34px 0;font-size:16px}
+.rank-note{background:#FFF8E6;border:1px solid #F1D79E;color:#8a6a22;border-radius:11px;
+  padding:9px 14px;font-size:13.5px;margin-bottom:12px;line-height:1.7}
+.rank-loading{text-align:center;color:#B9B0A4;padding:20px 0;font-size:15px}
 
 @media print{body{background:#fff}}
 </style>
@@ -324,12 +327,12 @@ footer{
 <div class="modal" id="rankModal">
   <div class="card">
     <h2>🏆 排行榜</h2>
-    <div class="sub" id="rankSub">一分钟内得分最高者胜 · 同分看解题数</div>
+    <div class="sub" id="rankSub">☁️ 云端排行榜 · 一分钟内得分最高者胜（同分看解题数）</div>
     <div id="rankBody"></div>
     <div class="btnrow">
       <button class="btn-ok" id="rankClose">关闭</button>
+      <button class="btn-ghost" id="rankRefresh">🔄 刷新</button>
       <button class="btn-ghost" id="rankExport">导出成绩 CSV</button>
-      <button class="btn-ghost" id="rankClear">清空排行榜</button>
     </div>
   </div>
 </div>
@@ -819,10 +822,13 @@ function addRankItem(name, score, solved, lv) {
 function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
 function fdate(ts) { const d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); }
 
-function renderRank(highlightTs) {
-  const list = loadRank();
+function renderRank(list, highlightTs, note) {
   const body = document.getElementById('rankBody');
-  if (!list.length) { body.innerHTML = '<div class="empty-rank">还没有成绩，快来做第一个挑战者！</div>'; return; }
+  const head = note ? '<div class="rank-note">' + esc(note) + '</div>' : '';
+  if (!list || !list.length) {
+    body.innerHTML = head + '<div class="empty-rank">还没有成绩，快来做第一个挑战者！</div>';
+    return;
+  }
   let h = '<table class="rank"><thead><tr><th>#</th><th>姓名</th><th>得分</th><th>解题</th><th>难度</th><th>时间</th></tr></thead><tbody>';
   list.slice(0, 50).forEach((r, i) => {
     const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : (i + 1);
@@ -832,25 +838,71 @@ function renderRank(highlightTs) {
       + '<td class="meta">' + (LV_NAME[r.lv] || '-') + '</td><td class="meta">' + fdate(r.ts) + '</td></tr>';
   });
   h += '</tbody></table>';
-  body.innerHTML = h;
+  body.innerHTML = head + h;
+}
+
+/* ---------- 云端排行榜（腾讯云 api.kexvefuxi.cn/dian24）----------
+   为什么在腾讯云：dadajs.cn 是 GitHub Pages 纯静态托管，跑不了后端。
+   后端源码见 项目目录/server/server.js（Node :3214，nginx /dian24/ 反代）。 */
+const RANK_API = 'https://api.kexvefuxi.cn/dian24/api';
+
+function apiCall(action, body, timeoutMs) {
+  if (typeof fetch === 'undefined') return Promise.resolve(null);   // 老浏览器/测试环境安全降级
+  const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+  const timer = ctl ? setTimeout(() => ctl.abort(), timeoutMs || 8000) : null;
+  const url = RANK_API + '?action=' + encodeURIComponent(action);
+  const opt = { cache: 'no-store' };
+  if (ctl) opt.signal = ctl.signal;
+  if (body) {
+    opt.method = 'POST';
+    opt.headers = { 'Content-Type': 'application/json' };
+    opt.body = JSON.stringify(Object.assign({ action: action }, body));
+  }
+  return fetch(url, opt)
+    .then(r => (r.ok ? r.json() : null))
+    .catch(() => null)
+    .then(j => { if (timer) clearTimeout(timer); return j; });
+}
+
+/** 打开排行榜：云端为准；连不上就退回本机记录并明确提示 */
+function openRank(highlightTs) {
+  document.getElementById('rankBody').innerHTML = '<div class="rank-loading">正在读取云端排行榜…</div>';
+  document.getElementById('rankModal').classList.add('on');
+  const local = loadRank();
+  apiCall('list').then(j => {
+    if (j && j.ok && Array.isArray(j.list)) {
+      renderRank(j.list, highlightTs, null);
+      document.getElementById('rankSub').textContent =
+        '☁️ 云端排行榜 · 共 ' + j.total + ' 次挑战 / ' + j.players + ' 人 · 一分钟内得分最高者胜';
+    } else if (local.length) {
+      renderRank(local, highlightTs, '⚠️ 云端连不上（多半是教室网络），下面显示的是本机记录，联网后点「🔄 刷新」。');
+      document.getElementById('rankSub').textContent = '排行榜（离线 · 本机记录）';
+    } else {
+      renderRank([], highlightTs, '⚠️ 云端连不上，本机也没有记录。检查网络后点「🔄 刷新」。');
+      document.getElementById('rankSub').textContent = '排行榜（离线）';
+    }
+  });
 }
 
 function exportRank() {
-  const list = loadRank();
-  if (!list.length) { toast('还没有成绩'); return; }
-  const q = s => '"' + String(s).replace(/"/g, '""') + '"';
-  let csv = '\ufeff排名,姓名,得分,解题数,难度,时间\n';
-  list.forEach((r, i) => {
-    csv += [i + 1, q(r.name), r.score, r.solved, q(LV_NAME[r.lv] || ''), q(new Date(r.ts).toLocaleString('zh-CN'))].join(',') + '\n';
+  toast('正在读取云端成绩…');
+  apiCall('list').then(j => {
+    const list = (j && j.ok && Array.isArray(j.list) && j.list.length) ? j.list : loadRank();
+    if (!list.length) { toast('还没有成绩'); return; }
+    const q = s => '"' + String(s).replace(/"/g, '""') + '"';
+    let csv = '\ufeff排名,姓名,得分,解题数,难度,时间\n';
+    list.forEach((r, i) => {
+      csv += [i + 1, q(r.name), r.score, r.solved, q(LV_NAME[r.lv] || ''), q(new Date(r.ts).toLocaleString('zh-CN'))].join(',') + '\n';
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    const d = new Date();
+    a.download = '24点挑战成绩_' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.csv';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    toast('已导出 ' + list.length + ' 条成绩');
   });
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  const d = new Date();
-  a.download = '24点挑战成绩_' + d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0') + '.csv';
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  toast('已导出 CSV');
 }
 
 /* ---------- 模式切换 ---------- */
@@ -889,28 +941,33 @@ document.getElementById('btnStart').onclick = cStart;
 document.getElementById('cUndo').onclick = cUndo;
 document.getElementById('cReset').onclick = () => { if (C.running) cResetQuestion(); };
 document.getElementById('cSkip').onclick = cSkip;
-document.getElementById('cRank').onclick = () => { renderRank(null); document.getElementById('rankModal').classList.add('on'); };
+document.getElementById('cRank').onclick = () => openRank(null);
 
 document.getElementById('saveRank').onclick = () => {
   const nm = document.getElementById('nameInput').value.trim().slice(0, 12);
   if (!nm) { toast('请输入名字'); document.getElementById('nameInput').focus(); return; }
+  const bw = document.getElementById('saveRank');
+  bw.disabled = true; bw.textContent = '正在上传…';
+  // 本机也留一份：万一云端连不上，成绩不至于丢
   const it = addRankItem(nm, C.score, C.solved, state.lv);
-  document.getElementById('resultModal').classList.remove('on');
-  renderRank(it.ts);
-  document.getElementById('rankModal').classList.add('on');
+  apiCall('submit', { name: nm, score: C.score, solved: C.solved, lv: state.lv }).then(j => {
+    bw.disabled = false; bw.textContent = '保存成绩';
+    document.getElementById('resultModal').classList.remove('on');
+    openRank(it.ts);
+    if (j && j.ok) {
+      toast('成绩已上传云端' + (j.rank ? '，当前第 ' + j.rank + ' 名' : ''));
+    } else {
+      toast('云端没连上，成绩已存本机（联网后点「🔄 刷新」）');
+    }
+  });
 };
 document.getElementById('skipSave').onclick = () => document.getElementById('resultModal').classList.remove('on');
 document.getElementById('nameInput').addEventListener('keydown', e => {
   if (e.key === 'Enter') { e.preventDefault(); document.getElementById('saveRank').click(); }
 });
 document.getElementById('rankClose').onclick = () => document.getElementById('rankModal').classList.remove('on');
+document.getElementById('rankRefresh').onclick = () => openRank(null);
 document.getElementById('rankExport').onclick = exportRank;
-document.getElementById('rankClear').onclick = () => {
-  if (!confirm('确定清空全部排行榜成绩？此操作不能撤销。')) return;
-  saveRankStore([]);
-  renderRank(null);
-  toast('排行榜已清空');
-};
 document.querySelectorAll('#modeBar button').forEach(b => { b.onclick = () => setMode(b.dataset.mode); });
 
 // ==== 启动 ====
