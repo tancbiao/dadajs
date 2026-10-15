@@ -403,8 +403,11 @@ function switchLevel(lv) {
     b.classList.toggle('on', +b.dataset.lv === lv);
   });
   renderLevelBar();
-  renderQuestion(false);
-  if (MODE === 'challenge') { C.qi = 0; cBuildList(); cLoadQuestion(); cUpdateHud(); }
+  if (MODE === 'challenge') {
+    C.qi = 0; cBuildList(); cLoadQuestion(); cUpdateHud();   // ★ 每次换难度都重新洗牌
+  } else {
+    buildOrder(); state.idx = 0; renderQuestion(false);
+  }
 }
 
 // ==== 渲染题目 ====
@@ -762,7 +765,11 @@ function cUpdateHud() {
 function cStart() {
   if (C.running) return;
   C.score = 0; C.solved = 0; C.qi = 0;
-  if (!C.list.length) cBuildList();
+  // ★ 每局都必须重新洗牌！
+  //   原来的写法是 `if (!C.list.length) cBuildList();`（列表为空才洗），
+  //   结果只有页面加载时洗过一次，之后每局顺序完全一样 —— 60 秒走不完一轮，
+  //   学生每次看到的都是那几道开头题，挑战就失去意义了。
+  cBuildList();
   C.left = CHALLENGE_MS;
   C.endTs = Date.now() + CHALLENGE_MS;
   C.running = true;
@@ -862,6 +869,7 @@ function setMode(m) {
     cUpdateHud();
   } else {
     state.startTs = Date.now(); state.elapsed = 0;
+    buildOrder(); state.idx = 0; renderQuestion(false);   // ★ 每次进练习模式重新洗牌
     document.getElementById('timer').classList.remove('warn');
     document.getElementById('score').textContent = state.score;
   }
