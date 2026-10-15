@@ -217,6 +217,13 @@ var GROUPS = [
     ]
   },
   {
+    name:'心理', accent:'#7C6BD6', tint:'#EFECFB',
+    items:[
+      { icon:'💧', name:'呐喊喷泉 · 心理解压', tag:'NEW', path:'/xinli/',
+        desc:'对着麦克风用力喊，屏幕里的虚拟喷泉随声音喷起；持续呐喊满 10 秒触发金色进度条 + 鼓励弹幕 + PERFECT 庆祝。内置「为什么能减压」科学原理（内啡肽 / 皮质醇 / 迷走神经 / 血清素），适合心理课、班会课、科技节，全班一起释放压力' }
+    ]
+  },
+  {
     name:'更多学科', accent:'#5F5E5A', tint:'#F1EFE8',
     items:[
       { icon:'🎨', name:'综合 / 班会', tag:'待建', path:'',
@@ -332,6 +339,16 @@ var SKILLS = {
       '含投稿、教师审核、后台发布'
     ],
     build:'前端站点（index/submit/teacher/review + 后端），用 school-online-gallery 技能范式'
+  },
+  '/xinli/': {
+    file:'dadajs-呐喊喷泉心理解压-技能包与提示词.md',
+    what:[
+      '浏览器麦克风实时驱动虚拟喷泉：声音越大，喷得越高越猛',
+      '「持续呐喊 10 秒」挑战：金色进度条拉满 + 鼓励弹幕飘过 + PERFECT 庆祝 10 秒',
+      '内置科学原理弹窗：内啡肽、皮质醇下降、迷走神经、杏仁核降温、5-羟色胺(血清素)',
+      '灵敏度可调、静音校准；全程在本机运行，不上传任何声音'
+    ],
+    build:'单文件 HTML + Web Audio API(getUserMedia/AnalyserNode) + Canvas 粒子系统；零依赖，可直接部署到任意静态托管'
   }
 };
 

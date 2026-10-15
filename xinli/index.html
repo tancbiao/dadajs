@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>呐喊喷泉 · 心理解压</title>
+<style>
+  :root{
+    --cream:#FFF9F0; --paper:#FFFFFF; --ink:#3A3A3A; --ink2:#6B6B6B;
+    --miffy:#FF8C42; --miffy-l:#FFB27A; --blue:#3FA9C9; --blue-l:#E3F4FA;
+    --green:#6BCB77; --pink:#FF8FA3; --purple:#A78BFA;
+    --line:#F0E4D8; --shadow:0 2px 10px rgba(180,150,120,.12); --radius:14px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;height:100%;overflow:hidden;background:#0b1a2b;
+    font-family:"HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",sans-serif;}
+  #stage{position:fixed;inset:0;display:block;}
+  /* 顶部信息条 */
+  .hud{position:fixed;left:0;right:0;top:0;padding:14px 20px;display:flex;
+    align-items:center;gap:18px;pointer-events:none;z-index:5;
+    background:linear-gradient(180deg,rgba(8,18,30,.55),rgba(8,18,30,0));}
+  .hud .title{color:#fff;font-size:18px;font-weight:800;letter-spacing:1px;
+    text-shadow:0 1px 6px rgba(0,0,0,.5);}
+  .hud .title small{font-weight:500;opacity:.8;font-size:12px;margin-left:8px;letter-spacing:0;}
+  .meterwrap{flex:1;max-width:420px;height:14px;border-radius:10px;background:rgba(255,255,255,.16);
+    overflow:hidden;position:relative;}
+  .meter{position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:10px;
+    background:linear-gradient(90deg,#5AA9E6,#FFD93D,#FF8C42,#FF5A5A);transition:width .05s linear;}
+  .peak{position:absolute;top:-3px;bottom:-3px;width:3px;background:#fff;left:0;border-radius:2px;
+    box-shadow:0 0 6px #fff;}
+  .readout{color:#fff;font-size:13px;font-variant-numeric:tabular-nums;min-width:118px;text-align:right;
+    text-shadow:0 1px 4px rgba(0,0,0,.5);}
+  .readout b{font-size:16px;}
+  /* 底部控制 */
+  .panel{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:6;
+    background:rgba(255,255,255,.92);backdrop-filter:blur(8px);border-radius:16px;
+    padding:12px 18px;display:flex;align-items:center;gap:16px;box-shadow:0 6px 24px rgba(0,0,0,.3);
+    flex-wrap:wrap;justify-content:center;max-width:94vw;}
+  .panel label{font-size:13px;color:#444;display:flex;align-items:center;gap:8px;white-space:nowrap;}
+  .panel input[type=range]{width:130px;accent-color:var(--miffy);}
+  .panel button{border:none;background:var(--miffy);color:#fff;font-weight:700;font-size:13px;
+    padding:8px 16px;border-radius:10px;cursor:pointer;box-shadow:0 2px 8px rgba(255,140,66,.4);}
+  .panel button.ghost{background:#EDE6DD;color:#5a5a5a;box-shadow:none;}
+  .hint{font-size:12px;color:#888;}
+  /* 开场遮罩 */
+  #gate{position:fixed;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;background:radial-gradient(circle at 50% 35%,#16344f,#08131f 70%);
+    color:#fff;text-align:center;padding:24px;}
+  #gate h1{font-size:30px;margin:0 0 10px;letter-spacing:2px;}
+  #gate p{font-size:15px;opacity:.85;max-width:520px;line-height:1.9;margin:6px 0;}
+  #startBtn{margin-top:26px;border:none;background:linear-gradient(135deg,#FFB27A,#FF8C42);
+    color:#fff;font-size:18px;font-weight:800;padding:15px 40px;border-radius:30px;cursor:pointer;
+    box-shadow:0 8px 26px rgba(255,140,66,.5);letter-spacing:1px;}
+  #startBtn:active{transform:translateY(2px);}
+  #gate .tip{margin-top:22px;font-size:12.5px;opacity:.6;}
+  #err{color:#ffb3b3;font-size:13px;margin-top:14px;min-height:18px;}
+  .cheer{position:fixed;left:50%;top:24%;transform:translateX(-50%);z-index:7;
+    font-size:34px;font-weight:900;color:#fff;text-shadow:0 2px 16px rgba(0,0,0,.5);
+    opacity:0;transition:opacity .3s, transform .3s;pointer-events:none;letter-spacing:2px;}
+  @media (max-width:560px){.hud .title small{display:none;} .readout{min-width:90px;}}
+  /* 科学原理 弹窗 */
+  #sci{position:fixed;inset:0;z-index:30;display:none;background:rgba(6,14,24,.84);
+    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);color:#fff;overflow:auto;padding:26px 16px;}
+  #sci .box{max-width:680px;margin:0 auto;}
+  #sci h2{font-size:22px;margin:0 0 4px;letter-spacing:1px;}
+  #sci .lead{opacity:.78;font-size:13.5px;margin:0 0 18px;line-height:1.7;}
+  #sci .card2{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+    border-radius:14px;padding:13px 15px;margin-bottom:11px;}
+  #sci .card2 h3{margin:0 0 5px;font-size:15.5px;display:flex;align-items:center;gap:8px;}
+  #sci .card2 p{margin:0;font-size:13px;line-height:1.75;opacity:.92;}
+  #sci .note{font-size:12.5px;opacity:.85;background:rgba(255,200,90,.12);
+    border:1px solid rgba(255,200,90,.35);border-radius:12px;padding:11px 13px;margin:6px 0 18px;line-height:1.75;}
+  #sciClose{display:block;margin:0 auto;border:none;background:linear-gradient(135deg,#FFB27A,#FF8C42);
+    color:#fff;font-size:16px;font-weight:800;padding:13px 34px;border-radius:28px;cursor:pointer;
+    box-shadow:0 8px 24px rgba(255,140,66,.45);letter-spacing:1px;}
+  #sciClose:active{transform:translateY(2px);}
+  .sciLink{margin-top:14px;font-size:13px;color:#FFD9A8;background:rgba(255,255,255,.08);
+    border:1px solid rgba(255,217,168,.35);border-radius:999px;padding:7px 16px;cursor:pointer;display:inline-block;}
+  .sciLink:active{transform:translateY(1px);}
+</style>
+</head>
+<body>
+<canvas id="stage"></canvas>
+
+<div class="hud" id="hud" style="display:none">
+  <div class="title">💧 呐喊喷泉 <small>对着麦克风，喊得越大喷得越猛</small></div>
+  <div class="meterwrap"><div class="meter" id="meter"></div><div class="peak" id="peak"></div></div>
+  <div class="readout">音量 <b id="lv">0</b> · 峰值 <span id="pk">0</span><br><span id="db" style="opacity:.75">≈ 0 dB</span></div>
+</div>
+
+<div class="cheer" id="cheer"></div>
+
+<div class="panel" id="panel" style="display:none">
+  <label>灵敏度 <input type="range" id="sens" min="0.5" max="6" step="0.1" value="2.4"></label>
+  <button class="ghost" id="calib">🎯 校准静音</button>
+  <button class="ghost" id="reset">↺ 清零峰值</button>
+  <span class="hint" id="hint">提示：先点「校准静音」测一下环境底噪</span>
+</div>
+
+<div id="gate">
+  <h1>💧 呐喊喷泉</h1>
+  <p>这是给同学们做的心理解压小工具。<br>
+     不需要真水泵、不需要水——<b>对着设备麦克风用力喊</b>，屏幕里的喷泉就会随着你的声音喷起来。</p>
+  <p style="opacity:.7;font-size:13.5px">适合心理课、班会课、科技节——全班一起对着屏幕喊，<br>把烦恼当成水喷出去。想知道为什么有效？点上面的「科学原理」。</p>
+  <p style="opacity:.9;font-size:14px;background:rgba(255,255,255,.1);display:inline-block;padding:8px 16px;border-radius:12px">🎯 <b>彩蛋挑战：</b>持续大声呐喊满 <b>10 秒</b>，会触发金色进度条拉满 + 满屏「太棒了」弹幕 + PERFECT 庆祝！<br><span style="opacity:.8;font-size:12.5px">（嫌喊不到门槛？拖底部「灵敏度」滑杆调大即可）</span></p>
+  <button id="startBtn">🎤 允许麦克风，开始呐喊</button>
+  <div id="err"></div>
+  <div style="margin-top:18px;display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
+    <span class="sciLink" id="sciOpen">📖 喊出来为什么能减压？（科学原理）</span>
+  </div>
+  <div class="tip">需要使用麦克风权限 · 全程在本机运行，不上传任何声音</div>
+</div>
+
+<!-- 科学原理 弹窗 -->
+<div id="sci">
+  <div class="box">
+    <h2>🧠 喊出来，为什么能减压？</h2>
+    <p class="lead">下面是经科普中国、BBC、澎湃新闻、百度健康等公开资料整理的身心机制——给孩子们讲也讲得通。不是玄学，是身体真的在起作用。</p>
+
+    <div class="card2">
+      <h3>💛 内啡肽 · 天然的"快乐物质"</h3>
+      <p>用力发声时，身体会释放内啡肽——它是大脑自己生产的镇痛与愉悦物质。喊完之后那种"爽快、轻松"的感觉，有一部分就来自它，类似运动后的畅快。</p>
+    </div>
+    <div class="card2">
+      <h3>📉 皮质醇 · 压力激素下降</h3>
+      <p>皮质醇是身体主要的压力激素。研究发现，持续的发声练习能让唾液里的压力指标（淀粉酶活性）下降约 15%~20%；唱歌也被证实能显著降低皮质醇。喊出来，等于给压力"泄压阀"放气。</p>
+    </div>
+    <div class="card2">
+      <h3>🌿 迷走神经 · 身体的"放松开关"</h3>
+      <p>声带振动会直接刺激<strong>迷走神经</strong>（副交感神经的主干），让心率减慢、血压回落，把身体从"紧张备战"切回"休息放松"模式——和深呼吸、冥想是同一套放松机制。</p>
+    </div>
+    <div class="card2">
+      <h3>🧩 杏仁核 · 情绪中枢"降温"</h3>
+      <p>日本筑波大学的实验发现：人在呐喊之后，大脑<strong>杏仁核</strong>（负责恐惧、焦虑的情绪中枢）活跃度会降低约 30%，这种平静感能持续大约 40 分钟。</p>
+    </div>
+    <div class="card2">
+      <h3>🔵 5-羟色胺（血清素）· 情绪稳定剂</h3>
+      <p>5-羟色胺（常简称 5-HT，也叫<strong>血清素</strong>）和情绪稳定密切相关。台湾阳明大学的研究指出：<strong>边喊边动</strong>（攥拳、摆动身体）的"呐喊+肢体"方式，血清素提升幅度比单纯坐着喊高 2.3 倍——所以喊的时候动起来更有效！</p>
+    </div>
+
+    <p class="note">⚠️ 小提醒：这是一个辅助放松的小游戏，<strong>不能代替专业心理帮助</strong>；请在安全、不打扰别人的地方喊，也别一次喊太久伤嗓子（建议单次别超过 1~2 分钟，喊完喝口温水）。</p>
+    <button id="sciClose">知道了，去玩 →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var cv = document.getElementById('stage');
+  var ctx = cv.getContext('2d');
+  var W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+  function resize(){
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = W*DPR; cv.height = H*DPR;
+    cv.style.width=W+'px'; cv.style.height=H+'px';
+    ctx.setTransform(DPR,0,0,DPR,0,0);
+  }
+  window.addEventListener('resize',resize); resize();
+
+  // ---------- 麦克风 ----------
+  var analyser=null, timeData=null, audioCtx=null, running=false;
+  var rawVol=0;          // 平滑后的 0~1 音量
+  var baseline=0.012;    // 静音基线（RMS）
+  var peak=0;            // 峰值（0~1）
+  var sens=2.4;          // 灵敏度倍率
+  var cool=0;            // 酷炫度 0~1（挑战进度越高/庆祝时拉满）
+  var calibFrames=0, calibSum=0; // 校准采集
+
+  document.getElementById('sens').addEventListener('input',function(e){ sens=parseFloat(e.target.value); });
+  document.getElementById('calib').addEventListener('click',function(){
+    calibFrames=0; calibSum=0; document.getElementById('hint').textContent='校准中…保持安静 1 秒';
+  });
+  document.getElementById('reset').addEventListener('click',function(){ peak=0; });
+
+  async function start(){
+    var errBox=document.getElementById('err');
+    try{
+      var stream = await navigator.mediaDevices.getUserMedia({audio:{
+        echoCancellation:false, noiseSuppression:false, autoGainControl:false}});
+      audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+      var src = audioCtx.createMediaStreamSource(stream);
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      analyser.smoothingTimeConstant = 0.6;
+      src.connect(analyser);
+      timeData = new Float32Array(analyser.fftSize);
+      running=true;
+      document.getElementById('gate').style.display='none';
+      document.getElementById('hud').style.display='flex';
+      document.getElementById('panel').style.display='flex';
+      loop();
+    }catch(err){
+      errBox.textContent='❌ 打不开麦克风：'+err.message+'（请检查浏览器权限，或换 Chrome/Edge）';
+    }
+  }
+  document.getElementById('startBtn').addEventListener('click',start);
+
+  // —— 科学原理弹窗 ——
+  document.getElementById('sciOpen').addEventListener('click',function(){
+    document.getElementById('sci').style.display='block';
+  });
+  document.getElementById('sciClose').addEventListener('click',function(){
+    document.getElementById('sci').style.display='none';
+  });
+
+  function readRMS(){
+    analyser.getFloatTimeDomainData(timeData);
+    var s=0;
+    for(var i=0;i<timeData.length;i++){ var v=timeData[i]; s+=v*v; }
+    return Math.sqrt(s/timeData.length);
+  }
+
+  // ---------- 喷泉粒子 ----------
+  var parts=[];
+  var basinY=0; // 水池水面 y
+  function spawn(vol){
+    // vol: 0~1 的「有效音量」；cool: 挑战酷炫度，越高喷得越猛越散
+    var cx = W*0.5;
+    basinY = H-70;
+    var boost = 1 + cool*1.4;                          // 越接近成功喷得越猛
+    var emit = Math.floor(vol*46*boost + cool*cool*30); // 挑战中额外补喷
+    var speedBase = 4 + vol*16 + cool*6;
+    for(var i=0;i<emit;i++){
+      var ang = -Math.PI/2 + (Math.random()-0.5)*(0.5+vol*0.7+cool*0.5);
+      var sp = speedBase*(0.6+Math.random()*0.6);
+      parts.push({
+        x:cx+(Math.random()-0.5)*(10+cool*20),
+        y:basinY,
+        vx:Math.cos(ang)*sp,
+        vy:Math.sin(ang)*sp,
+        life:1,
+        r:2+Math.random()*2.5 + cool*1.5,
+        hot: vol
+      });
+    }
+  }
+  var G=0.32; // 重力
+  function step(){
+    for(var i=parts.length-1;i>=0;i--){
+      var p=parts[i];
+      p.vy+=G; p.x+=p.vx; p.y+=p.vy; p.life-=0.012;
+      if(p.y>basinY || p.life<=0){ parts.splice(i,1); }
+    }
+    if(parts.length>2600) parts.splice(0,parts.length-2600);
+  }
+  function draw(){
+    // 天空渐变（酷炫度越高越偏暖、越亮）
+    var g=ctx.createLinearGradient(0,0,0,H);
+    if(cool<0.5){
+      g.addColorStop(0,'#16344f'); g.addColorStop(0.55,'#1d4a6b'); g.addColorStop(1,'#0e2436');
+    }else{
+      var t=(cool-0.5)/0.5;
+      g.addColorStop(0, mix('#16344f','#3a2a5e',t));
+      g.addColorStop(0.55, mix('#1d4a6b','#7a3f8f',t));
+      g.addColorStop(1, mix('#0e2436','#2a1230',t));
+    }
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+
+    // 主水柱（越接近成功越粗越金）
+    var cx=W*0.5;
+    var jetH = rawVol* (H*0.62) * (1+cool*0.5);
+    if(jetH>4){
+      var jg=ctx.createLinearGradient(0,basinY,0,basinY-jetH);
+      jg.addColorStop(0, cool>0.6?'rgba(255,210,120,.6)':'rgba(120,200,255,.55)');
+      jg.addColorStop(1,'rgba(180,230,255,.05)');
+      ctx.fillStyle=jg;
+      var jw=10+rawVol*26 + cool*20;
+      ctx.beginPath();
+      ctx.moveTo(cx-jw/2,basinY);
+      ctx.quadraticCurveTo(cx-jw*0.25,basinY-jetH*0.6, cx,basinY-jetH);
+      ctx.quadraticCurveTo(cx+jw*0.25,basinY-jetH*0.6, cx+jw/2,basinY);
+      ctx.closePath(); ctx.fill();
+    }
+
+    // 水珠粒子（挑战中更亮更暖）
+    for(var i=0;i<parts.length;i++){
+      var p=parts[i];
+      var a = Math.max(0,Math.min(1,p.life));
+      var r=120+Math.floor(p.hot*120), gg=200+Math.floor(p.hot*40), b=255;
+      if(cool>0.6){ r=Math.min(255,r+60); gg=Math.min(255,gg+30); }
+      ctx.fillStyle='rgba('+r+','+gg+','+b+','+(0.55*a+0.15)+')';
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+    }
+
+    // 水池
+    ctx.fillStyle='rgba(40,120,170,.55)';
+    ctx.fillRect(0,basinY,W,H-basinY);
+    ctx.fillStyle='rgba(255,255,255,.10)';
+    ctx.fillRect(0,basinY,W,4);
+    ctx.fillStyle='#0c1c2a';
+    ctx.fillRect(0,H-18,W,18);
+
+    drawProgress();   // 挑战进度条
+    drawDanmu();      // 鼓励弹幕飘过
+    drawCelebrate();  // 成功庆祝
+  }
+
+  // ====== 解压文案 / 弹幕 / 挑战状态 ======
+  var cheers=['用力喊出来！','释放一下～','太爽了吧！','继续！别停！','把烦恼喷出去！','漂亮！','情绪流动中…'];
+  var lastCheer=0;
+  function maybeCheer(v){
+    var now=performance.now();
+    if(v>0.35 && now-lastCheer>2500){
+      lastCheer=now;
+      var el=document.getElementById('cheer');
+      el.textContent=cheers[Math.floor(Math.random()*cheers.length)];
+      el.style.opacity='1'; el.style.transform='translateX(-50%) scale(1.08)';
+      setTimeout(function(){ el.style.opacity='0'; el.style.transform='translateX(-50%) scale(1)'; },900);
+    }
+  }
+
+  // —— 弹幕（鼓励话语飘过）——
+  var danmus=[];
+  var danmuTexts=['太棒了！','这人太牛了！','加油！','释放压力！','喊出来！','情绪流动中～','你最棒！','继续冲！','压力拜拜','深呼吸','了不起！','稳住别停！'];
+  var danmuBig=['完美！！','神级呐喊！','全场最佳！','能量爆表！','封神了！'];
+  var lastDanmu=0;
+  function spawnDanmu(big){
+    var txt = big ? danmuBig[Math.floor(Math.random()*danmuBig.length)]
+                  : danmuTexts[Math.floor(Math.random()*danmuTexts.length)];
+    danmus.push({
+      text:txt, x: W+20, y: 90 + Math.random()*(H*0.5),
+      sp: 2.2 + Math.random()*2.4 + (big?1.6:0),
+      size: big?30+Math.random()*10:18+Math.random()*10, big:!!big
+    });
+  }
+  function drawDanmu(){
+    ctx.textBaseline='middle';
+    for(var i=danmus.length-1;i>=0;i--){
+      var d=danmus[i]; d.x -= d.sp;
+      if(d.x < -220){ danmus.splice(i,1); continue; }
+      ctx.font='800 '+d.size+'px "PingFang SC","Microsoft YaHei",sans-serif';
+      ctx.lineWidth=3; ctx.strokeStyle='rgba(0,0,0,.45)';
+      ctx.fillStyle= d.big?'#FFD93D':'rgba(255,255,255,.92)';
+      ctx.strokeText(d.text,d.x,d.y); ctx.fillText(d.text,d.x,d.y);
+    }
+  }
+
+  // —— 挑战：持续呐喊 10 秒 → 庆祝 10 秒 ——
+  var TRIGGER=0.5;       // 达到"峰值"的音量门槛
+  var SUSTAIN_GOAL=10;   // 需持续秒数
+  var sustainTime=0;     // 已持续秒数
+  var celebrateUntil=0;  // 庆祝结束时间戳
+  var lastT=performance.now();
+  function roundRect(x,y,w,h,r){
+    if(w<2*r)r=w/2;
+    ctx.beginPath();
+    ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath();
+  }
+  function drawProgress(){
+    var prog = Math.min(1, sustainTime/SUSTAIN_GOAL);
+    if(prog<=0) return;
+    var bw=Math.min(520,W-60), bx=(W-bw)/2, by=64, bh=18;
+    ctx.fillStyle='rgba(255,255,255,.18)'; roundRect(bx,by,bw,bh,9); ctx.fill();
+    var fg=ctx.createLinearGradient(bx,0,bx+bw,0);
+    fg.addColorStop(0,'#5AA9E6'); fg.addColorStop(0.6,'#FFD93D'); fg.addColorStop(1,'#FF8C42');
+    ctx.fillStyle=fg; roundRect(bx,by,bw*prog,bh,9); ctx.fill();
+    if(prog>0.05){ ctx.save(); ctx.shadowColor='rgba(255,200,80,.9)'; ctx.shadowBlur=18*prog;
+      roundRect(bx,by,bw*prog,bh,9); ctx.fill(); ctx.restore(); }
+    ctx.fillStyle='#fff'; ctx.font='700 14px "PingFang SC",sans-serif';
+    ctx.textBaseline='middle'; ctx.textAlign='center';
+    ctx.fillText('💪 保持呐喊！坚持 '+sustainTime.toFixed(1)+' / '+SUSTAIN_GOAL+' 秒', W/2, by+bh/2);
+    ctx.textAlign='left';
+  }
+  function drawCelebrate(){
+    var now=performance.now();
+    if(now>=celebrateUntil) return;
+    ctx.fillStyle='rgba(10,20,35,.35)'; ctx.fillRect(0,0,W,H);
+    var pulse=1+0.12*Math.sin(now/90);
+    ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.save();
+    ctx.shadowColor='rgba(255,210,90,.9)'; ctx.shadowBlur=30;
+    ctx.fillStyle='#FFD93D'; ctx.font='900 '+(64*pulse)+'px "PingFang SC",sans-serif';
+    ctx.fillText('PERFECT!', W/2, H*0.4);
+    ctx.fillStyle='#fff'; ctx.font='800 '+(38*pulse)+'px "PingFang SC",sans-serif';
+    ctx.fillText('你太棒了！', W/2, H*0.4+70);
+    ctx.restore();
+    ctx.textAlign='left';
+  }
+  function mix(a,b,t){
+    var ca=hex2rgb(a), cb=hex2rgb(b);
+    return 'rgb('+Math.round(ca[0]+(cb[0]-ca[0])*t)+','+Math.round(ca[1]+(cb[1]-ca[1])*t)+','+Math.round(ca[2]+(cb[2]-ca[2])*t)+')';
+  }
+  function hex2rgb(h){ return [parseInt(h.substr(1,2),16),parseInt(h.substr(3,2),16),parseInt(h.substr(5,2),16)]; }
+
+  // ---------- 主循环 ----------
+  function loop(){
+    if(!running) return;
+    requestAnimationFrame(loop);
+    var now=performance.now();
+    var dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+
+    var rms = readRMS();
+    // 校准
+    if(calibFrames<60){ calibSum+=rms; calibFrames++;
+      if(calibFrames>=60){ baseline=Math.max(0.006,calibSum/60*0.9);
+        document.getElementById('hint').textContent='已校准：静音基线 '+baseline.toFixed(3)+'，现在可以喊了'; }
+    }
+    // 有效音量 = (当前 - 基线) 截零，再乘灵敏度、平滑
+    var eff = Math.max(0, rms - baseline) * sens;
+    eff = Math.min(1, eff*3.2);
+    rawVol = rawVol*0.75 + eff*0.25; // 平滑
+    if(rawVol>peak) peak=rawVol;
+    maybeCheer(rawVol);
+
+    // —— 挑战：持续呐喊 10 秒 → 庆祝 10 秒 ——
+    if(now < celebrateUntil){
+      cool=1; spawn(1);                                  // 庆祝期间喷泉全开
+      if(now-lastDanmu>170){ spawnDanmu(true); spawnDanmu(false); lastDanmu=now; }
+    } else {
+      if(rawVol>=TRIGGER){
+        sustainTime += dt;                               // 达到峰值就累加
+        cool = Math.min(1, sustainTime/SUSTAIN_GOAL);
+        if(now-lastDanmu > (520 - cool*360)){ spawnDanmu(cool>0.7); lastDanmu=now; }
+        if(sustainTime>=SUSTAIN_GOAL){ celebrateUntil=now+10000; sustainTime=0; } // 满 10 秒触发庆祝
+      } else {
+        sustainTime = Math.max(0, sustainTime - dt*0.6); // 短暂掉下去不立刻清零
+        cool = Math.min(1, sustainTime/SUSTAIN_GOAL) * 0.6;
+      }
+      spawn(rawVol);
+    }
+
+    step(); draw();
+
+    // HUD
+    document.getElementById('meter').style.width=(rawVol*100).toFixed(1)+'%';
+    document.getElementById('peak').style.left=(peak*100).toFixed(1)+'%';
+    document.getElementById('lv').textContent=Math.round(rawVol*100);
+    document.getElementById('pk').textContent=Math.round(peak*100);
+    // 近似 dB：以 baseline 为参考
+    var db = 20*Math.log10((rms+1e-6)/(baseline+1e-6));
+    document.getElementById('db').textContent='≈ '+ (isFinite(db)?db.toFixed(0):'0') + ' dB';
+  }
+})();
+</script>
+</body>
+</html>
