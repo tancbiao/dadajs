@@ -802,10 +802,14 @@ function cTick() {
 
 function cEnd() {
   C.running = false;
-  if (C.raf) cancelAnimationFrame(C.raf);
+  if (C.raf) { cancelAnimationFrame(C.raf); C.raf = null; }
   const b = document.getElementById('btnStart');
   b.textContent = '▶ 再挑战一次';
   b.disabled = false;
+  // ★ 保险：不在挑战模式时，绝对不弹「上传成绩」框
+  //   踩过的坑：挑战中途切到练习模式，计时器仍在后台跑，1 分钟后突然弹结算，
+  //   学生在练习模式里被要求上传成绩。
+  if (MODE !== 'challenge') { toast('本次挑战已取消，成绩未上传'); return; }
   document.getElementById('resSub').textContent =
     '得分 ' + C.score + ' 分 · 解出 ' + C.solved + ' 题 · 难度「' + LV_NAME[state.lv] + '」';
   document.getElementById('nameInput').value = '';
@@ -914,6 +918,18 @@ function exportRank() {
 
 /* ---------- 模式切换 ---------- */
 function setMode(m) {
+  // ★ 挑战进行中切到练习模式：先把挑战彻底停掉。
+  //   否则那 60 秒倒计时会在后台继续跑，时间一到弹出结算框，
+  //   学生就在练习模式里被要求上传成绩了（谭谭实测撞到的问题）。
+  if (m === 'practice' && C.running) {
+    C.running = false;
+    if (C.raf) { cancelAnimationFrame(C.raf); C.raf = null; }
+    const sb = document.getElementById('btnStart');
+    sb.textContent = '▶ 开始挑战（60 秒）';
+    sb.disabled = false;
+    document.getElementById('resultModal').classList.remove('on');
+    toast('已退出挑战，本次成绩未上传');
+  }
   MODE = m;
   document.querySelectorAll('#modeBar button').forEach(b => b.classList.toggle('on', b.dataset.mode === m));
   document.getElementById('practiceView').style.display = (m === 'practice') ? 'flex' : 'none';
@@ -951,6 +967,12 @@ document.getElementById('cSkip').onclick = cSkip;
 document.getElementById('cRank').onclick = () => openRank(null);
 
 document.getElementById('saveRank').onclick = () => {
+  // ★ 只有挑战模式才允许上传成绩。练习模式没有「上传积分」这回事。
+  if (MODE !== 'challenge') {
+    document.getElementById('resultModal').classList.remove('on');
+    toast('练习模式不上传成绩');
+    return;
+  }
   const nm = document.getElementById('nameInput').value.trim().slice(0, 12);
   if (!nm) { toast('请输入名字'); document.getElementById('nameInput').focus(); return; }
   const bw = document.getElementById('saveRank');
