@@ -2,3 +2,9 @@
 _bak/
 *.log
 /tmp/
+
+# 误建在仓库根的 Windows 缓存目录（工具未展开 %SystemDrive% 环境变量）
+/ystemDrive
+
+# 误建在仓库根的 Windows 缓存目录（工具未展开 %SystemDrive% 环境变量）
+/%SystemDrive%/
