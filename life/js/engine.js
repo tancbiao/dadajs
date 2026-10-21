@@ -189,6 +189,8 @@ window.LS = window.LS || {};
         dimBonus:{战:0,智:0,体:0,社:0,运:0,财:0,灵:0},
         made:0, aiUsed:0, devDone:0, customActs:[],
         buildId:null, build:null, deathWays:{},
+        lifeVar: Math.round((this.rnd() * 26 - 10)),   // 每个人天生寿元不同
+        achievements: [],
         startedAt: Date.now()
       };
       this.state = st;
@@ -230,6 +232,161 @@ window.LS = window.LS || {};
       st.age = 1;
       this.buildChildItem();
       return st;
+    },
+
+    /* 给 AI 的"人生履历"：它必须记得你之前选过什么 */
+    lifeMemory(){
+      const st = this.state;
+      if (!st) return '';
+      const lines = [];
+      if (st.brain) {
+        lines.push('家庭：' + (st.brain.parent ? st.brain.parent.name : '—') + '；学校：' + (st.brain.school ? st.brain.school.name : '—'));
+        lines.push('智商 ' + st.brain.iq + '，系统掌握度 ' + st.brain.mastery + '%');
+        if (st.brain.travel) lines.push('穿越熟练 ' + st.brain.travel);
+      }
+      lines.push('关键节点：' + (st.timeline.slice(-10).join('；') || '刚成年'));
+      const recent = st.log.slice(-10).map(function(l){
+        return l.age + '岁 ' + String(l.text || '').slice(0, 40);
+      }).join(' / ');
+      lines.push('近年经历：' + (recent || '—'));
+      lines.push('身上的标签：' + (st.tags.slice(-8).join('、') || '无'));
+      if (st.econ) {
+        lines.push('经济：现金 ' + LS.ECON.money(st.econ.cash, st.worldId) +
+          '，年收入 ' + LS.ECON.money(st.econ.active, st.worldId) +
+          '，负债 ' + LS.ECON.money(st.econ.debt, st.worldId));
+      }
+      if (st.civ) lines.push('文明计划：' + st.civ.field + ' 第 ' + (st.civ.years || 0) + ' 年');
+      if (st.deaths) lines.push('死过 ' + st.deaths + ' 次');
+      return lines.join('\n');
+    },
+
+    /* ================= 推动文明 ================= */
+    civFields(){
+      const st = this.state;
+      const w = LS.worldById(st.worldId);
+      const tags = (w.tags || []).join(',');
+      if (/神秘|诡异|克苏鲁/.test(tags)) return ['神秘学', '禁忌学', '宇宙学', '医学'];
+      if (/魔法|异世界|史诗/.test(tags)) return ['魔法学', '炼金术', '宇宙学', '农学'];
+      if (/修真|长生/.test(tags)) return ['丹道', '阵法', '宇宙学', '农学'];
+      if (/忍者|查克拉/.test(tags)) return ['忍术', '查克拉研究', '医疗忍术', '封印术'];
+      if (/海贼|航海|贸易/.test(tags)) return ['航海学', '造船', '恶魔果实研究', '宇宙学'];
+      if (/赛博|科幻|殖民/.test(tags)) return ['人工智能', '能源学', '宇宙学', '生物工程'];
+      if (/末世|废土|生存/.test(tags)) return ['农学', '医学', '能源学', '工程学'];
+      return ['哲学', '数学', '宇宙学', '医学'];
+    },
+
+    civAvailable(){
+      const st = this.state;
+      if (!st || !st.system || st.age < 25) return false;
+      if (st.worldId === 'modern') return false;
+      if (st.brain.iq < 105) return false;
+      return true;
+    },
+
+    civStart(field){
+      const st = this.state;
+      if (!this.civAvailable()) return { error:'你现在还做不了这件事。' };
+      if (st.civ) return { error:'你已经在做另一件事了。' };
+      st.civ = { field: field || '宇宙学', years: 0, failed: false, done: false };
+      st.timeline.push(st.age + '岁·开始研究' + st.civ.field);
+      return { ok:true, text:'你决定把接下来的十年，投进【' + st.civ.field + '】。\n\n没有人知道这有没有用。你自己也不知道。' };
+    },
+
+    civPush(){
+      const st = this.state;
+      if (!st.civ || st.civ.done) return null;
+      if (st.ap < 2) return { error:'要推动它，得一次投进两点行动力。' };
+      st.ap -= 2;
+      const c = st.civ;
+      c.years += 1;
+      const iq = st.brain.iq;
+      const gain = Math.max(1, Math.round(1 + (iq - 105) / 25));
+      c.progress = (c.progress || 0) + gain;
+      const chips = [{ text:'第 ' + c.years + ' 年 · 进度 +' + gain, good:true }];
+      let text = '你把这一年能挤出来的时间都给了【' + c.field + '】。\n\n';
+      text += c.years < 10
+        ? '离"可能有用"还差 ' + (10 - c.years) + ' 年。'
+        : '第十年。你把所有记录摊在桌上，手指停在其中一行。';
+
+      if (c.years >= 10) {
+        const p = Math.min(0.78, 0.10 + Math.max(0, iq - 100) * 0.012 + (st.brain.mastery || 0) * 0.002);
+        c.done = true;
+        if (this.rnd() < p) {
+          c.success = true;
+          st.flags.civilized = 1;
+          st.timeline.push(st.age + '岁·' + c.field + '推动了这个世界的文明');
+          st.tags.push('文明推动者');
+          chips.push({ text:'文明跃迁', good:true });
+          text += '\n\n你写下的那一页，后来被人抄了很多遍。\n\n这个世界往前走了一小步，而那一小步上有你的名字。';
+        } else {
+          c.success = false;
+          st.timeline.push(st.age + '岁·' + c.field + '研究失败');
+          chips.push({ text:'十年白费', good:false });
+          text += '\n\n你算错了一个前提。十年，塌在一行数字上。';
+        }
+      }
+      return { ok:true, text:text, chips:chips, done:c.done, success:c.success };
+    },
+
+    /* ================= 成就 ================= */
+    computeAchievements(){
+      const st = this.state;
+      const dims = this.dims();
+      const net = st.econ ? LS.ECON.netWorth(st.econ) : 0;
+      const list = [];
+      const add = function(icon, name, desc){ list.push({ icon:icon, name:name, desc:desc }); };
+
+      if (dims['战'] >= 90) add('⚔️', '万夫莫开', '战斗力 ' + Math.round(dims['战']) + '，你一个人就是一支队伍。');
+      if (st.brain.iq >= 131) add('🧠', '天生异类', '智商 ' + st.brain.iq + '，你一直比周围人快半步。');
+      if (st.brain.mastery >= 70) add('🔮', '把系统看穿了', '掌握度 ' + st.brain.mastery + '%，规则在你手里是透明的。');
+      if (net >= 500) add('💎', '富可敌国', '净资产 ' + LS.ECON.money(net, st.worldId) + '。');
+      if (st.age >= 90) add('🕯️', '活得比时代久', '你活到了 ' + st.age + ' 岁。');
+      if (st.deaths >= 5) add('💀', '死过很多次', '死亡 ' + st.deaths + ' 次，你还在。');
+      if ((st.customActs || []).length) add('✦', '自创一门', '你想出了【' + st.customActs[0].n + '】，它替代了原本的活法。');
+      if (st.flags.civilized) add('🌍', '文明推动者', '你用十年，把' + (st.civ ? st.civ.field : '某个学科') + '往前推了一格。');
+      if (st.worldId === 'xianxia' && st.age >= 150) add('⛰️', '长生', '在修真界活了 ' + st.age + ' 年。');
+      if (st.worldId !== 'modern' && st.flags.stayed) add('🏙️', '没被带走', '全世界都穿越了，只有你留在了原地。');
+      if (!list.length) add('🪨', '普通人', '没有奇迹，也没有塌方。你只是活过。');
+      st.achievements = list;
+      return list;
+    },
+
+    /* ================= 存档 / 续玩 ================= */
+    snapshot(){
+      if (!this.state) return null;
+      return {
+        v: LS.VERSION, at: Date.now(),
+        state: this.state,
+        phase: this.phase,
+        plan: this.plan,
+        idx: this.idx,
+        pending: this.pending,
+        result: this.result,
+        queue: this.queue,
+        systemUsed: this.systemUsed,
+        aiUsed: this.aiUsed
+      };
+    },
+
+    saveRun(){
+      if (!LS.Store.saveRun) return;
+      if (!this.state || this.state.ended) return;
+      try { LS.Store.saveRun(this.snapshot()); } catch(e){}
+    },
+
+    resumeRun(){
+      const sn = LS.Store.loadRun && LS.Store.loadRun();
+      if (!sn) return null;
+      this.state = sn.state;
+      this.phase = sn.phase || 'actions';
+      this.plan = sn.plan || [];
+      this.idx = sn.idx || 0;
+      this.pending = sn.pending || null;
+      this.result = sn.result || null;
+      this.queue = sn.queue || [];
+      this.systemUsed = !!sn.systemUsed;
+      this.aiUsed = sn.aiUsed || 0;
+      return this.state;
     },
 
     /* ================= 系统开发路线 ================= */
@@ -746,6 +903,7 @@ window.LS = window.LS || {};
       const travel = this.rollTravel(sys, b);
 
       this.phase = 'adult';
+      this.saveRun();
       return {
         system: sys,
         isMaker: !!st.maker,
@@ -905,6 +1063,10 @@ window.LS = window.LS || {};
         st.log.push({ age: st.age, kind:'say', text:
           '你还在' + st.econ.eduName + '，这一年没有收入。（' + st.econ.gradAge + ' 岁毕业）' });
       }
+      const linkChips = this.syncEcon();
+      if (linkChips.length) {
+        st.log.push({ age: st.age, kind:'sys', text: linkChips.map(function(c){ return c.text; }).join('，') });
+      }
       const pas = this.passive();
       if (pas) st.log.push({ age: st.age, kind:'sys', text: pas });
 
@@ -932,7 +1094,7 @@ window.LS = window.LS || {};
 
     lifespan(){
       const st = this.state;
-      let life = 62 + this.dimVal('体') * 0.9 + (st.flags.longevity || 0);
+      let life = 62 + this.dimVal('体') * 0.9 + (st.flags.longevity || 0) + (st.lifeVar || 0);
       const w = st.worldId;
       if (w === 'xianxia') {
         // 修真：境界越高，寿元越长。这是"长生路"最直接的那一层回报。
@@ -1106,6 +1268,7 @@ window.LS = window.LS || {};
           const ev = await LS.AI.genEvent({
             state: st, world: w, system: sys,
             recent: st.timeline.slice(-4),
+            memory: this.lifeMemory(),
             dims: this.dims()
           });
           this.aiUsed++;
@@ -1241,10 +1404,15 @@ window.LS = window.LS || {};
         if (d === 30 || d === 100) { this.growRandom(2); lines.push('连续签到 ' + d + ' 天，奖励升级。'); }
       }
       if (mech === 'wealth') {
-        Object.keys(st.res).forEach(function(k){
-          if (st.res[k] > 20) st.res[k] = Math.round((st.res[k] * 1.14 + 5) * 10) / 10;
-        });
-        lines.push('资产自行增值。');
+        const mk = this.moneyKey();
+        if (mk) {
+          const cur = st.res[mk] || 0;
+          // 越有钱，年化越低：20% → 6% → 2%，防止三年搞满
+          const rate = cur < 200 ? 0.12 : cur < 800 ? 0.05 : 0.015;
+          const gain = Math.max(1, Math.round(cur * rate + 2));
+          st.res[mk] = Math.round((cur + gain) * 10) / 10;
+          lines.push('余额生息 +' + gain + ' 万（现有 ' + LS.ECON.money(st.res[mk], st.worldId) + '）');
+        }
       }
       if (mech === 'fame') {
         const f = st.res.fans != null ? 'fans' : (st.res.fan != null ? 'fan' : null);
@@ -1265,16 +1433,70 @@ window.LS = window.LS || {};
       return lines.join(' ');
     },
 
+    /* 找到系统里的"钱"资源键 */
+    moneyKey(){
+      const st = this.state;
+      const res = (st.system && st.system.res) || [];
+      for (let i = 0; i < res.length; i++) {
+        if (/(余额|现金|资金|存款|钱|金)/.test(res[i].n || '')) return res[i].k;
+      }
+      return null;
+    },
+
+    /* 把系统面板折算成经济面板：资产→现金，人脉/声望→收入 */
+    syncEcon(){
+      const st = this.state, e = st.econ;
+      if (!e || !st.system) return [];
+      const chips = [];
+      const attrs = st.attrs || {};
+      const res = st.res || {};
+
+      // 资产属性 → 现金（只升不降，取高水位）
+      const asset = attrs.asset || attrs.estate || attrs.stock || 0;
+      const fromAsset = Math.round(asset * 0.6 * 10) / 10;
+      if (fromAsset > (e.assetMark || 0)) {
+        const add = Math.round((fromAsset - (e.assetMark || 0)) * 10) / 10;
+        e.cash = Math.round((e.cash + add) * 10) / 10;
+        e.assetMark = fromAsset;
+        chips.push({ text:'资产折现 +' + LS.ECON.money(add, st.worldId), good:true });
+      }
+
+      // 系统余额 → 现金（按 50% 计入可用现金）
+      const mk = this.moneyKey();
+      if (mk && (res[mk] || 0) > 0) {
+        const target = Math.round(res[mk] * 0.5 * 10) / 10;
+        if (target > (e.moneyMark || 0)) {
+          const add = Math.round((target - (e.moneyMark || 0)) * 10) / 10;
+          e.cash = Math.round((e.cash + add) * 10) / 10;
+          e.moneyMark = target;
+          chips.push({ text:'余额到账 +' + LS.ECON.money(add, st.worldId), good:true });
+        }
+      }
+
+      // 人脉 / 声望 → 主动收入加成
+      const conn = (attrs.conn || 0) + (attrs.network || 0);
+      const fame = (attrs.fame || 0) + (attrs.rep || 0);
+      const bonus = Math.round((conn * 0.05 + fame * 0.04) * 10) / 10;
+      if (bonus !== (e.linkMark || 0)) {
+        const diff = Math.round((bonus - (e.linkMark || 0)) * 10) / 10;
+        e.active = Math.round(((e.active || 0) + diff) * 10) / 10;
+        e.linkMark = bonus;
+        if (diff) chips.push({ text:'人脉/声望带来收入 ' + (diff>0?'+':'') + LS.ECON.money(diff, st.worldId) + '/年', good: diff>0 });
+      }
+      return chips;
+    },
+
     growRandom(v, dim){
       const st = this.state;
       let pool = (st.system.stats||[]).filter(function(s){ return !dim || s.dim === dim; });
       if (!pool.length) pool = st.system.stats || [];
-      if (!pool.length) return;
+      if (!pool.length) return null;
       const s = pool[Math.floor(this.rnd()*pool.length)];
       const cur = st.attrs[s.k] || 0;
       const gain = Math.max(1, Math.round(v * 80 / (80 + cur) * (this.buildMods().gainMul || 1)));
+      this._lastGrow = { k:s.k, n:s.n, gain:gain };
       st.attrs[s.k] = Math.round((cur + gain) * 10) / 10;
-      return gain;
+      return { k:s.k, n:s.n, gain:gain };
     },
 
     odds(dim, dc){
@@ -1495,6 +1717,7 @@ window.LS = window.LS || {};
       }
       st.ap = this.apMax();
       this.phase = 'actions';
+      this.saveRun();
       return 'actions';
     },
 
@@ -1801,10 +2024,11 @@ window.LS = window.LS || {};
       let text = '';
 
       if (tier.key === 'none') {
-        // 完全不会用：只能瞎按
-        this.growRandom(Math.max(1, Math.round(1 * scale)));
+        // 完全不会用：只能瞎按，但至少让你看见涨了什么
+        const g = this.growRandom(Math.max(1, Math.round(1 * scale)));
         text = '你把面板上的每个按钮都按了一遍，只有两个亮了。\n其中一个还按错了。';
-        chips.push({ text:'效果大打折扣', good:false });
+        if (g) chips.push({ text: g.n + ' +' + g.gain + '（勉强）', good:true });
+        chips.push({ text:'掌握度太低，效果减半', good:false });
         st.log.push({ age:st.age, kind:'sys', text: text.replace(/\n/g,' ') });
         this.systemUsed = true;
         return { text:text, chips:chips };
@@ -1907,6 +2131,41 @@ window.LS = window.LS || {};
         case 'maker': {
           return this.craftSystem();
         }
+        case 'wealth': {
+          const mk = this.moneyKey();
+          const act = (sys.acts || [])[0] || { n:'动用资金' };
+          if (!mk) { this.growRandom(Math.round(2*scale)); text = '系统在账面上动了一下，你看不懂。'; break; }
+          const cur = st.res[mk] || 0;
+          const spend = Math.max(5, Math.round(cur * 0.3));
+          st.res[mk] = Math.max(0, Math.round((cur - spend) * 10) / 10);
+          const back = Math.round(spend * (1.5 + rand() * 0.9) * scale);
+          st.res[mk] = Math.round((st.res[mk] + back) * 10) / 10;
+          if (st.econ) st.econ.cash = Math.round((st.econ.cash + back * 0.6) * 10) / 10;
+          chips.push({ text:'花掉 ' + LS.ECON.money(spend, st.worldId), good:false });
+          chips.push({ text:'返利 +' + LS.ECON.money(back, st.worldId), good:true });
+          text = '你用【' + act.n + '】把钱砸了出去。\n\n三天后，到账提醒响了 ' + back + ' 次。';
+          break;
+        }
+        case 'fame': {
+          const f = st.res.fans != null ? 'fans' : (st.res.fan != null ? 'fan' : null);
+          if (f) {
+            const gain = Math.max(1, Math.round(st.res[f] * 0.18 * scale));
+            st.res[f] += gain;
+            chips.push({ text:'粉丝 +' + gain, good:true });
+            if (st.econ) st.econ.passive = Math.round((st.econ.passive + gain * 0.002) * 10) / 10;
+            text = '你发了一条动态，粉丝涨了 ' + gain + '。\n\n流量变成了账单上的一行小字。';
+          } else { this.growRandom(Math.round(2*scale)); text = '你刷了一次存在感。'; }
+          break;
+        }
+        case 'signin': {
+          st.res.days = (st.res.days || 0) + 1;
+          const gain = Math.round(6 + st.res.days * 0.5);
+          st.res.pt = (st.res.pt || 0) + gain;
+          this.growRandom(Math.round(1.5*scale));
+          chips.push({ text:'签到点 +' + gain, good:true });
+          text = '第 ' + st.res.days + ' 天。\n\n奖励到账，不多，但没断过。';
+          break;
+        }
         case 'luck': {
           if ((st.res.fate||0) > 0) {
             st.res.fate -= 1;
@@ -1916,9 +2175,14 @@ window.LS = window.LS || {};
           break;
         }
         default: {
-          this.growRandom(Math.round(2*scale));
           const act = (sys.acts||[])[0];
-          text = act ? ('你用了【' + act.n + '】。' + (act.d||'')) : '你使用了一次系统能力。';
+          if (act && act.eff) {
+            this.applyEff(act.eff).forEach(function(c){ chips.push(c); });
+            text = '你用了【' + act.n + '】。\n\n' + (act.d || '');
+          } else {
+            this.growRandom(Math.round(2*scale));
+            text = act ? ('你用了【' + act.n + '】。' + (act.d||'')) : '你使用了一次系统能力。';
+          }
         }
       }
       const death = st.hp <= 0 ? this.handleDeath('你在' + st.age + '岁那年死在了自己手里') : null;
@@ -2076,6 +2340,7 @@ window.LS = window.LS || {};
       st.score = this.computeScore();
       st.rank = this.rankOf(st.score);
       st.epilogueText = this.epilogue();
+      this.computeAchievements();
 
       const b = st.brain;
       const path = {
@@ -2100,6 +2365,7 @@ window.LS = window.LS || {};
         ratingCount: 0, ratingSum: 0
       };
       LS.Store.savePath(path);
+      if (LS.Store.clearRun) LS.Store.clearRun();
       st.pathSaved = true;
       st.pathId = path.id;
       this.pathRecord = path;

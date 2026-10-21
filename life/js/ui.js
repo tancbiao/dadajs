@@ -16,6 +16,17 @@ window.LS = window.LS || {};
     aiWarned:false,
 
     init(){
+      const self = this;
+      if (typeof window !== 'undefined' && !this._hooked) {
+        this._hooked = true;
+        const flush = function(){
+          try { if (LS.Game && LS.Game.state && !LS.Game.state.ended) LS.Game.saveRun(); } catch(e){}
+        };
+        window.addEventListener('beforeunload', flush);
+        document.addEventListener('visibilitychange', function(){
+          if (document.visibilityState === 'hidden') flush();
+        });
+      }
       this.bind();
       this.home();
     },
@@ -56,6 +67,17 @@ window.LS = window.LS || {};
             <div><b>${st.snipCount()}</b><span>个剧情片段</span></div>
             <div><b>${LS.SYSTEMS.length + st.systems.length}</b><span>个系统</span></div>
           </div>
+          ${(function(){
+            var snap = LS.Store.loadRun ? LS.Store.loadRun() : null;
+            if (!snap || !snap.state) return '';
+            var s = snap.state;
+            var where = s.system ? (s.worldName + ' · ' + (s.system.name||'')) : '尚未觉醒';
+            return '<button class="resume-card" data-act="resume">' +
+              '<span class="rc-tag">未完成的人生</span>' +
+              '<b>' + esc(s.name||'无名') + ' · ' + s.age + ' 岁</b>' +
+              '<i>' + esc(where) + '</i>' +
+              '<em>继续 →</em></button>';
+          })()}
           <button class="btn btn-primary btn-lg btn-block" data-act="go" data-val="create">出生</button>
           <div class="hero-links">
             <button class="link" data-act="go" data-val="paths">别人的人生</button>
@@ -170,6 +192,24 @@ window.LS = window.LS || {};
           this.actionsScreen(); break;
         case 'enterworld':
           this.awakenScreen(); break;
+        case 'resume':
+          this.resumeGame(); break;
+        case 'civstart': {
+          const r = LS.Game.civStart(val);
+          if (r && r.error) this.toast(r.error);
+          else this.toast(String(r.text).replace(/\n+/g,' '), 2200);
+          this.actionsScreen(); break;
+        }
+        case 'civpush': {
+          const r = LS.Game.civPush();
+          if (!r) break;
+          if (r.error) { this.toast(r.error); break; }
+          LS.Game.result = { title:'推动文明 · ' + LS.Game.state.civ.field, text:r.text, chips:r.chips, ok:true };
+          LS.Game.phase = 'actionResult';
+          this.actionResultScreen(); break;
+        }
+        case 'aiending':
+          await this.doAiEnding(); break;
         case 'doresearch':
           await this.doResearch(); break;
         case 'sysact':
@@ -573,6 +613,37 @@ window.LS = window.LS || {};
       }
     },
 
+    async doAiEnding(){
+      const G = LS.Game, st = G.state;
+      const btn = document.querySelector('[data-act="aiending"]');
+      if (btn) { btn.disabled = true; btn.textContent = '导演正在写……'; }
+      try {
+        const txt = await LS.AI.genEnding({ state: st, world: LS.worldById(st.worldId), memory: G.lifeMemory() });
+        const epi = document.querySelector('.end-epi');
+        if (epi && txt) epi.innerHTML = nl2br(txt);
+        if (btn) btn.textContent = '再写一版';
+      } catch(e) {
+        this.toast('导演没接话：' + (e.message || e));
+        if (btn) btn.textContent = '让导演写完这一段';
+      }
+      if (btn) btn.disabled = false;
+    },
+
+    resumeGame(){
+      const G = LS.Game;
+      const st = G.resumeRun();
+      if (!st) { this.toast('没有可继续的人生'); this.home(); return; }
+      this.applyTheme(st.worldId);
+      this.screen = 'game';
+      if (G.phase === 'event' && G.pending) { this.eventScreen(); return; }
+      if (G.phase === 'actions') { this.actionsScreen(); return; }
+      if (G.phase === 'awaken') { this.awakenScreen(); return; }
+      if (G.phase === 'child') { this.childScreen(); return; }
+      if (G.phase === 'childResult') { this.childResultScreen(); return; }
+      if (G.phase === 'actionResult') { this.actionResultScreen(); return; }
+      this.actionsScreen();
+    },
+
     async beginYear(){
       const G = LS.Game;
       this.actionFeedback = null;
@@ -681,6 +752,30 @@ window.LS = window.LS || {};
       this.actionsScreen();
     },
 
+    civCard(){
+      const G = LS.Game, st = G.state;
+      if (!G.civAvailable()) return '';
+      const c = st.civ;
+      if (!c) {
+        const fields = G.civFields();
+        return '<div class="civ-card">' +
+          '<div class="cv-head"><b>🌍 推动文明</b><span>十年 · 2 行动力/年</span></div>' +
+          '<p class="cv-desc">这个世界有些东西还没被想明白。选一个方向，把接下来十年押上去。</p>' +
+          '<div class="cv-fields">' + fields.map(function(f){
+            return '<button class="chip" data-act="civstart" data-val="' + esc(f) + '">' + esc(f) + '</button>';
+          }).join('') + '</div></div>';
+      }
+      const pct = Math.min(100, Math.round((c.years || 0) / 10 * 100));
+      return '<div class="civ-card active">' +
+        '<div class="cv-head"><b>🌍 ' + esc(c.field) + '</b><span>第 ' + (c.years||0) + ' / 10 年</span></div>' +
+        '<div class="cv-bar"><i style="width:' + pct + '%"></i></div>' +
+        (c.done
+          ? '<p class="cv-desc">' + (c.success ? '成了。这个世界因为你往前走了一格。' : '十年，白费了。') + '</p>'
+          : '<p class="cv-desc">专注推动一年（消耗 2 行动力）。智商越高，每年推进得越多。</p>' +
+            '<button class="btn btn-ghost btn-block" data-act="civpush" ' + (st.ap < 2 ? 'disabled' : '') + '>再推一年</button>') +
+        '</div>';
+    },
+
     /* 基础 6 个行动，被自研行动按维度顶替 */
     /* 不是永远 6 个：脑子不够，你只知道其中几个办法 */
     actionList(){
@@ -730,6 +825,8 @@ window.LS = window.LS || {};
               </button>`;
             }).join('')}
           </div>
+
+          ${this.civCard()}
 
           <div class="research-act">
             <div class="ra-head">
@@ -868,7 +965,15 @@ window.LS = window.LS || {};
       const btn = $('[data-act="sysact"]');
       if (btn) { btn.disabled = true; btn.textContent = '……'; }
       const r = await G.systemAction();
-      if (r && r.text) this.toast(r.text.replace(/\n/g,' '), 2600);
+      if (r && r.text) {
+        this.actionFeedback = {
+          ok: !!(r.chips && r.chips.length),
+          title: '系统能力 · ' + (G.state.system ? G.state.system.name : ''),
+          text: r.text,
+          chips: r.chips || [],
+          left: G.state.ap
+        };
+      }
       if (G.state.ended) {
         if (!G.state.pathSaved) G.endRun(G.state.endReason || '你的一生结束了');
         this.ending(); return;
@@ -1010,6 +1115,7 @@ window.LS = window.LS || {};
           <h1 class="end-title">${esc(st.name)} · ${st.age} 岁</h1>
           <p class="end-reason">${esc(st.endReason||'')}</p>
           ${st.epilogueText ? `<p class="end-epi">${nl2br(st.epilogueText)}</p>` : ''}
+          ${LS.AI.available() ? `<button class="btn btn-ghost btn-block" data-act="aiending">让导演写完这一段</button>` : ''}
           <div class="end-score"><b>${st.score||0}</b><span>人生评分</span></div>
           <p class="end-comment">${esc(rank.d)}</p>
           <div class="end-grid">
@@ -1024,6 +1130,9 @@ window.LS = window.LS || {};
             ${st.econ&&st.econ.debt>0?`<div><span>负债</span><b class="neg">${LS.ECON.money(st.econ.debt, st.worldId)}</b></div>`:''}
             <div><span>死亡次数</span><b>${st.deaths}</b></div>
           </div>
+          ${(st.achievements && st.achievements.length) ? ('<div class="end-ach"><b>成就</b><div class="ach-grid">' +
+            st.achievements.map(function(a){ return '<div class="ach"><span>' + a.icon + '</span><b>' + esc(a.name) + '</b><i>' + esc(a.desc) + '</i></div>'; }).join('') +
+            '</div></div>') : ''}
           <div class="end-timeline">
             <b>人生关键节点</b>
             ${(p.timeline||st.timeline).slice(-10).map(function(t){ return `<div class="et-row">${esc(t)}</div>`; }).join('') || '<div class="et-row muted">没有留下什么记录</div>'}

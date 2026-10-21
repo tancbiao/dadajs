@@ -1,13 +1,2 @@
-/* 线上版：不内置任何 Key。 */
 window.LS = window.LS || {};
-LS.LOCAL_CONFIG = {
-  base: 'https://api.deepseek.com',
-  model: 'deepseek-flash',
-  key: '',
-  proxy: '',
-  thinking: 'disabled',
-  jsonMode: true,
-  temp: 0.95,
-  mode: 'auto',
-  budget: 60
-};
+LS.LOCAL_CONFIG = {base:'https://api.deepseek.com',model:'deepseek-flash',key:'',proxy:'',thinking:'disabled',jsonMode:true,temp:0.95,mode:'auto',budget:60};

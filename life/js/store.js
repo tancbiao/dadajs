@@ -8,7 +8,8 @@ window.LS = window.LS || {};
     systems:'ls.systems.v1',
     api:'ls.api.v1',
     fav:'ls.fav.v1',
-    research:'ls.research.v1'
+    research:'ls.research.v1',
+    run:'ls.run.v1'
   };
 
   function read(key, def){
@@ -176,6 +177,21 @@ window.LS = window.LS || {};
       return out;
     },
     saveApiCfg(cfg){ write(K.api, cfg); },
+
+    /* ---------- 未完成的人生（续玩） ---------- */
+    saveRun(snap){
+      try { localStorage.setItem(K.run, JSON.stringify(snap)); } catch(e){}
+    },
+    loadRun(){
+      try {
+        const s = localStorage.getItem(K.run);
+        if (!s) return null;
+        const o = JSON.parse(s);
+        if (!o || !o.state || o.state.ended) return null;
+        return o;
+      } catch(e){ return null; }
+    },
+    clearRun(){ try { localStorage.removeItem(K.run); } catch(e){} },
 
     /* ---------- 玩家自创用法 ---------- */
     addResearch(rec){
