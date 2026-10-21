@@ -740,7 +740,7 @@ window.LS = window.LS || {};
       st.freePts = 0;
 
       // 经济面板开张
-      st.econ = LS.ECON.init(b.iq);
+      st.econ = LS.ECON.init(b.iq, 'modern');
 
       // 穿越判定
       const travel = this.rollTravel(sys, b);
@@ -779,7 +779,12 @@ window.LS = window.LS || {};
     rollTravel(sys, b){
       const st = this.state;
       if (st.worldId !== 'modern') return null;
-      // 觉醒即穿越：这个世界不会把你留在原地
+      // 极少数人运气好，被留在了原来的世界
+      if (this.rnd() < 0.1) {
+        st.travelSkill = b.travel || 0;
+        st.flags.stayed = 1;
+        return null;
+      }
       let target = null;
       const home = LS.SYS_HOME[sys.id];
       if (b.manga && this.rnd() < 0.28) target = this.rnd() < 0.5 ? 'ninja' : 'pirate';
@@ -801,6 +806,8 @@ window.LS = window.LS || {};
       const role = LS.pick(LS.TRAVEL_ROLE[tierKey], this.rnd.bind(this));
       st.travelRole = role;
       st.flags.crossed = 1;
+      // 同一份身家，换成这个世界的钱与身份
+      if (LS.ECON.remap) LS.ECON.remap(st.econ, w.id);
       // 落地那一刻，身体被这个世界重写了一遍——这是"大杀四方"的本钱
       const boost = 1 + Math.min(0.35, 0.15 + skill / 400);
       Object.keys(st.attrs).forEach(function(k){
@@ -892,7 +899,7 @@ window.LS = window.LS || {};
       }
       if (st.econ && st.econ.justGraduated) {
         st.log.push({ age: st.age, kind:'good', text:
-          '你毕业了（' + st.econ.eduName + '）。第一份工作，年薪 ' + st.econ.active + ' 万。' +
+          '你出师了（' + st.econ.eduName + '）。第一份进项，一年 ' + LS.ECON.money(st.econ.active, st.worldId) + '。' +
           (st.econ.debt > 1 ? '先还助学贷款和之前欠下的 ' + Math.round(st.econ.debt) + ' 万。' : '') });
       } else if (st.econ && !st.econ.graduated) {
         st.log.push({ age: st.age, kind:'say', text:
@@ -1003,6 +1010,10 @@ window.LS = window.LS || {};
 
     pickLifeEvent(){
       const st = this.state, b = st.brain;
+      // 到了别的世界，就别再演都市买房那一套了
+      if (st.worldId !== 'modern' && st.age >= 18 && LS.makeWorldEvent) {
+        if (this.rnd() < 0.85) return LS.makeWorldEvent(LS.worldById(st.worldId), this.rnd.bind(this));
+      }
       const used = this.usedLife;
       const iq = b.iq || this.estIQ();
       let pool = LS.LIFE_EVENTS.filter(function(e){
@@ -1151,6 +1162,10 @@ window.LS = window.LS || {};
     buildOfflineEvent(w, sys){
       const st = this.state;
       const self = this;
+      if (st.worldId !== 'modern' && LS.makeWorldEvent && this.rnd() < 0.5) {
+        const we = LS.makeWorldEvent(w, this.rnd.bind(this));
+        if (we && we.opts && we.opts.length) return we;
+      }
       const wTags = (w.tags||[]).concat(sys.tags||[]);
       let cands = LS.EVENTS.filter(function(t){ return self.usedEvents.indexOf(t.id) < 0; });
       if (!cands.length) { this.usedEvents = []; cands = LS.EVENTS.slice(); }
@@ -1395,7 +1410,7 @@ window.LS = window.LS || {};
         }
       }
       if (eff.econ && st.econ) {
-        LS.ECON.apply(st.econ, eff.econ).forEach(function(c){ chips.push(c); });
+        LS.ECON.apply(st.econ, eff.econ, st.worldId).forEach(function(c){ chips.push(c); });
       }
       if (eff.flag) st.flags[eff.flag] = 1;
 
@@ -1970,10 +1985,11 @@ window.LS = window.LS || {};
       // 年度账单写进日志
       if (st.econ && st.age >= 18) {
         const e = st.econ;
+        const M = function(v){ return LS.ECON.money(v, st.worldId); };
         st.log.push({ age:st.age, kind:'sys', text:
-          '这一年：主动收入 ' + Math.round(e.active*10)/10 + ' 万，被动 ' + Math.round(e.passive*10)/10 +
-          ' 万，支出 ' + Math.round(e.expense*10)/10 + ' 万。' +
-          (e.debt > 0 ? '负债 ' + Math.round(e.debt) + ' 万。' : '没有负债。') });
+          '这一年：收入 ' + M(e.active) + '，被动 ' + M(e.passive) +
+          '，支出 ' + M(e.expense) + '。' +
+          (e.debt > 0 ? '负债 ' + M(e.debt) + '。' : '没有负债。') });
       }
       st.age += 1;
       if (st.age % 10 === 0) {
@@ -2018,8 +2034,9 @@ window.LS = window.LS || {};
         if (dead) lines.push('这个世界没有给你第二次机会。你在这里的痕迹，很快会被风沙盖住。');
         else lines.push('你从那个世界活着回来了，或者说，你终于在那里活成了本地人。');
       } else {
-        if (net >= 300) lines.push('你留下了 ' + Math.round(net) + ' 万。房子、账户、一堆没拆的快递。');
-        else if (net < 0) lines.push('你走的时候还欠着 ' + Math.round(-net) + ' 万。催收电话打到了你儿子的手机上。');
+        const M = function(v){ return LS.ECON.money(v, st.worldId); };
+        if (net >= 300) lines.push('你留下了 ' + M(net) + '。房子、账户、一堆没拆的快递。');
+        else if (net < 0) lines.push('你走的时候还欠着 ' + M(-net) + '。催收的电话打到了你儿子的手机上。');
         else lines.push('你没留下什么钱，也没欠下什么。');
       }
 

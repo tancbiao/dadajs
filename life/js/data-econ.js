@@ -58,16 +58,21 @@ LS.ECON = (function(){
   }
 
   /* 学历路线：18 岁这天你还什么都不是，先读书，读完才有工资 */
-  function planByIQ(iq){
-    if (iq >= 131) return { stage:'grad',    years:7, salary:34,  name:'读研' };
-    if (iq >= 118) return { stage:'college', years:4, salary:20,  name:'本科' };
-    if (iq >= 108) return { stage:'junior',  years:3, salary:11,  name:'大专' };
-    if (iq >= 98)  return { stage:'high',    years:0, salary:6.5, name:'高中毕业' };
-    return             { stage:'labor',   years:0, salary:3.2, name:'打零工' };
+  function planByIQ(iq, worldId){
+    let p;
+    if (iq >= 131) p = { stage:'grad',    years:7, salary:34,  name:'读研' };
+    else if (iq >= 118) p = { stage:'college', years:4, salary:20,  name:'本科' };
+    else if (iq >= 108) p = { stage:'junior',  years:3, salary:11,  name:'大专' };
+    else if (iq >= 98)  p = { stage:'high',    years:0, salary:6.5, name:'高中毕业' };
+    else p = { stage:'labor', years:0, salary:3.2, name:'打零工' };
+    // 同一个学历，换个世界就是另一种身份
+    if (LS.worldEduName) p.name = LS.worldEduName(p.stage, worldId || 'modern');
+    return p;
   }
 
-  function init(iq){
-    const p = planByIQ(iq);
+  function init(iq, worldId){
+    worldId = worldId || 'modern';
+    const p = planByIQ(iq, worldId);
     return {
       cash: 0.8,
       debt: 0,
@@ -82,8 +87,22 @@ LS.ECON = (function(){
       gradAge: 18 + Math.max(1, p.years),   // 不升学的人，也要先找一年工作
       graduated: false,
       conIQ: iq,
+      worldId: worldId,
       log: []
     };
+  }
+
+  /* 穿越落地后：同一份资产，换个世界换个算法 */
+  function remap(e, worldId){
+    if (!e) return e;
+    e.worldId = worldId || 'modern';
+    if (LS.worldEduName) e.eduName = LS.worldEduName(e.stage, e.worldId);
+    return e;
+  }
+
+  function money(v, worldId){
+    if (LS.fmtMoney) return LS.fmtMoney(v, worldId || 'modern');
+    return (Math.round(v * 10) / 10) + ' 万';
   }
 
   function netWorth(e){
@@ -155,22 +174,24 @@ LS.ECON = (function(){
     return e;
   }
 
-  function apply(e, eff){
+  function apply(e, eff, worldId){
     if (!e || !eff) return [];
+    const wid = worldId || e.worldId || 'modern';
+    const M = function(v){ return money(v, wid); };
     const chips = [];
-    if (eff.cash) { e.cash = Math.round((e.cash + eff.cash)*10)/10; chips.push({ text:'现金 ' + (eff.cash>0?'+':'') + eff.cash + '万', good: eff.cash>0 }); }
-    if (eff.debt) { e.debt = Math.round((e.debt + eff.debt)*10)/10; chips.push({ text:'负债 ' + (eff.debt>0?'+':'') + eff.debt + '万', good: eff.debt<0 }); }
-    if (eff.active) { e.active = Math.round((e.active + eff.active)*10)/10; chips.push({ text:'主动收入 ' + (eff.active>0?'+':'') + eff.active + '万/年', good: eff.active>0 }); }
-    if (eff.passive) { e.passive = Math.round((e.passive + eff.passive)*10)/10; chips.push({ text:'被动收入 ' + (eff.passive>0?'+':'') + eff.passive + '万/年', good: eff.passive>0 }); }
-    if (eff.expense) { e.expense = Math.round((e.expense + eff.expense)*10)/10; chips.push({ text:'年支出 ' + (eff.expense>0?'+':'') + eff.expense + '万', good: eff.expense<0 }); }
+    if (eff.cash) { e.cash = Math.round((e.cash + eff.cash)*10)/10; chips.push({ text:'现金 ' + (eff.cash>0?'+':'') + M(eff.cash), good: eff.cash>0 }); }
+    if (eff.debt) { e.debt = Math.round((e.debt + eff.debt)*10)/10; chips.push({ text:'负债 ' + (eff.debt>0?'+':'') + M(eff.debt), good: eff.debt<0 }); }
+    if (eff.active) { e.active = Math.round((e.active + eff.active)*10)/10; chips.push({ text:'收入 ' + (eff.active>0?'+':'') + M(eff.active) + '/年', good: eff.active>0 }); }
+    if (eff.passive) { e.passive = Math.round((e.passive + eff.passive)*10)/10; chips.push({ text:'被动 ' + (eff.passive>0?'+':'') + M(eff.passive) + '/年', good: eff.passive>0 }); }
+    if (eff.expense) { e.expense = Math.round((e.expense + eff.expense)*10)/10; chips.push({ text:'支出 ' + (eff.expense>0?'+':'') + M(eff.expense), good: eff.expense<0 }); }
     if (eff.asset) {
       e.assets.push({ n: eff.asset.n, v: eff.asset.v, passive: eff.asset.passive || 0 });
-      chips.push({ text:'买入「' + eff.asset.n + '」' + eff.asset.v + '万', good:true });
+      chips.push({ text:'买入「' + eff.asset.n + '」' + M(eff.asset.v), good:true });
     }
     return chips;
   }
 
-  return { init: init, settle: settle, apply: apply, netWorth: netWorth, incomeByIQ: incomeByIQ, planByIQ: planByIQ, clamp: clamp };
+  return { init: init, settle: settle, apply: apply, remap: remap, money: money, netWorth: netWorth, incomeByIQ: incomeByIQ, planByIQ: planByIQ, clamp: clamp };
 })();
 
 /* ================= 经济决策事件（智商够才给你选） ================= */

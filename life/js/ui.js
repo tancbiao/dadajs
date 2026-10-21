@@ -41,6 +41,7 @@ window.LS = window.LS || {};
     /* ---------------- 导航 ---------------- */
     home(){
       App.screen = 'home';
+      this.applyTheme('modern');
       const st = LS.Store;
       const mode = LS.AI.mode();
       const modeText = mode === 'offline' ? '离线引擎' : (mode === 'always' ? '全 AI 导演' : 'AI + 缓存混合');
@@ -167,6 +168,8 @@ window.LS = window.LS || {};
           this.doSeekDeath(val); break;
         case 'backactions':
           this.actionsScreen(); break;
+        case 'enterworld':
+          this.awakenScreen(); break;
         case 'doresearch':
           await this.doResearch(); break;
         case 'sysact':
@@ -250,6 +253,7 @@ window.LS = window.LS || {};
       this.screen = 'game';
       const G = LS.Game, st = G.state;
       if (!st) { this.home(); return; }
+      this.applyTheme(st.worldId);
       if (G.phase === 'awaken') { this.awakenScreen(); return; }
       if (G.phase === 'end') { this.ending(); return; }
       if (G.phase === 'adult') { this.beginYear(); return; }
@@ -441,6 +445,7 @@ window.LS = window.LS || {};
 
     awakenScreen(){
       const G = LS.Game, st = G.state;
+      this.applyTheme(st.worldId);
       if (!st.system) {
         $('#stage').innerHTML = `${this.topbar()}
           <section class="year-card awaken">
@@ -499,13 +504,13 @@ window.LS = window.LS || {};
           </div>
         </section>
 
-        ${st.travelText ? `<section class="travel-card">
-          <b>世界变了</b><p>${nl2br(st.travelText)}</p>
-          ${(b.travel||0) > 0 ? `<div class="tv-skill">
-            <span>穿越熟练 ${Math.round(b.travel)}</span>
-            <i>${b.travel>=60?'你看过太多遍这种世界，落地就知道哪条街不能走。':b.travel>=30?'书里的东西帮上了一点忙，至少你认得那些规矩。':'你只是看过几眼，落地才发现全都不作数。'}</i>
-          </div>` : ''}
-        </section>` : ''}
+        ${st.travelText ? `<section class="world-strip">
+          <span>${LS.worldById(st.worldId).icon} ${esc(st.worldName)}</span>
+          <b>${esc(st.travelRole || '')}</b>
+        </section>` : `<section class="world-strip stay">
+          <span>🏙️ 现代都市</span>
+          <b>你没有离开 · 运气好得不像话</b>
+        </section>`}
 
         <section class="build-card">
           <div class="bc-head"><b>选择系统开发路线</b><span>同一个系统，练法不同</span></div>
@@ -529,7 +534,43 @@ window.LS = window.LS || {};
     doAwaken(){
       const res = LS.Game.awaken();
       this.toast('系统已绑定：' + res.system.name);
+      if (LS.Game.state.travelText) { this.travelReveal(); return; }
       this.awakenScreen();
+    },
+
+    /* 穿越：整屏换世界 */
+    travelReveal(){
+      const G = LS.Game, st = G.state;
+      const w = LS.worldById(st.worldId) || {};
+      const cur = LS.worldMoney ? LS.worldMoney(w.id) : { n:'万', k:1 };
+      const stars = '★'.repeat(Math.max(1, Math.min(5, w.danger || 1))) + '☆'.repeat(5 - Math.max(1, Math.min(5, w.danger || 1)));
+      this.applyTheme(w.id);
+      const isekaiEdu = st.econ ? st.econ.eduName : '';
+      $('#stage').innerHTML = `
+        <section class="world-reveal">
+          <div class="wr-rings"></div>
+          <div class="wr-kicker">世界正在重写</div>
+          <div class="wr-icon">${w.icon || '🌍'}</div>
+          <h1 class="wr-name">${esc(w.name || '未知世界')}</h1>
+          <p class="wr-era">${esc(w.era || '')}</p>
+          <p class="wr-brief">${esc(w.brief || '')}</p>
+          <div class="wr-facts">
+            <div><span>你现在的身份</span><b>${esc(st.travelRole || '—')}</b></div>
+            <div><span>这里的钱</span><b>${esc(cur.n)}（1 万 ≈ ${cur.k} ${esc(cur.n)}）</b></div>
+            <div><span>这里的学历</span><b>${esc(isekaiEdu || '—')}</b></div>
+            <div><span>危险等级</span><b class="danger">${stars}</b></div>
+          </div>
+          <div class="wr-buff">落地加成 · 全属性 +${st.flags.travelBoost || 0}%</div>
+          <p class="wr-text">${nl2br(st.travelText || '')}</p>
+          <button class="btn btn-primary btn-lg btn-block" data-act="enterworld">在这里活下去</button>
+        </section>
+      `;
+    },
+
+    applyTheme(worldId){
+      if (typeof document !== 'undefined' && document.body) {
+        document.body.setAttribute('data-world', worldId || 'modern');
+      }
     },
 
     async beginYear(){
@@ -898,22 +939,23 @@ window.LS = window.LS || {};
       const note = iq < 110
         ? '你对钱没什么概念。别人家里有的，你也觉得该有。'
         : iq < 120 ? '你知道要存钱，但常常忍不住。' : '你开始算收益率了。';
+      const M = function(v){ return LS.ECON.money(v, st.worldId); };
       return `
         <section class="panel econ-panel">
           <div class="ep-head">
             <b>经济面板</b>
-            <span class="${LS.ECON.netWorth(e) < 0 ? 'neg' : ''}">净资产 ${LS.ECON.netWorth(e)} 万</span>
+            <span class="${LS.ECON.netWorth(e) < 0 ? 'neg' : ''}">净资产 ${M(LS.ECON.netWorth(e))}</span>
           </div>
           <div class="ep-grid">
             <div><span>学历</span><b>${esc(e.eduName || '—')}${e.graduated ? '（已毕业）' : '（在读）'}</b></div>
             <div><span>${e.graduated ? '状态' : '毕业时间'}</span><b>${e.graduated ? '已工作' : (e.gradAge - st.age) + ' 年后'}</b></div>
-            <div><span>现金</span><b>${Math.round(e.cash*10)/10} 万</b></div>
-            <div><span>负债</span><b class="${e.debt>0?'neg':''}">${Math.round(e.debt*10)/10} 万</b></div>
-            <div><span>主动收入</span><b>${Math.round(e.active*10)/10} 万/年</b></div>
-            <div><span>被动收入</span><b>${Math.round(e.passive*10)/10} 万/年</b></div>
+            <div><span>现金</span><b>${M(e.cash)}</b></div>
+            <div><span>负债</span><b class="${e.debt>0?'neg':''}">${M(e.debt)}</b></div>
+            <div><span>主动收入</span><b>${M(e.active)}/年</b></div>
+            <div><span>被动收入</span><b>${M(e.passive)}/年</b></div>
           </div>
           <p class="ep-note">${!e.graduated ? ('你还在读书，今年没有工资。' + Math.max(0, e.gradAge - st.age) + ' 年后毕业。') : esc(note)}</p>
-          ${(e.assets||[]).length?`<div class="ep-assets">${e.assets.map(function(a){ return `<span>${esc(a.n)} ${Math.round(a.v)}万</span>`; }).join('')}</div>`:''}
+          ${(e.assets||[]).length?`<div class="ep-assets">${e.assets.map(function(a){ return `<span>${esc(a.n)} ${M(a.v)}</span>`; }).join('')}</div>`:''}
         </section>
       `;
     },
@@ -955,6 +997,7 @@ window.LS = window.LS || {};
     /* ---------------- 结局 ---------------- */
     ending(){
       const G = LS.Game, st = G.state;
+      this.applyTheme(st.worldId);
       if (!st.pathSaved) G.endRun(st.endReason || '你的一生结束了');
       const p = LS.Store.getPath(st.id) || G.pathRecord || {};
       const rank = st.rank || G.rankOf(st.score||0);
@@ -976,9 +1019,9 @@ window.LS = window.LS || {};
             <div><span>教育影响</span><b>智力 ${b.eduIQ>0?'+':''}${b.eduIQ||0}</b></div>
             <div><span>系统掌握度</span><b>${b.mastery}%</b></div>
             <div><span>家庭</span><b>${esc(b.parent.name)}</b></div>
-            <div><span>净资产</span><b class="${net<0?'neg':''}">${net} 万</b></div>
-            ${st.econ?`<div><span>主动/被动</span><b>${Math.round(st.econ.active*10)/10} / ${Math.round(st.econ.passive*10)/10} 万</b></div>`:''}
-            ${st.econ&&st.econ.debt>0?`<div><span>负债</span><b class="neg">${Math.round(st.econ.debt)} 万</b></div>`:''}
+            <div><span>净资产</span><b class="${net<0?'neg':''}">${LS.ECON.money(net, st.worldId)}</b></div>
+            ${st.econ?`<div><span>主动/被动</span><b>${LS.ECON.money(st.econ.active, st.worldId)} / ${LS.ECON.money(st.econ.passive, st.worldId)}</b></div>`:''}
+            ${st.econ&&st.econ.debt>0?`<div><span>负债</span><b class="neg">${LS.ECON.money(st.econ.debt, st.worldId)}</b></div>`:''}
             <div><span>死亡次数</span><b>${st.deaths}</b></div>
           </div>
           <div class="end-timeline">
