@@ -1,6 +1,4 @@
-/* 线上版：不内置任何 Key。
- * 想用 AI 审核/生成剧情：打开游戏 → 设置 → 填自己的 DeepSeek Key（只存本机浏览器）。
- */
+/* 线上版：不内置任何 Key。 */
 window.LS = window.LS || {};
 LS.LOCAL_CONFIG = {
   base: 'https://api.deepseek.com',

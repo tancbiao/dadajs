@@ -300,6 +300,7 @@ window.LS = window.LS || {};
             <div class="yc-age">${it.age} 岁 · 学校</div>
             <h2 class="ev-title">${esc(it.title)}</h2>
             <p class="narration">${nl2br(it.text)}</p>
+            ${this.sciHtml(it.sci)}
             ${this.eduLinesHtml(it.policyLines)}
             ${this.eduLinesHtml(it.eduLines)}
             <button class="btn btn-primary btn-block" data-act="childnext">继续</button>
@@ -315,6 +316,7 @@ window.LS = window.LS || {};
           <div class="year-card">
             <div class="yc-age">${it.age} 岁</div>
             <p class="narration">${nl2br(it.text)}</p>
+            ${this.sciHtml(it.sci)}
             ${this.eduLinesHtml(it.eduLines)}
             <button class="btn btn-primary btn-block" data-act="childnext">继续</button>
             <button class="btn btn-ghost btn-block" data-act="fastchild">快进到下一件大事</button>
@@ -330,6 +332,7 @@ window.LS = window.LS || {};
           <div class="yc-age">${it.age} 岁 · ${it.age === 10 ? '第一次自己拿主意' : '你自己拿主意'}</div>
           <h2 class="ev-title">${esc(it.title)}</h2>
           <p class="narration">${nl2br(it.text)}</p>
+          ${this.sciHtml(it.sci)}
           <div class="options">
             ${it.opts.map(function(o,i){
               return `<button class="opt" data-act="childopt" data-val="${i}">
@@ -338,7 +341,7 @@ window.LS = window.LS || {};
               </button>`;
             }).join('')}
           </div>
-          ${it.limited ? `<p class="limited">你想不出别的办法了。</p>` : ''}
+          ${it.locked ? `<p class="limited">你的脑子里没有第二个选项。</p>` : (it.limited ? `<p class="limited">你想不出别的办法了。</p>` : '')}
           ${this.eduLinesHtml(it.eduLines)}
         </section>
         ${this.logBlock(4)}
@@ -539,6 +542,7 @@ window.LS = window.LS || {};
             <div class="yc-age">${st.age} 岁 <span class="src-tag">${esc(ev.source||'')}</span></div>
             <h2 class="ev-title">${esc(ev.title)}</h2>
             <p class="narration">${nl2br(ev.text)}</p>
+            ${this.sciHtml(ev.sci)}
             <div class="no-choice">你没有选择的余地。</div>
             <button class="btn btn-primary btn-block" data-act="autonext">继续</button>
           </section>
@@ -554,6 +558,7 @@ window.LS = window.LS || {};
           <div class="yc-age">${st.age} 岁 · 第 ${st.turn} 年 <span class="src-tag">${esc(ev.source||'')}</span></div>
           <h2 class="ev-title">${esc(ev.title)}</h2>
           <p class="narration">${nl2br(ev.text)}</p>
+          ${this.sciHtml(ev.sci)}
           <div class="options">
             ${ev.opts.map(function(o,i){
               const p = (reveal && o.dim) ? Math.round(G.odds(o.dim, o.dc)*100) : null;
@@ -604,12 +609,17 @@ window.LS = window.LS || {};
     },
 
     /* 基础 6 个行动，被自研行动按维度顶替 */
+    /* 不是永远 6 个：脑子不够，你只知道其中几个办法 */
     actionList(){
       const st = LS.Game.state;
+      const iq = (st.brain && st.brain.iq) || 100;
       const customs = st.customActs || [];
       return LS.FREE_ACTIONS.map(function(base){
         const own = customs.find(function(c){ return c.dim === base.dim; });
         return own || base;
+      }).filter(function(a){
+        const need = a.custom ? 100 : (a.iqMin || 0);
+        return iq >= need;
       });
     },
 
@@ -636,7 +646,7 @@ window.LS = window.LS || {};
         <section class="panel">
           <div class="panel-head row">
             <h2>这一年，你还想做点什么</h2>
-            <span class="ap">行动力 ${st.ap} / 3</span>
+            <span class="ap">行动力 ${Math.min(st.ap, G.apMax())} / ${G.apMax()}</span>
           </div>
           <div class="action-grid">
             ${this.actionList().map(function(a){
@@ -665,7 +675,7 @@ window.LS = window.LS || {};
           ${G.canSeekDeath() ? `          <div class="seek-act">
             <div class="sa-head">
               <b>💀 找死</b>
-              <span class="${st.ap<=0?'used':''}">剩 ${st.ap} 点行动力</span>
+              <span class="${st.ap<=0?'used':''}">剩 ${st.ap} / ${G.apMax()} 点行动力</span>
             </div>
             <p>主动去最危险的地方。死一次，强一次——但同一种死法会指数递减，得换着来。</p>
             <p class="sa-tier">已死亡 ${deathCount} 次 · 同种死法收益 ×${(build && build.mods && build.mods.decay) || 0.82}<sup>n</sup>，越死越少</p>
@@ -751,7 +761,7 @@ window.LS = window.LS || {};
             </button>`;
           }).join('')}
         </div>
-        <div class="sheet-foot">行动力 ${st.ap} / 3 · 每次消耗 1 点</div>
+        <div class="sheet-foot">行动力 ${st.ap} / ${G.apMax()} · 每次消耗 1 点</div>
       `);
     },
 
@@ -863,15 +873,22 @@ window.LS = window.LS || {};
             <span class="${LS.ECON.netWorth(e) < 0 ? 'neg' : ''}">净资产 ${LS.ECON.netWorth(e)} 万</span>
           </div>
           <div class="ep-grid">
+            <div><span>学历</span><b>${esc(e.eduName || '—')}${e.graduated ? '（已毕业）' : '（在读）'}</b></div>
+            <div><span>${e.graduated ? '状态' : '毕业时间'}</span><b>${e.graduated ? '已工作' : (e.gradAge - st.age) + ' 年后'}</b></div>
             <div><span>现金</span><b>${Math.round(e.cash*10)/10} 万</b></div>
             <div><span>负债</span><b class="${e.debt>0?'neg':''}">${Math.round(e.debt*10)/10} 万</b></div>
             <div><span>主动收入</span><b>${Math.round(e.active*10)/10} 万/年</b></div>
             <div><span>被动收入</span><b>${Math.round(e.passive*10)/10} 万/年</b></div>
           </div>
-          <p class="ep-note">${esc(note)}</p>
+          <p class="ep-note">${!e.graduated ? ('你还在读书，今年没有工资。' + Math.max(0, e.gradAge - st.age) + ' 年后毕业。') : esc(note)}</p>
           ${(e.assets||[]).length?`<div class="ep-assets">${e.assets.map(function(a){ return `<span>${esc(a.n)} ${Math.round(a.v)}万</span>`; }).join('')}</div>`:''}
         </section>
       `;
+    },
+
+    sciHtml(sci){
+      if (!sci) return '';
+      return '<details class="sci"><summary>🔬 科学解释</summary><p>' + esc(sci) + '</p></details>';
     },
 
     chipsHtml(chips){

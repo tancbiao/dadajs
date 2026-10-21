@@ -728,3 +728,21 @@ select.input{ appearance:none; }
   font-family:"Songti SC","STSong",serif; font-size:13.5px; line-height:2;
   color:#6C5F58; text-align:center; margin:2px 18px 14px;
 }
+
+/* ================= 科学解释 ================= */
+.sci{
+  margin-top:10px; border:1px dashed #CFE0EC; border-radius:12px;
+  background:#F7FBFE; overflow:hidden;
+}
+.sci summary{
+  cursor:pointer; padding:8px 12px; font-size:11.5px; color:#41748F;
+  list-style:none; user-select:none;
+}
+.sci summary::-webkit-details-marker{ display:none; }
+.sci summary:before{ content:'▸ '; }
+.sci[open] summary:before{ content:'▾ '; }
+.sci p{
+  padding:0 12px 11px; font-size:11.5px; line-height:1.9; color:#4A6A80;
+  font-family:"Songti SC","STSong",serif;
+}
+.sci[open] summary{ border-bottom:1px dashed #CFE0EC; margin-bottom:8px; }

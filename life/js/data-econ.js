@@ -49,22 +49,39 @@ LS.ECON = (function(){
   const clamp = function(v,a,b){ return Math.max(a, Math.min(b, v)); };
 
   function incomeByIQ(iq){
-    if (iq < 90) return 4.2;
-    if (iq < 110) return 7.2;
-    if (iq < 120) return 11.5;
-    if (iq < 131) return 19;
+    if (iq < 90) return 3.2;
+    if (iq < 98) return 3.8;
+    if (iq < 108) return 6.5;
+    if (iq < 118) return 11;
+    if (iq < 131) return 20;
     return 34;
   }
 
+  /* 学历路线：18 岁这天你还什么都不是，先读书，读完才有工资 */
+  function planByIQ(iq){
+    if (iq >= 131) return { stage:'grad',    years:7, salary:34,  name:'读研' };
+    if (iq >= 118) return { stage:'college', years:4, salary:20,  name:'本科' };
+    if (iq >= 108) return { stage:'junior',  years:3, salary:11,  name:'大专' };
+    if (iq >= 98)  return { stage:'high',    years:0, salary:6.5, name:'高中毕业' };
+    return             { stage:'labor',   years:0, salary:3.2, name:'打零工' };
+  }
+
   function init(iq){
+    const p = planByIQ(iq);
     return {
-      cash: 1.2,
+      cash: 0.8,
       debt: 0,
-      active: 0,          // 主动收入（万/年）
+      active: 0,          // 主动收入（万/年）——18 岁必然是 0
       passive: 0,         // 被动收入（万/年）
-      expense: 2.4,       // 年支出（万）
+      expense: p.years ? 0.9 : 2.4,
       assets: [],         // { n, v, passive }
-      salary: incomeByIQ(iq),
+      salary: p.salary,
+      stage: p.stage,
+      eduName: p.name,
+      studyYears: p.years,
+      gradAge: 18 + Math.max(1, p.years),   // 不升学的人，也要先找一年工作
+      graduated: false,
+      conIQ: iq,
       log: []
     };
   }
@@ -78,11 +95,28 @@ LS.ECON = (function(){
   /* 每年结一次账 */
   function settle(e, age){
     if (!e) return null;
-    if (e.active === 0 && age >= 18) e.active = e.salary;
-    // 35 岁后主动收入见顶并缓慢下滑
-    if (age === 36) e.active = Math.round(e.salary * 0.92 * 10) / 10;
-    if (age === 45) e.active = Math.round(e.salary * 0.85 * 10) / 10;
-    if (age >= 60) e.active = Math.round(e.active * 0.6 * 10) / 10;
+    e.justGraduated = false;
+
+    if (!e.graduated) {
+      if (age >= e.gradAge) {
+        e.graduated = true;
+        e.justGraduated = true;
+        e.active = e.salary;
+        e.expense = Math.round((2.2 + e.salary * 0.04) * 10) / 10;
+      } else {
+        e.active = 0;             // 学生没有工资
+        e.expense = 0.9;
+      }
+    } else if (!e.active) {
+      e.active = e.salary;
+    }
+
+    if (e.graduated) {
+      // 35 岁后主动收入见顶并缓慢下滑；60 岁后只剩养老金
+      if (age === 36) e.active = Math.round(e.salary * 0.92 * 10) / 10;
+      if (age === 45) e.active = Math.round(e.salary * 0.85 * 10) / 10;
+      if (age >= 60) e.active = Math.round(e.salary * 0.45 * 10) / 10;
+    }
 
     let flow = e.active + e.passive - e.expense;
     e.cash = Math.round((e.cash + flow) * 10) / 10;
@@ -136,7 +170,7 @@ LS.ECON = (function(){
     return chips;
   }
 
-  return { init: init, settle: settle, apply: apply, netWorth: netWorth, incomeByIQ: incomeByIQ, clamp: clamp };
+  return { init: init, settle: settle, apply: apply, netWorth: netWorth, incomeByIQ: incomeByIQ, planByIQ: planByIQ, clamp: clamp };
 })();
 
 /* ================= 经济决策事件（智商够才给你选） ================= */
