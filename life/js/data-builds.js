@@ -26,10 +26,10 @@ LS.BUILDS = {
   levelUp: [
     { id:'grind', name:'苦修流', tag:'把时间换成数值',
       desc:'每天多练两个钟头。成长稳，但你需要放弃很多别的东西。',
-      mods:{ gainMul:1.25, regen:1.2 } },
+      mods:{ gainMul:1.25, regen:1.2, apBonus:1 } },
     { id:'combat', name:'实战流', tag:'在挨打里升级',
       desc:'专挑打不过的对手。经验和伤一起涨。',
-      mods:{ gainMul:1.5, sysScale:1.1 } },
+      mods:{ gainMul:1.5, sysScale:1.1, apBonus:1 } },
     { id:'insight', name:'顿悟流', tag:'一次想通顶十年',
       desc:'不练肌肉，练脑子。系统能力更强，属性涨得慢。',
       mods:{ sysScale:1.4 } }

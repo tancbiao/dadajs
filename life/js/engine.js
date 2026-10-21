@@ -260,6 +260,33 @@ window.LS = window.LS || {};
       return lines.join('\n');
     },
 
+    /* ================= 自发路线（研究出来的那条路） ================= */
+    advancePath(idea){
+      const st = this.state;
+      if (!LS.Paths) return null;
+      const def = LS.Paths.match(idea);
+      if (!def) return null;
+      st.paths = st.paths || {};
+      const cur = st.paths[def.id] || { stage: 0 };
+      if (cur.stage >= def.stages.length) return { def: def, stage: null, done: true };
+      const step = def.stages[cur.stage];
+      cur.stage += 1;
+      st.paths[def.id] = cur;
+
+      // 真改数值：收入结构、寿元、死亡率
+      if (step.econ && st.econ) {
+        if (step.econ.cash) st.econ.cash = Math.round((st.econ.cash + step.econ.cash) * 10) / 10;
+        if (step.econ.active) st.econ.active = Math.round((st.econ.active + step.econ.active) * 10) / 10;
+        if (step.econ.passive) st.econ.passive = Math.round((st.econ.passive + step.econ.passive) * 10) / 10;
+      }
+      if (step.life) st.flags.longevity = (st.flags.longevity || 0) + step.life;
+      if (step.risk) st.flags.riskMul = Math.min(st.flags.riskMul == null ? 1 : st.flags.riskMul, step.risk);
+      if (step.immortal) st.flags.immortal = 1;
+      st.timeline.push(st.age + '岁·' + def.n + '：' + step.n);
+      st.tags.push(def.n + '·' + step.n);
+      return { def: def, stage: step, index: cur.stage, total: def.stages.length };
+    },
+
     /* ================= 推动文明 ================= */
     civFields(){
       const st = this.state;
@@ -1133,6 +1160,8 @@ window.LS = window.LS || {};
       const st = this.state;
       const w = LS.worldById(st.worldId) || {};
       let r = 0.0025 + Math.max(0, st.age - 45) * 0.0014 + (w.danger || 1) * 0.0014;
+      if (st.flags.riskMul != null) r *= st.flags.riskMul;
+      if (st.flags.immortal) r *= 0.15;
       r -= this.dimVal('体') * 0.00012;
       r -= this.dimVal('运') * 0.00010;
       // 穿越熟练：刚落地那几年，你懂得怎么活。
@@ -1552,6 +1581,16 @@ window.LS = window.LS || {};
 
       if (st.flags.autoWin) { st.flags.autoWin = 0; ok = true; rerolled = true; }
 
+      // 时间循环：把一次失败倒回三秒前
+      if (!ok && st.flags.savepoint) {
+        st.flags.savepoint = 0;
+        st.rewinds = (st.rewinds || 0) + 1;
+        rerolled = true;
+        ok = this.rnd() < Math.min(0.95, p + 0.35);
+        if (!ok) ok = true;   // 读档至少保证这一次活着
+        st.timeline.push(st.age + '岁·时间倒回了三秒');
+      }
+
       if (!ok && st.system && st.system.mechanic === 'luck' && !st.usedReroll) {
         st.usedReroll = true; rerolled = true;
         ok = this.rnd() < Math.min(0.92, p + 0.25);
@@ -1725,9 +1764,10 @@ window.LS = window.LS || {};
     apMax(){
       const st = this.state;
       if (!st) return 3;
-      if (st.age < 45) return 3;
-      if (st.age < 60) return 2;
-      return 1;
+      const bonus = this.buildMods().apBonus || 0;
+      if (st.age < 45) return 3 + bonus;
+      if (st.age < 60) return 2 + bonus;
+      return 1 + bonus;
     },
 
     /* ---------- 事件之后 ---------- */
@@ -1819,6 +1859,10 @@ window.LS = window.LS || {};
       if (ok) {
         const eff = v.effect || {};
         const chips = this.applyEff({ attrs: eff.attrs || {}, res: eff.res || {}, hp: eff.hp || 0 });
+        const pathStep = this.advancePath(idea);
+        if (pathStep && pathStep.stage) {
+          chips.push({ text: pathStep.def.icon + ' ' + pathStep.def.n + '：' + pathStep.stage.n, good:true });
+        }
         b.mastery = clamp((b.mastery || 0) + 3, 0, 100);
         b.tier = LS.BRAIN.tierOf(b.mastery);
         st.customUses = st.customUses || [];

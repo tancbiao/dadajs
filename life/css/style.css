@@ -915,3 +915,20 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 .tc-routes span{
   font-size:10.5px; color:#6B5A8A; background:#F1EBFA; border-radius:8px; padding:2px 8px;
 }
+
+/* ================= 自发路线 ================= */
+.bd-mods{ font-size:10.5px; color:#7A6A8A; background:#F3EEF8; border-radius:8px; padding:3px 8px; margin-top:4px; align-self:flex-start; }
+.path-card{
+  margin-top:14px; padding:13px 14px; border-radius:16px;
+  background:linear-gradient(135deg,#F6F9FF,#FFF8F1); border:1px solid #DCE6F2;
+}
+.pc-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.pc-head b{ font-size:13px; color:#3F5F7F; }
+.pc-head span{ font-size:10.5px; color:#8FA3B8; }
+.path-row{ margin-top:10px; }
+.pr-top{ display:flex; justify-content:space-between; align-items:baseline; }
+.pr-top b{ font-size:12.5px; }
+.pr-top span{ font-size:10.5px; color:var(--muted); }
+.pr-bar{ height:5px; border-radius:5px; background:#E6EEF6; overflow:hidden; margin-top:5px; }
+.pr-bar i{ display:block; height:100%; background:linear-gradient(90deg,#8FB8E8,#4F79B8); }
+.pr-step{ font-style:normal; font-size:10.5px; color:#6B7F94; display:block; margin-top:5px; }

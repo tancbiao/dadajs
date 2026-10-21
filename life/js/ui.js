@@ -499,6 +499,7 @@ window.LS = window.LS || {};
       const tier = b.tier || LS.BRAIN.tierOf(b.mastery);
       const verdict = LS.BRAIN.verdict(b);
       const builds = G.builds();
+      const modsOf = this.buildModsText.bind(this);
       const selBuild = st.buildId || (builds[0] && builds[0].id);
 
       $('#stage').innerHTML = `
@@ -561,6 +562,7 @@ window.LS = window.LS || {};
               return `<button class="build ${selBuild===x.id?'on':''}" data-act="pickbuild" data-val="${x.id}">
                 <span class="bd-top"><b>${esc(x.name)}</b><i>${esc(x.tag)}</i></span>
                 <span class="bd-desc">${esc(x.desc)}</span>
+                <span class="bd-mods">${esc(modsOf(x))}</span>
               </button>`;
             }).join('')}
           </div>
@@ -794,6 +796,40 @@ window.LS = window.LS || {};
       this.actionsScreen();
     },
 
+    buildModsText(b){
+      const m = (b && b.mods) || {};
+      const out = [];
+      if (m.gainMul) out.push('成长 ×' + m.gainMul);
+      if (m.sysScale) out.push('系统能力 ×' + m.sysScale);
+      if (m.apBonus) out.push('行动力 +' + m.apBonus);
+      if (m.regen) out.push('回血 ×' + m.regen);
+      if (m.deathGain) out.push('死亡收益 ×' + m.deathGain);
+      if (m.decay) out.push('死法衰减 ' + m.decay + '^n');
+      return out.length ? out.join(' · ') : '没有额外加成';
+    },
+
+    pathCard(){
+      const G = LS.Game, st = G.state;
+      if (!LS.Paths) return '';
+      const defs = LS.Paths.all();
+      const mine = st.paths || {};
+      const rows = [];
+      defs.forEach(function(def){
+        const cur = mine[def.id];
+        if (!cur) return;
+        const step = def.stages[Math.min(cur.stage, def.stages.length) - 1];
+        const pct = Math.round(cur.stage / def.stages.length * 100);
+        rows.push('<div class="path-row">' +
+          '<div class="pr-top"><b>' + def.icon + ' ' + esc(def.n) + '</b><span>' + cur.stage + '/' + def.stages.length + '</span></div>' +
+          '<div class="pr-bar"><i style="width:' + pct + '%"></i></div>' +
+          '<i class="pr-step">' + esc(step ? step.n : '') + (cur.stage < def.stages.length ? '　下一步：' + esc(def.stages[cur.stage].n) : '　已走到尽头') + '</i>' +
+          '</div>');
+      });
+      if (!rows.length) return '';
+      return '<div class="path-card"><div class="pc-head"><b>你走出来的路</b><span>研究同一方向会自动推进</span></div>' +
+        rows.join('') + '</div>';
+    },
+
     civCard(){
       const G = LS.Game, st = G.state;
       if (!G.civAvailable()) return '';
@@ -868,6 +904,7 @@ window.LS = window.LS || {};
             }).join('')}
           </div>
 
+          ${this.pathCard()}
           ${this.civCard()}
 
           <div class="research-act">
