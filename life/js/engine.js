@@ -187,7 +187,7 @@ window.LS = window.LS || {};
         deaths:0, rewinds:0, usedReroll:false,
         log:[], timeline:[], history:[], childMemories:[],
         dimBonus:{战:0,智:0,体:0,社:0,运:0,财:0,灵:0},
-        made:0, aiUsed:0, devDone:0,
+        made:0, aiUsed:0, devDone:0, customActs:[],
         buildId:null, build:null, deathWays:{},
         startedAt: Date.now()
       };
@@ -211,7 +211,7 @@ window.LS = window.LS || {};
       // 童年节奏：1-9 无选择；10 岁开智；10-17 六次事件
       // 另外在 8/11/12/16 岁各插一场"学校生活"：10 岁前由学校替你决定，10 岁后你才有得选
       const evtAges = [10, 11, 13, 14, 15, 17];
-      const lifeAges = { 8:null, 11:'l_manga', 12:null, 16:null };
+      const lifeAges = { 8:null, 11:'l_manga', 12:null, 14:'l_novel', 16:null };
       this.plan = [];
       for (let age=1; age<=9; age++) {
         this.plan.push({ age:age, kind:'say' });
@@ -623,6 +623,7 @@ window.LS = window.LS || {};
       if (bb.cort) b.cortisol = clamp(b.cortisol + bb.cort, 0, 100);
       if (bb.focus) b.focus = clamp(b.focus + bb.focus, 5, 100);
       if (bb.mirror) b.mirror = clamp(b.mirror + bb.mirror, 5, 100);
+      if (bb.travel) { b.travel = clamp((b.travel || 0) + bb.travel, 0, 100); b.novel = (b.novel || 0) + 1; }
       if (bb.phy) b.phy = clamp(b.phy + bb.phy, 5, 100);
       if (bb.res) b.res = clamp(b.res + bb.res, 5, 100);
       // 年度生活修正（下一年发育时用）
@@ -739,13 +740,18 @@ window.LS = window.LS || {};
       const home = LS.SYS_HOME[sys.id];
       if (home && home !== 'modern' && this.rnd() < 0.66) target = home;
       else if (b.manga && this.rnd() < 0.5) target = this.rnd() < 0.5 ? 'ninja' : 'pirate';
-      else if (this.rnd() < 0.18) target = LS.pick(['isekai','xianxia','cyber','zombie'], this.rnd.bind(this));
+      else if (this.rnd() < 0.18 + (b.travel || 0) / 500) target = LS.pick(['isekai','xianxia','cyber','zombie'], this.rnd.bind(this));
       if (!target) return null;
 
       const w = LS.worldById(target);
       st.worldId = w.id;
       st.worldName = w.name;
-      const tierKey = b.iq >= 120 ? 'high' : b.iq >= 105 ? 'mid' : 'low';
+      const skill = b.travel || 0;
+      st.travelSkill = skill;
+      // 小说看得深，落地就知道哪条街不能走、哪种人会杀你
+      let tierKey = b.iq >= 120 ? 'high' : b.iq >= 105 ? 'mid' : 'low';
+      if (skill >= 60 && tierKey === 'low') tierKey = 'mid';
+      if (skill >= 60 && tierKey === 'mid') tierKey = 'high';
       const role = LS.pick(LS.TRAVEL_ROLE[tierKey], this.rnd.bind(this));
       st.travelRole = role;
       st.travelText = '你睁开眼，天花板不见了。\n空气里有' + (w.id === 'ninja' ? '铁锈和树叶' : w.id === 'pirate' ? '海盐和火药' : w.id === 'zombie' ? '铁锈和消毒水' : '一种说不上来的味道') + '。\n\n这里是' + w.name + '。你现在的身份：' + role + '。';
@@ -837,15 +843,58 @@ window.LS = window.LS || {};
       st.maxHp = this.calcMaxHp();
       if (st.hp > 0 && st.hp < st.maxHp) {
         const regen = (this.buildMods().regen || 1);
-        st.hp = Math.min(st.maxHp, st.hp + Math.round(st.maxHp * 0.07 * regen));
+        st.hp = Math.min(st.maxHp, st.hp + Math.round(st.maxHp * 0.12 * regen));
       }
 
-      const lifespan = Math.round(62 + this.dimVal('体') * 0.9 + (st.flags.longevity || 0));
+      const lifespan = this.lifespan();
       if (st.age > lifespan) {
-        this.endRun('寿终正寝：你在睡梦中安静地走完了一生');
+        this.endRun('寿终正寝：你在睡梦中安静地走完了一生', '寿终');
+        return null;
+      }
+
+      // 每年都有意外。活得越久、世界越危险，这个数字越大。
+      const risk = this.annualRisk();
+      if (this.rnd() < risk) {
+        const cause = this.rollAnnualDeath();
+        this.endRun('你 ' + st.age + ' 岁那年，' + cause, '意外');
         return null;
       }
       return this.buildYearQueue();
+    },
+
+    lifespan(){
+      const st = this.state;
+      let life = 62 + this.dimVal('体') * 0.9 + (st.flags.longevity || 0);
+      const w = st.worldId;
+      if (w === 'xianxia') {
+        // 修真：境界越高，寿元越长。这是"长生路"最直接的那一层回报。
+        life += 30 + this.dimVal('灵') * 2.2 + (st.level || 1) * 4;
+      } else if (w === 'isekai' || w === 'wow' || w === 'abyss') {
+        // 魔法/神秘侧：延寿一点点，不是长生
+        life += 12 + this.dimVal('灵') * 0.8;
+      } else if (w === 'cyber' || w === 'scifi') {
+        life += 8;
+      }
+      return Math.round(life);
+    },
+
+    annualRisk(){
+      const st = this.state;
+      const w = LS.worldById(st.worldId) || {};
+      let r = 0.0025 + Math.max(0, st.age - 45) * 0.0014 + (w.danger || 1) * 0.0014;
+      r -= this.dimVal('体') * 0.00012;
+      r -= this.dimVal('运') * 0.00010;
+      // 穿越熟练：刚落地那几年，你懂得怎么活。
+      const grace = (st.travelSkill || 0) / 20;
+      if (st.age - 18 < grace) r *= 0.4;
+      return clamp(r, 0.0012, 0.05);
+    },
+
+    rollAnnualDeath(){
+      const st = this.state;
+      const pool = (LS.ANNUAL_DEATH && (LS.ANNUAL_DEATH[st.worldId] || LS.ANNUAL_DEATH.modern))
+        || LS.ANNUAL_DEATH.modern;
+      return LS.pick(pool, this.rnd.bind(this));
     },
 
     /* 一年可以撞上不止一件事 */
@@ -1305,6 +1354,17 @@ window.LS = window.LS || {};
           ? ('你死了。\n然后，你睁开了眼睛。\n第 ' + st.deaths + ' 次。')
           : ('你死了。\n然后，你睁开了眼睛。\n第 ' + st.deaths + ' 次死亡，属性永久提升。') };
       }
+      // 濒死一次：普通人也不是一碰就死。这一生只给一次。
+      if (!opts.force && (st.flags.nearDeath || 0) < 2 && st.age < 58) {
+        st.flags.nearDeath = (st.flags.nearDeath || 0) + 1;
+        st.maxHp = this.calcMaxHp();
+        st.hp = Math.max(1, Math.round(st.maxHp * 0.12));
+        if (st.tags.indexOf('从鬼门关回来') < 0) st.tags.push('从鬼门关回来');
+        st.log.push({ age: st.age, kind:'bad', text:'你差点没挺过来。有人在最后一刻把你拽了回来。' });
+        return { revived:true, ended:false, near:true,
+                 text:'你眼前一黑，以为就这么结束了。\n\n再睁开眼时，你躺在一片白灯下面。有人叫了你的名字。\n\n（这样的运气，一生不会有第三次。）' };
+      }
+
       const rwKey = (st.system.res||[]).some(function(r){ return r.k === 'rw' || r.k === 'laps'; })
         ? (st.res.rw != null ? 'rw' : 'laps') : null;
       if (rwKey && st.res[rwKey] > 0) {
@@ -1357,8 +1417,10 @@ window.LS = window.LS || {};
       if (!feasible) reason = '这个用法越过了系统的上限——它要的是代价，你给的是空想。';
       else if (score >= 75) reason = '规则里确实留着这个口子，代价也算得过来。';
       else reason = '说得通，但执行起来会打折扣。';
+      const dim = this.guessDim(text);
       return { feasible: feasible, score: score, reason: '（离线审核）' + reason,
-               label: '', effect: { attrs:{}, res:{}, hp:0 }, source:'离线' };
+               label: this.shortAction(text, dim), dim: dim,
+               effect: { attrs:{}, res:{}, hp:0 }, source:'离线' };
     },
 
     async research(idea){
@@ -1411,6 +1473,10 @@ window.LS = window.LS || {};
         b.mastery = clamp((b.mastery || 0) + 3, 0, 100);
         b.tier = LS.BRAIN.tierOf(b.mastery);
         st.customUses = st.customUses || [];
+        const act = this.makeCustomAction(idea, v, eff);
+        st.customActs = (st.customActs || []).filter(function(x){ return x.dim !== act.dim; });
+        st.customActs.push(act);
+        const replaced = LS.FREE_ACTIONS.find(function(x){ return x.dim === act.dim; });
         const rec = { age: st.age, idea: idea, label: v.label || '', systemId: sys.id, systemName: sys.name };
         st.customUses.push(rec);
         LS.Store.addResearch(Object.assign({ author: st.name, world: st.worldName }, rec));
@@ -1418,10 +1484,12 @@ window.LS = window.LS || {};
         st.timeline.push(st.age + '岁·自创用法：' + (v.label || idea.slice(0, 10)));
         const text = '你把想法说了出来，系统沉默了 ' + (2 + Math.floor(this.rnd()*4)) + ' 秒。\n\n' +
           '然后它给了你回应：这条路，走得通。\n\n' + (v.reason || '') +
+          '\n\n你把它练成了一个固定的动作：【' + act.n + '】' +
+          (replaced ? '——从此它替代了你原来的【' + replaced.n + '】。' : '。') +
           '\n\n（掌握度 +3。这个用法已经写进系统库，别人也许会用上。）';
         const r = { title:'研究：成立', text:text, chips:chips, ok:true,
                     research:true, source:v.source, chance:Math.round(chance*100),
-                    label:v.label || '' };
+                    label:v.label || '', act: act, replaces: replaced ? replaced.n : '' };
         this.result = r;
         this.phase = 'actionResult';
         return r;
@@ -1440,6 +1508,59 @@ window.LS = window.LS || {};
       this.result = r;
       this.phase = 'actionResult';
       return r;
+    },
+
+    shortAction(idea, dim){
+      const pool = {
+        '战': ['磨刀','练手','找架打','负重'],
+        '智': ['推演','拆解','复盘','记盘'],
+        '体': ['跑圈','憋气','扛重','早睡'],
+        '社': ['听墙根','攒人情','组局','递烟'],
+        '运': ['押注','踩点','试手气','烧香'],
+        '财': ['压价','囤货','走量','记账'],
+        '灵': ['静坐','观息','抄书','守夜']
+      }[dim] || ['琢磨','试错','反复练'];
+      let h = 0;
+      const t = String(idea || '');
+      for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) % 9973;
+      return pool[h % pool.length];
+    },
+
+    guessDim(t){
+      t = String(t || '');
+      if (/(死|杀|战|打|斗|猎|刀|剑|攻|守|拳)/.test(t)) return '战';
+      if (/(钱|赚|卖|买|投资|生意|股|债|资产)/.test(t)) return '财';
+      if (/(人|朋友|说话|名|粉丝|社交|势力|招)/.test(t)) return '社';
+      if (/(跑|练|身体|睡|吃|体力|锻|熬)/.test(t)) return '体';
+      if (/(运|运气|抽|赌|概率|签|随机)/.test(t)) return '运';
+      if (/(修|心|静|灵|感|悟|冥想|魂)/.test(t)) return '灵';
+      return '智';
+    },
+
+    makeCustomAction(idea, v, eff){
+      const dim = (v && v.dim) || this.guessDim(idea);
+      const score = (v && v.score) || 60;
+      const power = clamp(3 + Math.round(score / 18), 3, 8);   // 基础行动是 2，自研更狠
+      const label = String((v && v.label) || idea || '自研').slice(0, 12);
+      if (!this._cid) this._cid = 0;
+      this._cid += 1;
+      return {
+        id: 'c_' + this._cid,
+        n: label,
+        icon: '✦',
+        custom: true,
+        dim: dim,
+        desc: '自研 · 你自己想出来的练法',
+        grow: { dim: dim, v: power },
+        eff: { hp: (eff && eff.hp) || 0 },
+        effF: { hp: -Math.round(power * 1.6) },
+        ok: ['你按自己研究出来的路子走了一遍。系统没有拦你。',
+             '这一次不是系统给的，是你自己想出来的。',
+             '你把那条路走通了，比想象中顺。'],
+        bad: ['你想得太理想了，代价比预计的重。',
+              '路子是对的，但你的手还跟不上。',
+              '你漏算了一步，白费了力气。']
+      };
     },
 
     /* 找死：一次行动力换一次死亡，同种死法收益指数递减 */
@@ -1505,7 +1626,12 @@ window.LS = window.LS || {};
     freeAction(id){
       const st = this.state;
       if (st.ap <= 0) return null;
-      const fa = LS.FREE_ACTIONS.find(function(x){ return x.id === id; });
+      let fa = null;
+      if (String(id).indexOf('c_') === 0) {
+        fa = (st.customActs || []).find(function(x){ return x.id === id; });
+      } else {
+        fa = LS.FREE_ACTIONS.find(function(x){ return x.id === id; });
+      }
       if (!fa) return null;
       const p = this.odds(fa.dim, 20 + Math.floor(st.turn*0.8));
       const ok = this.rnd() < p;
@@ -1767,6 +1893,46 @@ window.LS = window.LS || {};
       return Math.round(s);
     },
 
+    /* 结局尾话：同一套数值，落在不同世界、不同活法上，说法不一样 */
+    epilogue(){
+      const st = this.state;
+      const dims = this.dims();
+      const order = Object.keys(dims).sort(function(a,b){ return dims[b]-dims[a]; });
+      const top = order[0], low = order[order.length-1];
+      const net = st.econ ? LS.ECON.netWorth(st.econ) : 0;
+      const xian = st.worldId === 'xianxia';
+      const dead = st.endTag !== '寿终';
+      const lines = [];
+
+      if (xian) {
+        if (st.age > 120) lines.push('你活了 ' + st.age + ' 年。同辈的坟头草换了几十茬，你还在。');
+        else if (st.level >= 12) lines.push('你修到了第 ' + st.level + ' 层。山门换了三任掌门，你的名字还在碑上。');
+        else lines.push('你没能走完这条路。修真界每天都在埋人，你只是其中一个。');
+      } else if (st.worldId !== 'modern') {
+        if (dead) lines.push('这个世界没有给你第二次机会。你在这里的痕迹，很快会被风沙盖住。');
+        else lines.push('你从那个世界活着回来了，或者说，你终于在那里活成了本地人。');
+      } else {
+        if (net >= 300) lines.push('你留下了 ' + Math.round(net) + ' 万。房子、账户、一堆没拆的快递。');
+        else if (net < 0) lines.push('你走的时候还欠着 ' + Math.round(-net) + ' 万。催收电话打到了你儿子的手机上。');
+        else lines.push('你没留下什么钱，也没欠下什么。');
+      }
+
+      if (top === '财') lines.push('你这一生最擅长的是算账，最后连自己的葬礼都算过成本。');
+      else if (top === '战') lines.push('你打赢过很多次，也终于输了一次。');
+      else if (top === '智') lines.push('你想明白了不少事，但想明白并不等于能改变。');
+      else if (top === '社') lines.push('来送你的人比你想的多，只是没有一个是真正懂你的。');
+      else if (top === '灵') lines.push('你到最后都在看远处，没人知道你看见了什么。');
+      else if (top === '运') lines.push('你这一生运气不错，好到连你自己都觉得不好意思。');
+      else lines.push('你把身体练得很好，可身体终究是会到期的。');
+
+      if (low === '体' && st.age < 60) lines.push('你从来没有好好照顾过它。');
+      if (st.brain.iq >= 131) lines.push('你的脑子一直比周围人快半步，这让你既占便宜，也很难跟人走在一起。');
+      else if (st.brain.iq < 95) lines.push('很多事你没想明白就过去了，等想明白时，已经来不及。');
+      if (st.build && st.build.action === 'seekDeath') lines.push('你死过 ' + st.deaths + ' 次。到最后一次，你没有再睁开眼。');
+      if ((st.customActs||[]).length) lines.push('你自己琢磨出来的那套用法，被后来的人记在了系统库里。');
+      return lines.join('\n');
+    },
+
     rankOf(score){
       if (score >= 1200) return { t:'SSS · 传说', c:'#D99A2B', d:'你的名字会被写进某种"设定集"里。' };
       if (score >= 900) return { t:'SS · 传奇', c:'#C77B2B', d:'一个时代里，能出几个你这样的人？' };
@@ -1786,6 +1952,7 @@ window.LS = window.LS || {};
       st.endTag = reasonTag || (st.alive ? '寿终' : '死亡');
       st.score = this.computeScore();
       st.rank = this.rankOf(st.score);
+      st.epilogueText = this.epilogue();
 
       const b = st.brain;
       const path = {

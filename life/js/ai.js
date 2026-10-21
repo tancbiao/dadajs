@@ -218,9 +218,11 @@ window.LS = window.LS || {};
         '2. score：成立程度 0-100。明显超出机制上限的（无限、无代价、直接无敌）压低到 40 以下；有取舍、有代价、钻规则空子的给 60-90。',
         '3. reason：30-70 字，说明为什么成立或不成立，要具体到机制，不要说教。',
         '4. effect：如果成立，给出一次性的收益（attrs 用系统属性 key，数值保守 -3~+5；res 少量；hp 0~+10）。',
+        '5. dim：这个用法长期练下去，主要练哪一维，只能取 战/智/体/社/运/财/灵 之一。',
+        '6. action：把这个用法压成一个可以反复做的"动作名"，2-6 字，动词开头（例：磨刀、装死、听墙根、压价）。',
         '',
         '只输出 JSON：',
-        '{"feasible":true,"score":72,"reason":"","effect":{"label":"一句话命名这个用法","attrs":{},"res":{},"hp":0}}'
+        '{"feasible":true,"score":72,"dim":"战","action":"磨刀","reason":"","effect":{"label":"一句话命名这个用法","attrs":{},"res":{},"hp":0}}'
       ].join('\n');
 
       const txt = await this.chat([
@@ -234,7 +236,8 @@ window.LS = window.LS || {};
         feasible: !!j.feasible,
         score: Math.max(0, Math.min(100, parseInt(j.score, 10) || 50)),
         reason: String(j.reason || '').slice(0, 240),
-        label: String((j.effect && j.effect.label) || '').slice(0, 20),
+        label: String(j.action || (j.effect && j.effect.label) || '').slice(0, 20),
+        dim: ['战','智','体','社','运','财','灵'].indexOf(j.dim) >= 0 ? j.dim : null,
         effect: eff,
         source: 'AI'
       };

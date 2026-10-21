@@ -479,7 +479,13 @@ window.LS = window.LS || {};
           </div>
         </section>
 
-        ${st.travelText ? `<section class="travel-card"><b>世界变了</b><p>${nl2br(st.travelText)}</p></section>` : ''}
+        ${st.travelText ? `<section class="travel-card">
+          <b>世界变了</b><p>${nl2br(st.travelText)}</p>
+          ${(b.travel||0) > 0 ? `<div class="tv-skill">
+            <span>穿越熟练 ${Math.round(b.travel)}</span>
+            <i>${b.travel>=60?'你看过太多遍这种世界，落地就知道哪条街不能走。':b.travel>=30?'书里的东西帮上了一点忙，至少你认得那些规矩。':'你只是看过几眼，落地才发现全都不作数。'}</i>
+          </div>` : ''}
+        </section>` : ''}
 
         <section class="build-card">
           <div class="bc-head"><b>选择系统开发路线</b><span>同一个系统，练法不同</span></div>
@@ -508,6 +514,7 @@ window.LS = window.LS || {};
 
     async beginYear(){
       const G = LS.Game;
+      this.actionFeedback = null;
       $('#stage').innerHTML = `${this.topbar()}
         <section class="loading-card"><div class="spinner"></div><p>${G.state.age} 岁这年……</p></section>`;
       const ev = await G.startYear();
@@ -596,6 +603,26 @@ window.LS = window.LS || {};
       this.actionsScreen();
     },
 
+    /* 基础 6 个行动，被自研行动按维度顶替 */
+    actionList(){
+      const st = LS.Game.state;
+      const customs = st.customActs || [];
+      return LS.FREE_ACTIONS.map(function(base){
+        const own = customs.find(function(c){ return c.dim === base.dim; });
+        return own || base;
+      });
+    },
+
+    actionFeedbackHtml(){
+      const f = this.actionFeedback;
+      if (!f) return '';
+      return `<section class="action-fb ${f.ok?'ok':'bad'}">
+        <div class="af-head"><b>${esc(f.title)}</b><span>${f.left} 点行动力</span></div>
+        <p>${esc(f.text)}</p>
+        <div class="chips">${this.chipsHtml(f.chips)}</div>
+      </section>`;
+    },
+
     actionsScreen(){
       const G = LS.Game, st = G.state;
       const tier = st.brain.tier || LS.BRAIN.tierOf(0);
@@ -605,16 +632,17 @@ window.LS = window.LS || {};
         ${this.topbar()}
         ${this.panelBlock(true)}
         ${this.econBlock()}
+        ${this.actionFeedbackHtml()}
         <section class="panel">
           <div class="panel-head row">
             <h2>这一年，你还想做点什么</h2>
             <span class="ap">行动力 ${st.ap} / 3</span>
           </div>
           <div class="action-grid">
-            ${LS.FREE_ACTIONS.map(function(a){
-              return `<button class="action-btn" data-act="free" data-val="${a.id}" ${st.ap<=0?'disabled':''}>
+            ${this.actionList().map(function(a){
+              return `<button class="action-btn ${a.custom?'custom':''}" data-act="free" data-val="${a.id}" ${st.ap<=0?'disabled':''}>
                 <span class="ab-ico">${a.icon}</span>
-                <b>${a.n}</b>
+                <b>${a.n}${a.custom?'<em class="ab-tag">自研</em>':''}</b>
                 <i>${a.desc}</i>
               </button>`;
             }).join('')}
@@ -670,6 +698,7 @@ window.LS = window.LS || {};
           <div class="yc-age">${st.age} 岁 · ${esc(r.title||'找死')}</div>
           <p class="narration">${nl2br(r.text)}</p>
           <div class="chips">${this.chipsHtml(r.chips)}</div>
+          ${r.act ? `<div class="new-act"><b>✦ 新动作：${esc(r.act.n)}</b><i>练 ${esc(r.act.dim)} · 强度 ${r.act.grow.v}${r.replaces?' · 替代「'+esc(r.replaces)+'」':''}</i></div>` : ''}
           ${r.research ? `<p class="r-meta">审核：${esc(r.source || '本地规则')} · 成算 ${r.chance || 0}% · 掌握度 ${st.brain.mastery}%</p>` : ''}
           ${r.death && r.death.revived ? `<div class="revive">${nl2br(r.death.text)}</div>` : ''}
           <button class="btn btn-primary btn-block" data-act="backactions">继续</button>
@@ -736,7 +765,14 @@ window.LS = window.LS || {};
       const G = LS.Game;
       const r = G.freeAction(id);
       if (!r) return;
-      this.toast(r.text, 1700);
+      const fa = this.actionList().find(function(x){ return x.id === id; });
+      this.actionFeedback = {
+        ok: !!r.ok,
+        title: (fa ? fa.n : '行动') + (r.ok ? ' · 成了' : ' · 没成'),
+        text: r.text,
+        chips: r.chips || [],
+        left: r.ap
+      };
       if (G.state.ended) {
         if (!G.state.pathSaved) G.endRun(G.state.endReason || '你的一生结束了');
         this.ending(); return;
@@ -881,6 +917,7 @@ window.LS = window.LS || {};
           <div class="end-rank" style="color:${rank.c}">${rank.t}</div>
           <h1 class="end-title">${esc(st.name)} · ${st.age} 岁</h1>
           <p class="end-reason">${esc(st.endReason||'')}</p>
+          ${st.epilogueText ? `<p class="end-epi">${nl2br(st.epilogueText)}</p>` : ''}
           <div class="end-score"><b>${st.score||0}</b><span>人生评分</span></div>
           <p class="end-comment">${esc(rank.d)}</p>
           <div class="end-grid">

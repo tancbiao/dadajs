@@ -686,3 +686,45 @@ select.input{ appearance:none; }
 .research-act .btn{ margin-top:8px; }
 .research-act textarea[disabled]{ background:#F7F4F1; }
 .r-meta{ margin-top:10px; font-size:11px; color:#8A7CA8; text-align:center; }
+
+/* ================= 行动反馈 / 自研行动 ================= */
+.action-fb{
+  margin-top:10px; padding:12px 14px; border-radius:16px;
+  background:#FFFDFA; border:1px solid var(--line2); box-shadow:var(--shadow-s);
+  animation:cardIn .25s ease both;
+}
+.action-fb.ok{ border-left:3px solid #6FBF9A; }
+.action-fb.bad{ border-left:3px solid #E08D95; }
+.af-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.af-head b{ font-size:13px; }
+.af-head span{ font-size:10.5px; color:var(--muted); }
+.action-fb p{ font-size:12.5px; color:var(--ink2); line-height:1.75; margin-top:5px; }
+.action-fb .chips{ margin-top:8px; }
+
+.action-btn.custom{
+  border-color:var(--rose); background:linear-gradient(180deg,#FFFAFB,#FFF3F6);
+}
+.ab-tag{
+  font-style:normal; font-size:9.5px; color:#fff; background:var(--rose);
+  border-radius:6px; padding:1px 5px; margin-left:5px; vertical-align:2px;
+}
+
+.tv-skill{
+  margin-top:10px; padding-top:9px; border-top:1px solid rgba(255,255,255,.14);
+  display:flex; flex-direction:column; gap:3px;
+}
+.tv-skill span{ font-size:11px; color:#FFC96B; letter-spacing:1px; }
+.tv-skill i{ font-style:normal; font-size:11px; color:#E8CBB8; line-height:1.6; }
+
+.new-act{
+  margin-top:12px; padding:10px 12px; border-radius:13px;
+  background:#F4FBF7; border:1px dashed #9FD9C0;
+  display:flex; flex-direction:column; gap:2px;
+}
+.new-act b{ font-size:13px; color:#34795E; }
+.new-act i{ font-style:normal; font-size:11px; color:#4F8A72; }
+
+.end-epi{
+  font-family:"Songti SC","STSong",serif; font-size:13.5px; line-height:2;
+  color:#6C5F58; text-align:center; margin:2px 18px 14px;
+}
