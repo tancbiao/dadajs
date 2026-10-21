@@ -972,3 +972,6 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 .bounty-row span{ font-size:10.5px; color:#A0764A; }
 .bounty-row b{ font-size:17px; color:#8A5A2A; font-family:Georgia,serif; }
 .bounty-row i{ font-style:normal; font-size:10.5px; color:#A0764A; margin-left:auto; }
+
+.idea-actions{ display:flex; gap:8px; margin-top:8px; }
+.idea-actions .btn{ flex:1; margin-top:0; }

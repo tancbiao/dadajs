@@ -214,6 +214,8 @@ window.LS = window.LS || {};
           LS.Game.phase = 'actionResult';
           this.actionResultScreen(); break;
         }
+        case 'dostory':
+          await this.doStory(); break;
         case 'aiending':
           await this.doAiEnding(); break;
         case 'doresearch':
@@ -932,16 +934,21 @@ window.LS = window.LS || {};
 
           <div class="research-act">
             <div class="ra-head">
-              <b>🧠 研究一个用法</b>
+              <b>🧠 你想做什么</b>
               <span>${G.researchAvailable() ? '今年可用一次' : '今年已经研究过了'}</span>
             </div>
-            <p>自己写一句"我想这样用系统"。系统会判断它是否成立——但前提是，你的脑子得先想到。</p>
+            <p>可以研究一种新的系统用法，也可以直接写下你要去做的事（比如"去干四皇"）。两件事每年各一次。</p>
             <textarea id="ideaInput" class="input" rows="2" maxlength="80"
-              placeholder="例：把每次死亡换来的力量存起来，一次性用在最关键的时候"
+              placeholder="例：把死亡换来的力量存起来 / 去挑战四皇 / 找海军本部算账"
               ${G.researchAvailable()?'':'disabled'}></textarea>
-            <button class="btn btn-ghost btn-block" data-act="doresearch" ${G.researchAvailable()?'':'disabled'}>
-              ${G.researchAvailable() ? '提交给系统' : '明年再想'}
-            </button>
+            <div class="idea-actions">
+              <button class="btn btn-ghost" data-act="doresearch" ${G.researchAvailable()?'':'disabled'}>
+                ${G.researchAvailable() ? '研究用法' : '研究已用'}
+              </button>
+              <button class="btn btn-primary" data-act="dostory" ${G.storyAvailable()?'':'disabled'}>
+                ${G.storyAvailable() ? '直接去做' : '今年做过了'}
+              </button>
+            </div>
           </div>
 
           ${G.canSeekDeath() ? `          <div class="seek-act">
@@ -987,6 +994,19 @@ window.LS = window.LS || {};
         </section>
         ${this.panelBlock()}
       `;
+    },
+
+    async doStory(){
+      const G = LS.Game;
+      const ta = document.querySelector('#ideaInput');
+      const idea = ((ta && ta.value) || '').trim();
+      if (idea.length < 2) { this.toast('写下你要做什么，哪怕只有四个字'); return; }
+      const r = await G.narrativeStory(idea);
+      if (r && r.error) { this.toast(r.error); return; }
+      G.result = { title: r.title, text: r.text, chips: r.chips, ok: r.ok, death: r.death, story: true };
+      G.phase = r.death && r.death.ended ? 'end' : 'actionResult';
+      if (G.phase === 'end') { this.ending(); return; }
+      this.actionResultScreen();
     },
 
     async doResearch(){

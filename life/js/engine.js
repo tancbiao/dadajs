@@ -277,6 +277,71 @@ window.LS = window.LS || {};
       return lines.join('\n');
     },
 
+    /* ================= 主导剧情：直接去做一件大事 ================= */
+    storyAvailable(){
+      const st = this.state;
+      return !!(st && st.system) && st.storyYear !== st.age;
+    },
+
+    async narrativeStory(idea){
+      const st = this.state, w = LS.worldById(st.worldId);
+      idea = String(idea || '').replace(/\s+/g,' ').trim();
+      if (idea.length < 2) return { error:'写清楚你要做什么。' };
+      if (!this.storyAvailable()) return { error:'这一年你已经做过一件大事了。' };
+      if (st.ap < 1) return { error:'至少需要 1 点行动力。' };
+      st.storyYear = st.age;
+      st.ap -= 1;
+
+      const power = this.dimVal('战');
+      const iq = st.brain.iq || 100;
+      const text0 = idea;
+      let dc = 26, tier = '对手', reward = 1;
+      if (/(四皇|大将|七武海|影级|宗主|掌门|魔王|龙王|星海|古神)/.test(idea)) { dc = 48; tier = '顶尖存在'; reward = 6; }
+      else if (/(海军|叛忍|上忍|妖兽|首领|头目|干部|军团长)/.test(idea)) { dc = 36; tier = '强敌'; reward = 3; }
+
+      const p = Math.max(0.05, Math.min(0.92, 0.5 + (power - dc) / dc * 0.9 + (iq - 100) * 0.001));
+      const ok = this.rnd() < p;
+      const chips = [];
+
+      if (ok) {
+        const attrKey = (st.system.stats || []).find(function(x){ return x.dim === '战'; });
+        if (attrKey) st.attrs[attrKey.k] = Math.round(((st.attrs[attrKey.k] || 0) + 2 * reward) * 10) / 10;
+        st.tags.push('做过：' + text0.slice(0, 10));
+        if (st.worldId === 'pirate') {
+          const add = 20000000 * reward;
+          st.bounty = (st.bounty || 0) + add;
+          chips.push({ text:'悬赏金 +' + LS.fmtBounty(add) + '（现 ' + LS.fmtBounty(st.bounty) + '）', good:true });
+        }
+        if (st.econ) {
+          const cash = 20 * reward;
+          st.econ.cash = Math.round((st.econ.cash + cash) * 10) / 10;
+          chips.push({ text:'收获 ' + LS.ECON.money(cash, st.worldId), good:true });
+        }
+        st.brain.mastery = Math.min(100, (st.brain.mastery || 0) + 2);
+        chips.push({ text:'战力提升', good:true });
+        st.timeline.push(st.age + '岁·' + text0.slice(0, 14));
+        const text = '你去了。\n\n' + (tier === '顶尖存在'
+          ? '那不是一场势均力敌的战斗。你准备了很多年，把所有能算的都算了一遍。\n\n最后站着的人是你。'
+          : '比想象中顺利。你花了半炷香的时间，收尾很干净。') +
+          '\n\n从此' + w.name + '的人提起你，会先停一下。';
+        st.log.push({ age: st.age, kind:'good', text: text.replace(/\n+/g,' ') });
+        return { title:'你做到了：' + text0.slice(0, 10), text:text, chips:chips, ok:true, story:true, chance:Math.round(p*100) };
+      }
+
+      const dmg = tier === '顶尖存在' ? 45 : 22;
+      st.hp = Math.max(0, st.hp - dmg);
+      chips.push({ text:'气血 -' + dmg, good:false });
+      st.brain.cortisol = Math.min(100, (st.brain.cortisol || 0) + 4);
+      const text = '你去了。\n\n' + (tier === '顶尖存在'
+        ? '你连它的正面都没撑过。醒来时天已经黑了，肋骨断了两根，身上的钱被人摸走了。\n\n有些东西，不是靠勇气就能越过去的。'
+        : '你打得很吃力。最后被人拖了出来，刀口很深，血止不住。') +
+        '\n\n你活下来了，但这件事你暂时不会再提。';
+      st.log.push({ age: st.age, kind:'bad', text: text.replace(/\n+/g,' ') });
+      let death = null;
+      if (st.hp <= 0) death = this.handleDeath('你在挑战' + tier + '时没能活下来');
+      return { title:'你没做到：' + text0.slice(0, 10), text:text, chips:chips, ok:false, story:true, death:death, chance:Math.round(p*100) };
+    },
+
     /* ================= 自发路线（研究出来的那条路） ================= */
     advancePath(idea){
       const st = this.state;
