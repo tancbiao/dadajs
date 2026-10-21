@@ -192,6 +192,7 @@ window.LS = window.LS || {};
         slice: !!(LS.SLICE && opts && opts.slice),
         talentId: (opts && opts.talent) || null,
         talentCrisis: 0,
+        bounty: 0,
         lifeVar: Math.round((this.rnd() * 26 - 10)),   // 每个人天生寿元不同
         achievements: [],
         startedAt: Date.now()
@@ -225,10 +226,14 @@ window.LS = window.LS || {};
       // 童年节奏：1-9 无选择；10 岁开智；10-17 六次事件
       // 另外在 8/11/12/16 岁各插一场"学校生活"：10 岁前由学校替你决定，10 岁后你才有得选
       const evtAges = [10, 11, 13, 14, 15, 17];
-      const lifeAges = { 8:null, 9:null, 10:'l_hw_crash', 11:'l_manga', 12:null, 13:'l_smoke_hard', 14:'l_novel', 15:null, 16:null };
+      const lifeAges = { 8:null, 9:'l_expert_test', 10:'l_hw_crash', 11:'l_manga', 12:null, 13:'l_smoke_hard', 14:'l_novel', 15:null, 16:null };
       this.plan = [];
       // 1–5 岁：一张速写卡带过（学《人生重开模拟器》的节奏，别让玩家点九次）
-      this.plan.push({ age:5, kind:'batch', from:1, to:5 });
+      this.plan.push({ age:2, kind:'batch', from:1, to:2 });
+      for (let age=3; age<=5; age++) {
+        this.plan.push({ age:age, kind:'say' });
+        this.plan.push({ age:age, kind:'life', force: age===3 ? 'l_phone_feed' : (age===4 ? 'l_class_early' : null) });
+      }
       for (let age=6; age<=9; age++) {
         this.plan.push({ age:age, kind:'say' });
         if (lifeAges[age] !== undefined) this.plan.push({ age:age, kind:'life', force:lifeAges[age] });
@@ -383,6 +388,7 @@ window.LS = window.LS || {};
       if (st.deaths >= 5) add('💀', '死过很多次', '死亡 ' + st.deaths + ' 次，你还在。');
       if ((st.customActs || []).length) add('✦', '自创一门', '你想出了【' + st.customActs[0].n + '】，它替代了原本的活法。');
       if (st.flags.civilized) add('🌍', '文明推动者', '你用十年，把' + (st.civ ? st.civ.field : '某个学科') + '往前推了一格。');
+      if (st.flags.numb) add('🌫️', '浑浑噩噩的一生', '你把日子过成了一条直线：上班、回家、抽烟、睡觉，然后重复了 ' + (st.numbYears || 0) + ' 年。');
       if (st.worldId === 'xianxia' && st.age >= 150) add('⛰️', '长生', '在修真界活了 ' + st.age + ' 年。');
       if (st.worldId !== 'modern' && st.flags.stayed) add('🏙️', '没被带走', '全世界都穿越了，只有你留在了原地。');
       if (!list.length) add('🪨', '普通人', '没有奇迹，也没有塌方。你只是活过。');
@@ -838,7 +844,7 @@ window.LS = window.LS || {};
       }
       st.childMemories.push({ age:ev.age, title:ev.title, choice:o.n, tag:o.tag || '' });
 
-      this.result = { text:text, chips:[], title:ev.title, age:ev.age };
+      this.result = { text:text, chips:[], title:ev.title, age:ev.age, eff: o.brain || null };
       // 童年不告诉玩家数值，chips 留空
       this.phase = 'childResult';
       return this.result;
@@ -1163,7 +1169,7 @@ window.LS = window.LS || {};
       st.usedReroll = false;
       this.systemUsed = false;
 
-      LS.ECON.settle(st.econ, st.age);
+      LS.ECON.settle(st.econ, st.age, st.brain.cortisol);
       if (st.econ && st.econ.justBankrupt) {
         st.log.push({ age:st.age, kind:'bad', text:'债务滚到你再也还不动，最后做了债务重组。征信黑了，日子还得照样过。' });
       }
@@ -1225,6 +1231,7 @@ window.LS = window.LS || {};
       const w = LS.worldById(st.worldId) || {};
       let r = 0.0025 + Math.max(0, st.age - 45) * 0.0014 + (w.danger || 1) * 0.0014;
       if (st.flags.smoker && st.age >= 40) r += 0.0035;
+      if (st.worldId === 'pirate' && st.bounty > 0) r += Math.min(0.02, st.bounty / 2e8 * 0.004);
       if (st.flags.riskMul != null) r *= st.flags.riskMul;
       if (st.flags.immortal) r *= 0.15;
       r -= this.dimVal('体') * 0.00012;
@@ -1243,8 +1250,40 @@ window.LS = window.LS || {};
     },
 
     /* 一年可以撞上不止一件事 */
+    numbTick(){
+      const st = this.state;
+      if (!st.flags.numb) return null;
+      if (st.worldId !== 'modern') return null;   // 浑浑噩噩的现代剧情不要串到异世界
+      st.numbYears = (st.numbYears || 0) + 1;
+      const female = st.gender === 'f';
+      const pool = (female ? LS.NUMB_EVENTS_F : LS.NUMB_EVENTS) || LS.NUMB_EVENTS || [];
+      const ev = pool[(st.numbYears - 1) % Math.max(1, pool.length)];
+      // 男性更容易猝死；女性不会，只会慢慢坏下去
+      const deathP = female
+        ? (st.numbYears >= 8 ? 0.05 + st.numbYears * 0.008 : 0)
+        : (st.numbYears >= 5 ? 0.18 + st.numbYears * 0.02 : 0);
+      if (deathP && this.rnd() < deathP) {
+        const list = female ? (LS.NUMB_DEATH_F || []) : (LS.NUMB_DEATH || []);
+        const death = LS.pick(list.length ? list : ['你在睡梦里没有再醒过来。'], this.rnd.bind(this));
+        this.endRun(death, female ? '耗损' : '猝死');
+        return { ended:true };
+      }
+      // 家暴：麻木的人不会离开
+      if (female && st.numbYears >= 3 && this.rnd() < 0.3 && st.tags.indexOf('家暴') < 0) {
+        st.tags.push('家暴');
+        st.flags.abused = 1;
+        st.brain.cortisol = Math.min(100, st.brain.cortisol + 6);
+      }
+      if (ev && ev.tag && st.tags.indexOf(ev.tag) < 0) st.tags.push(ev.tag);
+      this.pending = { kind:'quiet', age:st.age, title:ev ? ev.t : '又一年', text:ev ? ev.x : '这一年没什么可说的。', auto:true, opts:[], source:'' };
+      this.phase = 'event';
+      return this.pending;
+    },
+
     buildYearQueue(){
       const st = this.state;
+      const nb = this.numbTick();
+      if (nb) return nb;
       this.queue = [];
       const self = this;
 
@@ -1256,7 +1295,7 @@ window.LS = window.LS || {};
       if (life) this.queue.push({ kind:'life', ev:life });
 
       // 第三件：经济决策（18 岁后，智力够才有选项；不够就是自动剧情）
-      if (st.age >= 18 && st.econ) {
+      if (st.age >= 18 && st.econ && st.worldId === 'modern') {
         const econ = this.pickEconEvent();
         if (econ) this.queue.push({ kind:'econ', ev:econ });
       }
@@ -1289,8 +1328,9 @@ window.LS = window.LS || {};
     pickLifeEvent(){
       const st = this.state, b = st.brain;
       // 到了别的世界，就别再演都市买房那一套了
-      if (st.worldId !== 'modern' && st.age >= 18 && LS.makeWorldEvent) {
-        if (this.rnd() < 0.85) return LS.makeWorldEvent(LS.worldById(st.worldId), this.rnd.bind(this));
+      if (st.worldId !== 'modern' && st.age >= 18) {
+        if (LS.makeWorldEvent) return LS.makeWorldEvent(LS.worldById(st.worldId), this.rnd.bind(this));
+        return null;
       }
       const used = this.usedLife;
       const iq = b.iq || this.estIQ();
@@ -1416,6 +1456,14 @@ window.LS = window.LS || {};
       const st = this.state, ev = this.pending;
       if (!ev || !ev.opts) return;
       const iq = st.brain.iq || this.estIQ();
+      // 皮质醇长期过高：人已经麻木了，看不见别的路
+      if (st.age >= 18 && st.brain.cortisol >= 82) {
+        st.numbCount = (st.numbCount || 0) + 1;
+        if (st.numbCount >= 3) st.flags.numb = 1;
+        ev.opts = (ev.opts || []).slice(0, 1);
+        ev.numb = true;
+        ev.limited = true;
+      }
       const n = LS.BRAIN.hasChoice(st.age, iq);
       if (ev.opts.length > n) {
         const self = this;
@@ -1443,7 +1491,7 @@ window.LS = window.LS || {};
     buildOfflineEvent(w, sys){
       const st = this.state;
       const self = this;
-      if (st.worldId !== 'modern' && LS.makeWorldEvent && this.rnd() < 0.5) {
+      if (st.worldId !== 'modern' && LS.makeWorldEvent) {
         const we = LS.makeWorldEvent(w, this.rnd.bind(this));
         if (we && we.opts && we.opts.length) return we;
       }
@@ -2087,7 +2135,9 @@ window.LS = window.LS || {};
       const st = this.state;
       if (st.ap <= 0) return null;
       let fa = null;
-      if (String(id).indexOf('c_') === 0) {
+      if (String(id).indexOf('sea_') === 0 && LS.SEA_ACTS) {
+        fa = LS.SEA_ACTS.find(function(x){ return x.id === id; });
+      } else if (String(id).indexOf('c_') === 0) {
         fa = (st.customActs || []).find(function(x){ return x.id === id; });
       } else {
         fa = LS.FREE_ACTIONS.find(function(x){ return x.id === id; });
@@ -2136,6 +2186,17 @@ window.LS = window.LS || {};
         }
       }
       if (ok && st.res.exp != null) st.res.exp += 8;
+      // 海贼世界：打出名声就有悬赏
+      if (ok && st.worldId === 'pirate') {
+        let add = 0;
+        if (id === 'sea_bounty') add = 300000 + Math.round(this.dimVal('战') * 90000);
+        else if (id === 'sea_sail') add = Math.round(this.rnd() * 150000);
+        else if (id === 'sea_crew') add = 120000 + Math.round(this.dimVal('社') * 20000);
+        if (add > 0) {
+          st.bounty = (st.bounty || 0) + add;
+          chips.push({ text:'悬赏金 +' + LS.fmtBounty(add) + '（现 ' + LS.fmtBounty(st.bounty) + '）', good:true });
+        }
+      }
       let text = ok ? LS.pick(fa.ok, this.rnd.bind(this)) : LS.pick(fa.bad, this.rnd.bind(this));
       st.log.push({ age:st.age, kind: ok?'good':'bad', text: text });
       let death = null;

@@ -60,11 +60,11 @@ LS.ECON = (function(){
   /* 学历路线：18 岁这天你还什么都不是，先读书，读完才有工资 */
   function planByIQ(iq, worldId){
     let p;
-    if (iq >= 131) p = { stage:'grad',    years:7, salary:34,  name:'读研' };
-    else if (iq >= 118) p = { stage:'college', years:4, salary:20,  name:'本科' };
-    else if (iq >= 108) p = { stage:'junior',  years:3, salary:11,  name:'大专' };
-    else if (iq >= 98)  p = { stage:'high',    years:0, salary:6.5, name:'高中毕业' };
-    else p = { stage:'labor', years:0, salary:3.2, name:'打零工' };
+    if (iq >= 131) p = { stage:'grad',    years:7, salary:14, name:'读研' };
+    else if (iq >= 118) p = { stage:'college', years:4, salary:8,  name:'本科' };
+    else if (iq >= 108) p = { stage:'junior',  years:3, salary:4.5, name:'大专' };
+    else if (iq >= 98)  p = { stage:'high',    years:0, salary:2,  name:'高中毕业' };
+    else p = { stage:'labor', years:0, salary:1.2, name:'打零工' };
     // 同一个学历，换个世界就是另一种身份
     if (LS.worldEduName) p.name = LS.worldEduName(p.stage, worldId || 'modern');
     return p;
@@ -112,8 +112,9 @@ LS.ECON = (function(){
   }
 
   /* 每年结一次账 */
-  function settle(e, age){
+  function settle(e, age, cort){
     if (!e) return null;
+    e.cort = Number(cort) || 0;
     e.justGraduated = false;
 
     if (!e.graduated) {
@@ -144,6 +145,14 @@ LS.ECON = (function(){
       const risk = Math.max(0, e.cash) * k.risk + Math.max(0, e.debt) * 0.02;  // 风险成本
       const relation = Math.max(0, e.linkMark || 0) * k.relation;   // 关系成本
       e.expense = Math.round((2.2 + identity + risk + relation) * 10) / 10;
+    }
+
+    // 消费汇：焦虑的人靠买东西麻痹自己，存不下钱
+    if (e.graduated) {
+      const cort = (e.cort || 0);
+      const young = age < 45 ? 1 : 0.6;
+      const consume = ((cort >= 65 ? 1.2 : 0.5) * young) * (e.cash > 0.8 ? 1 : 0);   // 月光：钱花完就停
+      e.expense = Math.round((e.expense + consume) * 10) / 10;
     }
 
     let flow = e.active + e.passive - e.expense;

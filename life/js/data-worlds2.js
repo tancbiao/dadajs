@@ -257,3 +257,41 @@ LS.makeWorldEvent = function(w, rnd){
     tag: '世界事件'
   };
 };
+
+
+/* 海贼世界专属行动：属性够了才敢出海 */
+LS.SEA_ACTS = [
+  { id:'sea_sail', n:'出海', dim:'战', icon:'⛵', desc:'把船开出去', iqMin:0, need:18,
+    ok:['你第一次自己掌舵。浪把船顶起来又摔下去，你站住了。','你在海上待了半个月，回来时晒黑了一层。'],
+    bad:['你遇上逆风，漂了两天才回来。','船底漏了，你舀了一夜的水。'],
+    grow:{ dim:'战', v:3 }, eff:{hp:-4}, effF:{hp:-14} },
+  { id:'sea_bounty', n:'接悬赏', dim:'财', icon:'💰', desc:'去领悬赏令上的活', iqMin:0, need:16,
+    ok:['你解决了一个小角色，拿着人头去换了钱。','悬赏令上的名字被你划掉了一个。'],
+    bad:['目标比悬赏令上写的强得多，你差点没回来。','你被人抢了先，白跑一趟。'],
+    grow:{ dim:'财', v:3 }, eff:{cash:2}, effF:{hp:-12} },
+  { id:'sea_crew', n:'找草帽一伙', dim:'社', icon:'🏴‍☠️', desc:'去打听那群人的下落', iqMin:0, need:20,
+    ok:['你在港口听到了他们的消息。有人说他们刚离开这座岛。','你远远看见了那面草帽旗，没敢靠太近。'],
+    bad:['你打听错了方向，跑了一座空岛。','你被当成海军的探子，挨了一顿。'],
+    grow:{ dim:'社', v:3 }, eff:{tags:['见过草帽']}, effF:{hp:-6} }
+];
+
+/* 海贼世界：悬赏金 */
+LS.fmtBounty = function(v){
+  v = Number(v) || 0;
+  if (v >= 1e8) return (v / 1e8).toFixed(2) + ' 亿';
+  if (v >= 1e4) return Math.round(v / 1e4) + ' 万';
+  return String(Math.round(v));
+};
+LS.BOUNTY_TIERS = [
+  { at:0,        n:'无名之辈' },
+  { at:1000000,  n:'被通缉' },
+  { at:30000000, n:'小有名气' },
+  { at:100000000,n:'一方之患' },
+  { at:500000000,n:'四皇候选' },
+  { at:1500000000,n:'传说' }
+];
+LS.bountyTier = function(v){
+  let out = LS.BOUNTY_TIERS[0];
+  LS.BOUNTY_TIERS.forEach(function(t){ if (v >= t.at) out = t; });
+  return out;
+};

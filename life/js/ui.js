@@ -186,9 +186,10 @@ window.LS = window.LS || {};
           LS.Game.chooseBuild(val); this.awakenScreen(); break;
         case 'seekdeath':
           this.doSeekDeath(); break;
-        case 'seekway':
+        case 'seekway': {
+          const wid = (el && el.getAttribute && el.getAttribute('data-val')) || val;
           this.closeSheet();
-          this.doSeekDeath(val); break;
+          this.doSeekDeath(wid); break; }
         case 'backactions':
           this.actionsScreen(); break;
         case 'enterworld':
@@ -274,8 +275,7 @@ window.LS = window.LS || {};
                 <span class="tc-ico">${t.icon}</span>
                 <b>${esc(t.n)}</b>
                 <i>${esc(t.desc)}</i>
-                <em class="tc-warn">只有高知 / 放养的父母才养得住</em>
-              </button>`).join('')}
+                </button>`).join('')}
             </div>
           </div>
           <div class="form-row">
@@ -353,6 +353,7 @@ window.LS = window.LS || {};
 
     childScreen(){
       const G = LS.Game, st = G.state;
+      const effOf = this.brainEffectText.bind(this);
       const it = G.pending;
       if (!it) { this.game(); return; }
 
@@ -436,6 +437,7 @@ window.LS = window.LS || {};
         <section class="year-card result">
           <div class="yc-age">${r.age} 岁 · ${esc(r.title)}</div>
           <p class="narration">${nl2br(r.text)}</p>
+          ${r.eff ? `<div class="result-eff"><b>发育影响</b>${esc(this.brainEffectText(r.eff))}</div>` : ''}
           <button class="btn btn-primary btn-block" data-act="childnext">继续</button>
         </section>
         ${this.childMemories()}
@@ -882,11 +884,12 @@ window.LS = window.LS || {};
       const customs = st.customActs || [];
       return LS.FREE_ACTIONS.map(function(base){
         const own = customs.find(function(c){ return c.dim === base.dim; });
-        return own || base;
+        // 自研要 IQ≥100 才用得上；否则退回原来的行动，别让格子空掉
+        const picked = (own && iq >= 100) ? own : base;
+        return picked;
       }).filter(function(a){
-        const need = a.custom ? 100 : (a.iqMin || 0);
-        return iq >= need;
-      });
+        return iq >= (a.iqMin || 0);
+      }).concat(st.worldId === 'pirate' && LS.SEA_ACTS ? LS.SEA_ACTS.filter(function(a){ return LS.Game.dimVal(a.dim) >= a.need; }) : []);
     },
 
     actionFeedbackHtml(){
@@ -1059,11 +1062,28 @@ window.LS = window.LS || {};
       this.actionsScreen();
     },
 
+    systemSheet(sys){
+      if (!sys) return;
+      const st = LS.Game.state;
+      const stats = (sys.stats || []).map(function(s){ return '<div class="ss-stat"><span>' + esc(s.n) + '</span><b>' + Math.round((st.attrs[s.k]||0)*10)/10 + '</b><i>' + esc(s.dim) + '</i></div>'; }).join('');
+      const acts = (sys.acts || []).map(function(a){ return '<div class="ss-act"><b>【' + esc(a.n) + '】</b>' + esc(a.d || '') + '</div>'; }).join('');
+      this.sheet('<div class="sheet-head"><b>新系统诞生</b><button class="icon-btn" data-act="closesheet">✕</button></div>' +
+        '<div class="ss-card"><div class="ss-ico">' + (sys.icon||'✦') + '</div>' +
+        '<h2>' + esc(sys.name) + '</h2>' +
+        '<p class="ss-tag">「' + esc(sys.tagline||'') + '」</p>' +
+        '<p class="ss-desc">' + esc(sys.desc||'') + '</p>' +
+        '<div class="ss-stats">' + stats + '</div>' +
+        (acts ? '<div class="ss-acts">' + acts + '</div>' : '') +
+        '<p class="ss-note">它已经写进系统库，别人也可能抽到。</p></div>' +
+        '<button class="btn btn-primary btn-block" data-act="closesheet">收下</button>');
+    },
+
     async doSystem(){
       const G = LS.Game;
       const btn = $('[data-act="sysact"]');
       if (btn) { btn.disabled = true; btn.textContent = '……'; }
       const r = await G.systemAction();
+      if (r && r.system) { this.systemSheet(r.system); return; }
       if (r && r.text) {
         this.actionFeedback = {
           ok: !!(r.chips && r.chips.length),
@@ -1150,6 +1170,7 @@ window.LS = window.LS || {};
             <b>经济面板</b>
             <span class="${LS.ECON.netWorth(e) < 0 ? 'neg' : ''}">净资产 ${M(LS.ECON.netWorth(e))}</span>
           </div>
+          ${this.bountyRow()}
           <div class="ep-grid">
             <div><span>学历</span><b>${esc(e.eduName || '—')}${e.graduated ? '（已毕业）' : '（在读）'}</b></div>
             <div><span>${e.graduated ? '状态' : '毕业时间'}</span><b>${e.graduated ? '已工作' : (e.gradAge - st.age) + ' 年后'}</b></div>
@@ -1164,9 +1185,26 @@ window.LS = window.LS || {};
       `;
     },
 
+    brainEffectText(bb){
+      if (!bb) return '';
+      const map = [['ndi','神经元'],['iq','智力'],['cort','皮质醇'],['focus','专注'],['mirror','镜像'],['phy','体能'],['sleep','睡眠']];
+      return map.filter(function(x){ return bb[x[0]]; }).map(function(x){
+        const v = bb[x[0]];
+        return x[1] + (v > 0 ? ' +' : ' ') + (Math.round(v * 10) / 10);
+      }).join(' · ');
+    },
+
     sciHtml(sci){
       if (!sci) return '';
       return '<details class="sci"><summary>🔬 科学解释</summary><p>' + esc(sci) + '</p></details>';
+    },
+
+    bountyRow(){
+      const st = LS.Game.state;
+      if (!st || st.worldId !== 'pirate' || !LS.fmtBounty) return '';
+      const v = st.bounty || 0;
+      const tier = LS.bountyTier ? (LS.bountyTier(v) || {}).n : '';
+      return '<div class="bounty-row"><span>悬赏金</span><b>' + LS.fmtBounty(v) + '</b><i>' + esc(tier) + '</i></div>';
     },
 
     chipsHtml(chips){
