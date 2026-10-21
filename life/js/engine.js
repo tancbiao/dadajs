@@ -1,0 +1,1832 @@
+/* 人生模拟器 · 核心引擎 v2
+ * 新规则：
+ *  - 18 岁前固定在现代都市，开局不选世界
+ *  - 1-9 岁没有选择权（家长安排），10 岁开智后才有选项
+ *  - 选项数量由智商决定（<120 两项，≥120 三项，≥131 多一条系统骚操作）
+ *  - 每年可触发多起事件；选项不告诉玩家加什么属性
+ *  - 18 岁结算神经发育与智力，觉醒系统，看系统背景决定是否穿越
+ *  - 18 岁后解锁经济面板：主动收入 / 被动收入 / 负债，智商决定你有没有决定权
+ */
+window.LS = window.LS || {};
+
+(function(){
+  const clamp = function(v,a,b){ return Math.max(a, Math.min(b, v)); };
+
+  function mulberry32(a){
+    return function(){
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
+
+  /* 童年播报：严格按年龄分桶，1 岁不会出现"周末三个班" */
+  const CHILD_LINES = {
+    '1': [
+      '你出生了。世界没有为你停下来，但有一两个人，在你面前忽然不会说话了。',
+      '你在产房的第一声哭被雨声盖住了一半。',
+      '家里为了你的名字争了三天，最后一笔落在族谱上，谁也不太满意。',
+      '你满月那天，家里来了很多人，每个人都说你像爸爸。'
+    ],
+    '2-3': [
+      '你走得还不稳，摔了就自己爬起来，没人在后面扶。',
+      '你开口说的第一个词，被家里人反复学了很久。',
+      '你开始认人。陌生人一抱就哭，只认那两张脸。',
+      '你把抽屉里的东西一件件搬出来，再一件件塞回去。'
+    ],
+    '4-5': [
+      '你上了幼儿园。第一天在门口哭了很久，后来发现里面比家里有意思。',
+      '你开始记事。记忆里第一个画面，是午睡室的天花板。',
+      '你有了第一个朋友，也有了第一个讨厌的人。',
+      '你学会了自己穿鞋，虽然左右总是反的。'
+    ],
+    '6': [
+      '你背上书包，第一次走进校门。教室里的桌子比幼儿园高，椅子腿是不平的。',
+      '开学第一天，老师让每个人站起来说自己的名字。你说了，声音小得只有同桌听见。',
+      '你被分到最后一排靠窗的位置，窗外有一棵树，风一吹就响。'
+    ],
+    '7-9': [
+      '你升了年级。书包比你的背还宽。',
+      '你第一次考了满分，那张卷子被贴在墙上，贴到纸都黄了。',
+      '你在路上捡到一枚硬币，攥了一路，最后买了一根冰棍。',
+      '你开始知道，家里并不像你以为的那么宽裕。'
+    ],
+    '10-12': [
+      '你升了高年级。作业本从薄变厚，课间从十分钟变成"别出去"。',
+      '你第一次熬夜，不是为了学习，是为了一件说不清的事。',
+      '你开始注意到这座城市里那些大人不愿解释的东西。',
+      '你学会了一件事：有些问题不问，日子会好过一点。'
+    ],
+    '13-15': [
+      '你上了初中。身高长得很快，脾气也是。',
+      '你和家里吵了一架，摔了门，然后在楼道上坐了很久。',
+      '你开始有自己的秘密，锁在抽屉里，钥匙随身带着。',
+      '你第一次意识到，成绩会把人和人分成两列。'
+    ],
+    '16-17': [
+      '你上了高中。时间被切成了一节一节，每节四十五分钟。',
+      '你在课桌上刻了一个字，毕业时才发现已经被磨平了。',
+      '你开始想以后。想不清楚，但停不下来。',
+      '有一天你在天台上站了很久，忽然意识到：十八岁快到了。'
+    ]
+  };
+
+  function childBucket(age){
+    if (age <= 1) return '1';
+    if (age <= 3) return '2-3';
+    if (age <= 5) return '4-5';
+    if (age === 6) return '6';
+    if (age <= 9) return '7-9';
+    if (age <= 12) return '10-12';
+    if (age <= 15) return '13-15';
+    return '16-17';
+  }
+
+  /* 家长安排（1-9 岁，玩家无选择权）——每条都标了适用年龄 */
+  const UPBRINGING = {
+    intellectual: [
+      { a:[1,3], t:'书架最下面一层专门给你空出一格，放你的绘本。' },
+      { a:[1,3], t:'你半夜哭，爸爸抱着你在客厅走了四十分钟，一边走一边跟你说话。' },
+      { a:[4,6], t:'你把家里的收音机拆了，他们没骂你，还陪你装了回去。' },
+      { a:[7,9], t:'你问"为什么天是蓝的"，爸爸放下手里的活，给你讲了半小时。' },
+      { a:[7,9], t:'周末去的是科技馆，不是商场。' }
+    ],
+    anxious: [
+      { a:[1,3], t:'你刚会坐，妈妈就在放英语儿歌，说"语感要从小养"。' },
+      { a:[1,3], t:'你哭了十分钟，她看了眼手表，说"不能一哭就抱，会惯坏"。' },
+      { a:[4,4], t:'四岁那年，你被送去学钢琴。老师说你有天赋，妈妈说那就每天两小时。' },
+      { a:[5,6], t:'钢琴课还在继续。每天两小时，指尖按得发红，你数着节拍器等它结束。' },
+      { a:[7,9], t:'周末三个班。你在车上吃午饭，字写得歪歪扭扭。' },
+      { a:[7,9], t:'你考了 98 分，妈妈问那 2 分扣在哪。' }
+    ],
+    permissive: [
+      { a:[1,3], t:'你在地上爬，抓到什么啃什么，没人拦。' },
+      { a:[1,3], t:'哭了就抱，抱起来又放下——他们实在太困了。' },
+      { a:[4,6], t:'你整天在小区里跑，膝盖上的伤没好过。' },
+      { a:[7,9], t:'放学自己回家，钥匙挂在脖子上。' }
+    ],
+    absent: [
+      { a:[1,3], t:'你被送回老家，跟着爷爷奶奶。视频里的妈妈总是很模糊。' },
+      { a:[1,3], t:'你发烧那晚，是奶奶背着你走了两里路去诊所。' },
+      { a:[4,6], t:'家长会没人来，你坐在最后一排，假装不在意。' },
+      { a:[7,9], t:'你学会了自己签字，笔迹练得很像。' },
+      { a:[7,9], t:'过年他们回来七天，走的时候你躲在被子里没出来。' }
+    ],
+    pragmatic: [
+      { a:[1,3], t:'邻居家孩子会背唐诗了，妈妈回来念叨了一路。' },
+      { a:[1,3], t:'你被抱着在楼下晒太阳，谁路过都要捏一下你的脸。' },
+      { a:[4,6], t:'邻居家孩子报了班，妈妈第二天也给你报了。' },
+      { a:[7,9], t:'爸爸说：老师说的准没错，你听老师的。' },
+      { a:[7,9], t:'饭桌上聊得最多的是别人家孩子。' }
+    ],
+    strict: [
+      { a:[1,3], t:'你哭得久了，门会被关上，让你"哭够了再说"。' },
+      { a:[1,3], t:'你伸手去抓桌上的杯子，被拍了一下手背。' },
+      { a:[4,6], t:'你摔碎了一个碗，被罚站到半夜。' },
+      { a:[7,9], t:'考了第三名，父亲问：为什么不是第一。' },
+      { a:[7,9], t:'你藏了一本日记，藏在床板下面，还是被翻出来了。' }
+    ]
+  };
+
+  const Game = {
+    state:null,
+    plan:[],
+    idx:0,
+    phase:'idle',
+    pending:null,
+    queue:[],
+    result:null,
+    rnd:Math.random,
+    usedEvents:[],
+    usedChild:[],
+    usedLife:[],
+    systemUsed:false,
+    aiUsed:0,
+    lastAiError:'',
+    pathRecord:null,
+
+    /* ================= 新游戏 ================= */
+    newGame(opts){
+      opts = opts || {};
+      const seed = opts.seed != null ? opts.seed : Math.floor(Math.random()*1e9);
+      this.rnd = mulberry32(seed);
+
+      // 18 岁前固定现代都市；只有回放旧路径时才允许别的世界
+      const startWorld = opts.worldId || 'modern';
+      const world = LS.worldById(startWorld);
+
+      const maker = opts.maker != null ? !!opts.maker : (this.rnd() < 0.06);
+      const gender = opts.gender || (this.rnd() < 0.5 ? 'm' : 'f');
+      const names_m = ['林决','陈砚','周野','顾南','沈既定','江迟','许照','程野'];
+      const names_f = ['林晚','苏离','周宁','顾青','沈见月','江眠','许星','程雾'];
+      const name = opts.name || LS.pick(gender==='f'?names_f:names_m, this.rnd.bind(this));
+
+      const brain = LS.BRAIN.init(this.rnd.bind(this));
+
+      const st = {
+        id: LS.Store.uid('run_'),
+        seed: seed,
+        replay: !!opts.replay,
+        worldId: world.id,
+        worldName: world.name,
+        systemId: opts.systemId || null,
+        maker: maker,
+        name: name,
+        gender: gender,
+        birthplace: LS.pick(world.places, this.rnd.bind(this)),
+        age: 0,
+        hp: 100, maxHp: 100,
+        child: { hp:8, mind:8, guts:8, soci:8, study:8, home:8, luck:8 },
+        brain: brain,
+        attrs:{}, res:{}, econ:null,
+        level:1, expNeed:100, freePts:0,
+        tags:[], flags:{},
+        ap:3, turn:0, year:1,
+        alive:true, ended:false, endReason:'',
+        deaths:0, rewinds:0, usedReroll:false,
+        log:[], timeline:[], history:[], childMemories:[],
+        dimBonus:{战:0,智:0,体:0,社:0,运:0,财:0,灵:0},
+        made:0, aiUsed:0, devDone:0,
+        buildId:null, build:null, deathWays:{},
+        startedAt: Date.now()
+      };
+      this.state = st;
+      this.aiUsed = 0;
+      this.usedEvents = [];
+      this.usedChild = [];
+      this.usedLife = [];
+      this._lastLine = '';
+      this.eduAge = -1;
+      this.eduLines = [];
+      this.eduLinesShown = -1;
+      this.eduNew = null;
+      this.eduReplay = false;
+      this.systemUsed = false;
+      this.result = null;
+      this.queue = [];
+      this.pathRecord = null;
+      this.lastAiError = '';
+
+      // 童年节奏：1-9 无选择；10 岁开智；10-17 六次事件
+      // 另外在 8/11/12/16 岁各插一场"学校生活"：10 岁前由学校替你决定，10 岁后你才有得选
+      const evtAges = [10, 11, 13, 14, 15, 17];
+      const lifeAges = { 8:null, 11:'l_manga', 12:null, 16:null };
+      this.plan = [];
+      for (let age=1; age<=9; age++) {
+        this.plan.push({ age:age, kind:'say' });
+        if (lifeAges[age] !== undefined) this.plan.push({ age:age, kind:'life', force:lifeAges[age] });
+      }
+      for (let age=10; age<=17; age++) {
+        this.plan.push({ age:age, kind: evtAges.indexOf(age) >= 0 ? 'event' : 'say' });
+        if (lifeAges[age] !== undefined) this.plan.push({ age:age, kind:'life', force:lifeAges[age] });
+      }
+      this.plan.push({ age:18, kind:'awaken' });
+
+      this.idx = 0;
+      this.phase = 'child';
+      st.age = 1;
+      this.buildChildItem();
+      return st;
+    },
+
+    /* ================= 系统开发路线 ================= */
+    buildMods(){
+      const b = this.state && this.state.build;
+      return (b && b.mods) || {};
+    },
+
+    builds(){
+      const st = this.state;
+      if (!st || !st.system) return [];
+      if (!LS.buildsFor) return [];
+      return LS.buildsFor(st.system.mechanic);
+    },
+
+    chooseBuild(id){
+      const st = this.state;
+      const list = this.builds();
+      const b = list.find(function(x){ return x.id === id; }) || list[0];
+      st.buildId = b.id;
+      st.build = b;
+      return b;
+    },
+
+    canSeekDeath(){
+      const st = this.state;
+      if (!st || !st.system) return false;
+      if (st.system.mechanic !== 'deathReturn') return false;
+      return !!(st.build && st.build.action === 'seekDeath');
+    },
+
+    /* ================= 童年 ================= */
+    estIQ(){
+      const b = this.state.brain;
+      if (b.iq) return b.iq;
+      const copy = Object.assign({}, b, { log: b.log });
+      return LS.BRAIN.finalIQ(copy);
+    },
+
+    childItem(){ return this.pending; },
+
+    /* 每年发育结算（年龄结束时调用） */
+    develop(age){
+      const st = this.state;
+      if (st.devDone >= age) return;
+      const b = st.brain;
+      const mods = b.mods || {};
+      LS.BRAIN.yearDevelop(b, age, mods);
+      b.mods = null;
+      st.devDone = age;
+    },
+
+    /* 学校生活事件（童年版）：10 岁前由学校替你决定，10 岁后才给你选 */
+    buildChildLife(step){
+      const st = this.state;
+      const used = this.usedLife;
+      let pool;
+      if (step.force) {
+        pool = LS.LIFE_EVENTS.filter(function(e){ return e.id === step.force; });
+      } else {
+        const okWhen = function(e){ return !e.when || e.when !== 'private' || st.brain.school.id.indexOf('private') === 0; };
+        pool = LS.LIFE_EVENTS.filter(function(e){
+          return step.age >= e.minAge && step.age <= e.maxAge && (e.opts||[]).length && okWhen(e) && used.indexOf(e.id) < 0;
+        });
+        if (!pool.length) pool = LS.LIFE_EVENTS.filter(function(e){
+          return step.age >= e.minAge && step.age <= e.maxAge && (e.opts||[]).length && okWhen(e);
+        });
+      }
+      if (!pool.length) { this.idx++; return this.buildChildItem(); }
+
+      const tpl = pool[Math.floor(this.rnd()*pool.length)];
+      used.push(tpl.id);
+      // 私立转公办：学校真的换了，后面的课间/压力描述才不会前后矛盾
+      if (tpl.id === 'l_private_math') {
+        const pub = LS.BRAIN.SCHOOLS.find(function(s){ return s.id === 'public_plain'; });
+        if (pub) { st.brain.school = pub; st.tags.push('转学'); }
+      }
+      const ev = this.normalizeOffline(tpl);
+      const self = this;
+
+      let opts = (ev.opts || []).map(function(o){
+        return { n:o.n, s:o.s, f:o.f, res:o.s, dim:o.dim, dc:o.dc, eff:o.eff || {},
+                 brain: (o.eff && o.eff.brain) || null, risk: o.risk || null };
+      });
+      if (!opts.length) { this.idx++; return this.buildChildItem(); }
+
+      // 10 岁前：没有选择权
+      if (step.age < 10) {
+        const o = opts[0];
+        if (o.brain) this.applyBrain(o.brain);
+        const text = '【' + ev.title + '】\n\n' + ev.text + '\n\n' + (o.s || '');
+        this.pending = { kind:'say', age:step.age, text:text, title:ev.title, eduLines: this._showEduLines || [] };
+        st.log.push({ age:step.age, kind:'say', text:text });
+        this.phase = 'child';
+        return this.pending;
+      }
+
+      const n = LS.BRAIN.hasChoice(step.age, this.estIQ());
+      if (opts.length > n) {
+        opts = opts.map(function(o){ return { o:o, r:self.rnd() }; })
+                   .sort(function(a,b){ return a.r - b.r; })
+                   .slice(0, n).map(function(x){ return x.o; });
+      }
+      this.pending = {
+        kind:'event', age:step.age, id:tpl.id, title:ev.title, text:ev.text,
+        opts:opts, limited: opts.length < (ev.opts||[]).length, life:true,
+        eduLines: this._showEduLines || []
+      };
+      st.log.push({ age:step.age, kind:'event', text:'【' + ev.title + '】' + ev.text });
+      this.phase = 'child';
+      return this.pending;
+    },
+
+    /* 每年的教育政策结算：先算今年收益，再判投诉，最后可能触发新政策 */
+    eduTick(age){
+      const st = this.state, b = st.brain;
+      if (!b.buffs) b.buffs = [];
+      if (!b.eduTaken) b.eduTaken = [];
+      b.eduIQ = b.eduIQ || 0;
+      const lines = [];
+      const isPublic = (b.school.id || '').indexOf('public') === 0;
+
+      // 1) 生效中的政策：今年产出
+      b.buffs.forEach(function(buff){
+        if (buff.stopped || buff.expired) return;
+        if (age > buff.untilAge) { buff.expired = true; return; }
+        buff.years = (buff.years || 0) + 1;
+        const parts = [];
+        if (buff.iq) {
+          b.eduIQ = Math.round((b.eduIQ + buff.iq) * 10) / 10;
+          buff.sumIQ = Math.round(((buff.sumIQ || 0) + buff.iq) * 10) / 10;
+          parts.push('智力 ' + (buff.iq > 0 ? '+' : '') + buff.iq);
+        }
+        if (buff.ndi) {
+          b.ndi = LS.BRAIN.clamp(b.ndi + buff.ndi, 5, 100);
+          buff.sumNDI = Math.round(((buff.sumNDI || 0) + buff.ndi) * 10) / 10;
+          parts.push('神经元 ' + (buff.ndi > 0 ? '+' : '') + buff.ndi);
+        }
+        if (buff.sleep) {
+          b.mods = b.mods || {};
+          b.mods.sleep = (b.mods.sleep || 0) + buff.sleep;
+          parts.push('睡眠 ' + buff.sleep + ' 小时');
+        }
+        if (parts.length) {
+          lines.push({ t:'〔教育〕' + buff.name + ' · ' + parts.join('、'), good: ((buff.iq||0) + (buff.ndi||0)) > 0 });
+        }
+      });
+
+      // 2) 家长投诉：政策中断
+      const self = this;
+      b.buffs.forEach(function(buff){
+        if (buff.stopped || buff.expired || !buff.stopRisk) return;
+        const rate = LS.EDU_STOP_RATE[isPublic ? 'public' : 'private'] || 1;
+        if (self.rnd() < buff.stopRisk * rate) {
+          buff.stopped = true;
+          buff.stoppedAge = age;
+          lines.push({ t:'〔教育〕家长投诉 · ' + buff.name + ' 中断。' + (buff.stopText || ''), good:false });
+          if (buff.id === 'recess_sport' && b.school.recess > 0.1) {
+            b.school.recess = 0.05;
+            b.buffs.push(Object.assign({}, LS.EDU_NO_RECESS, { addedAge: age, years: 0 }));
+            lines.push({ t:'〔教育〕课间被取消 · 神经元发育受抑制（每年 -0.8）', good:false });
+          }
+        }
+      });
+
+      // 3) 新政策/新师资（每年最多一件）
+      let newEvent = null;
+      if (age >= 6 && age <= 16) {
+        for (let i = 0; i < LS.EDU_EVENTS.length; i++) {
+          const e = LS.EDU_EVENTS[i];
+          if (b.eduTaken.indexOf(e.id) >= 0) continue;
+          if (age < e.age[0] || age > e.age[1]) continue;
+          if (e.publicOnly && !isPublic) continue;
+          if (this.rnd() >= e.prob) continue;
+          newEvent = e;
+          b.eduTaken.push(e.id);
+          b.buffs.push(Object.assign({}, e.buff, { addedAge: age, years: 0 }));
+          break;
+        }
+      }
+      return { lines: lines, newEvent: newEvent };
+    },
+
+    eduReport(){
+      const b = this.state.brain;
+      return (b.buffs || []).map(function(x){
+        return {
+          name: x.name, years: x.years || 0,
+          iq: Math.round((x.sumIQ || 0) * 10) / 10,
+          ndi: Math.round((x.sumNDI || 0) * 10) / 10,
+          status: x.stopped ? 'stopped' : (x.expired ? 'ended' : 'active'),
+          stoppedAge: x.stoppedAge
+        };
+      });
+    },
+
+    buildChildItem(){
+      const step = this.plan[this.idx];
+      if (!step) { this.phase = 'awaken'; return null; }
+      const st = this.state, w = LS.worldById(st.worldId), b = st.brain;
+      st.age = step.age;
+
+      if (step.kind === 'awaken') {
+        this.pending = { kind:'awaken', age:18 };
+        this.phase = 'awaken';
+        return this.pending;
+      }
+
+      /* 教育政策：同一个年龄只结算一次；新政策优先单独成卡 */
+      let edu;
+      if (this.eduAge !== step.age) {
+        edu = this.eduTick(step.age);
+        this.eduAge = step.age;
+        this.eduLines = edu.lines;
+        this.eduLinesShown = -1;
+        this.eduNew = edu.newEvent;
+      } else {
+        edu = { lines: this.eduLines || [], newEvent: null };
+      }
+      if (this.eduNew) {
+        const ev = this.eduNew;
+        this.eduNew = null;
+        this.eduLinesShown = step.age;
+        this.eduReplay = true;
+        const bf = ev.buff || {};
+        const amt = [];
+        if (bf.iq) amt.push('智力 ' + (bf.iq > 0 ? '+' : '') + bf.iq);
+        if (bf.ndi) amt.push('神经元 ' + (bf.ndi > 0 ? '+' : '') + bf.ndi);
+        if (bf.sleep) amt.push('睡眠 ' + bf.sleep + ' 小时');
+        const policyLines = [];
+        if (amt.length) {
+          policyLines.push({ t:'〔政策〕每年 ' + amt.join('、') + '，持续到 ' + (bf.untilAge || 12) + ' 岁', good: ((bf.iq||0)+(bf.ndi||0)) > 0 });
+        }
+        if (bf.stopRisk) {
+          const isPub = (this.state.brain.school.id || '').indexOf('public') === 0;
+          const rate = Math.round(bf.stopRisk * (LS.EDU_STOP_RATE[isPub?'public':'private']||1) * 100);
+          policyLines.push({ t:'〔风险〕每年约有 ' + rate + '% 概率被家长投诉中断', good:false });
+        }
+        const body = ev.text + (edu.lines.length ? '\n\n' + edu.lines.map(function(l){ return l.t; }).join('\n') : '');
+        this.pending = { kind:'edu', age:step.age, title:ev.title, text:ev.text, eduLines: edu.lines, policyLines: policyLines };
+        this.state.log.push({ age:step.age, kind:'edu',
+          text:'【' + ev.title + '】' + ev.text + (edu.lines.length ? ' ' + edu.lines.map(function(l){ return l.t; }).join(' ') : '') });
+        this.phase = 'child';
+        return this.pending;
+      }
+      const showLines = (this.eduLinesShown !== step.age) ? (this.eduLines || []) : [];
+      this.eduLinesShown = step.age;
+      this._showEduLines = showLines;
+
+      if (step.kind === 'life') return this.buildChildLife(step);
+
+      if (step.kind === 'say') {
+        const bucket = childBucket(step.age);
+        // 相邻两年不播同一句
+        const bankAll = CHILD_LINES[bucket];
+        const bank = bankAll.filter(function(t){ return t !== this._lastLine; }, this);
+        let line = LS.pick(bank.length ? bank : bankAll, this.rnd.bind(this));
+        this._lastLine = line;
+
+        // 1-9 岁：家长安排的戏份（按年龄过滤，避免 1 岁出现小学剧情）
+        if (step.age <= 9) {
+          const upAll = UPBRINGING[b.parent.id] || UPBRINGING.pragmatic;
+          const up = upAll.filter(function(x){ return step.age >= x.a[0] && step.age <= x.a[1]; });
+          if (up.length) line += '\n\n' + LS.pick(up, this.rnd.bind(this)).t;
+
+          if (step.age === 4 && b.parent.id !== 'permissive' && b.parent.id !== 'absent') {
+            b.earlyEdu = b.parent.id === 'intellectual' ? 'enrich' : (b.parent.id === 'anxious' || b.parent.id === 'strict') ? 'drill' : 'plain';
+            line += b.earlyEdu === 'enrich'
+              ? '\n\n他们给你报了一个不考试的启蒙班，只是玩。'
+              : b.earlyEdu === 'drill'
+                ? '\n\n你被送去上"专注力训练"。你坐不住，被老师按在椅子上。'
+                : '\n\n兴趣班试听了一节，你只顾着玩积木，老师说你还没准备好。';
+          }
+          if (step.age === 6) {
+            line += '\n\n你被送进了' + b.school.name + '。' + b.school.desc;
+            if (b.school.id === 'private_elite') line += ' 学费是家里一年多的收入，爸妈说值得。';
+            else if (b.school.id === 'private_cheap') line += ' 学费不便宜，妈妈说"总比菜小强"。';
+            else if (b.school.id === 'public_plain') line += ' 校门口的小卖部，一根辣条五毛。';
+          }
+        }
+
+        // 用文字暗示状态（不给数字）
+        if (step.age % 4 === 3) {
+          if (b.cortisol > 70) line += '\n\n你最近总是肚子疼，医生说是"情绪引起的"。';
+          else if (b.ndi > 65) line += '\n\n你学东西很快，快到大人都觉得奇怪。';
+          else if (b.focus < 30) line += '\n\n你坐不住，十分钟就要起来一次。';
+          else if (b.mirror > 65) line += '\n\n小区里的孩子都爱找你玩。';
+        }
+
+        // 每三年补一句环境：让"这座城"有存在感
+        if ([3,6,9,12,15,17].indexOf(step.age) >= 0) {
+          line += '\n\n' + LS.pick(w.flavor, this.rnd.bind(this));
+        }
+
+        this.pending = { kind:'say', age:step.age, text:line, eduLines: this._showEduLines || [] };
+        st.log.push({ age:step.age, kind:'say', text:line });
+        this.phase = 'child';
+        return this.pending;
+      }
+
+      // 事件：10 岁前不可能出现
+      const used = this.usedChild;
+      let cands = LS.CHILD_EVENTS.filter(function(e){
+        return step.age >= e.minAge && step.age <= e.maxAge && used.indexOf(e.id) < 0;
+      });
+      if (!cands.length) {
+        this.usedChild = [];
+        cands = LS.CHILD_EVENTS.filter(function(e){ return step.age >= e.minAge && step.age <= e.maxAge; });
+      }
+      const ev = LS.pick(cands, this.rnd.bind(this));
+      used.push(ev.id);
+
+      let text = ev.text
+        .replace('{place}', LS.pick(w.places, this.rnd.bind(this)))
+        .replace('{school}', b.school.name);
+
+      // 选项数量由当前智力估计决定
+      const iq = this.estIQ();
+      const n = LS.BRAIN.hasChoice(step.age, iq);
+      let opts = ev.opts.map(function(o, i){ return { n:o.n, eff:o.eff, res:o.res, tag:o.tag, _i:i }; });
+      // 打乱后截断：看不全，就是看不全
+      const self = this;
+      opts = opts.map(function(o){ return { o:o, r:self.rnd() }; })
+                 .sort(function(a,b){ return a.r - b.r; })
+                 .slice(0, n)
+                 .map(function(x){ return x.o; });
+
+      this.pending = {
+        kind:'event', age:step.age, id:ev.id, title:ev.title, text:text, opts:opts,
+        limited: n < ev.opts.length, eduLines: this._showEduLines || []
+      };
+      st.log.push({ age:step.age, kind:'event', text:'【' + ev.title + '】' + text });
+      this.phase = 'child';
+      return this.pending;
+    },
+
+    childChoose(i){
+      const ev = this.pending;
+      if (!ev || ev.kind !== 'event') return null;
+      const o = ev.opts[i];
+      if (!o) return null;
+      const st = this.state;
+
+      const chips = [];
+      Object.keys(o.eff || {}).forEach(function(k){
+        const v = o.eff[k];
+        st.child[k] = clamp((st.child[k] || 8) + v, 1, 20);
+        const meta = LS.CHILD_KEYS.find(function(x){ return x.k === k; });
+        chips.push({ text: (meta?meta.n:k) + (v>0?' +':' ') + v, good: v>0 });
+      });
+
+      // 脑发育影响（童年最关键的一层）
+      const bb = (LS.CHILD_BRAIN[ev.id] || [])[o._i] || null;
+      if (bb) this.applyBrain(bb);
+      if (o.brain) this.applyBrain(o.brain);      // 来自"学校生活"事件
+
+      let text = o.res || o.s || '';
+      // 事件自带的概率风险
+      if (o.risk && this.rnd() < o.risk.p) {
+        text += (text ? '\n\n' : '') + (o.risk.text || '');
+        this.applyBrain(o.risk);
+      }
+
+      if (o.tag && st.tags.indexOf(o.tag) < 0) st.tags.push(o.tag);
+      if (o.eff && o.eff.flag) {
+        st.flags[o.eff.flag] = 1;
+        if (o.eff.flag === 'manga') st.brain.manga = true;   // 解锁动漫世界的穿越池
+      }
+      st.childMemories.push({ age:ev.age, title:ev.title, choice:o.n, tag:o.tag || '' });
+
+      this.result = { text:text, chips:[], title:ev.title, age:ev.age };
+      // 童年不告诉玩家数值，chips 留空
+      this.phase = 'childResult';
+      return this.result;
+    },
+
+    childNext(){
+      // 教育政策卡看完后，回到同一年的正常内容
+      if (this.eduReplay) { this.eduReplay = false; return this.buildChildItem(); }
+      const cur = this.plan[this.idx];
+      if (cur && cur.age >= 1 && cur.age <= 17) this.develop(cur.age);
+      this.idx++;
+      if (this.idx >= this.plan.length) this.idx = this.plan.length - 1;
+      this.buildChildItem();
+      return this.pending;
+    },
+
+    /* 脑发育增量（童年用，成年后只影响身体） */
+    applyBrain(bb){
+      const b = this.state.brain;
+      if (!bb) return;
+      if (bb.ndi) b.ndi = clamp(b.ndi + bb.ndi, 5, 100);
+      if (bb.cort) b.cortisol = clamp(b.cortisol + bb.cort, 0, 100);
+      if (bb.focus) b.focus = clamp(b.focus + bb.focus, 5, 100);
+      if (bb.mirror) b.mirror = clamp(b.mirror + bb.mirror, 5, 100);
+      if (bb.phy) b.phy = clamp(b.phy + bb.phy, 5, 100);
+      if (bb.res) b.res = clamp(b.res + bb.res, 5, 100);
+      // 年度生活修正（下一年发育时用）
+      b.mods = b.mods || {};
+      ['sleep','play','sport','stress'].forEach(function(k){
+        if (bb[k]) b.mods[k] = (b.mods[k] || 0) + bb[k];
+      });
+      if (bb.interrupt) b.mods.interrupt = 1;
+    },
+
+    /* ================= 18 岁：结算 + 觉醒 + 穿越 ================= */
+    awaken(){
+      const st = this.state, b = st.brain;
+      LS.BRAIN.finalIQ(b);
+
+      let sys;
+      if (st.maker) sys = LS.systemById('maker');
+      else if (st.systemId && LS.systemById(st.systemId)) sys = LS.systemById(st.systemId);
+      else sys = this.rollSystem(LS.worldById('modern'));
+
+      st.systemId = sys.id;
+      st.systemName = sys.name;
+      st.rarity = sys.rarity;
+      st.system = sys;
+
+      // 童年折算进面板
+      const childAvgByDim = {};
+      LS.CHILD_KEYS.forEach(function(ck){
+        const v = st.child[ck.k] || 8;
+        if (!childAvgByDim[ck.dim]) childAvgByDim[ck.dim] = [];
+        childAvgByDim[ck.dim].push(v);
+      });
+      const bonusOf = function(dim){
+        const arr = childAvgByDim[dim];
+        if (!arr || !arr.length) return 0;
+        const avg = arr.reduce(function(a,b){ return a+b; },0)/arr.length;
+        return Math.round((avg - 8) * 0.7);
+      };
+
+      st.attrs = {};
+      (sys.stats||[]).forEach(function(s){
+        st.attrs[s.k] = Math.max(3, (s.init || 10) + bonusOf(s.dim));
+      });
+      st.res = {};
+      (sys.res||[]).forEach(function(r){ st.res[r.k] = r.init || 0; });
+
+      st.dimBonus = {战:0,智:0,体:0,社:0,运:0,财:0,灵:0};
+      const map = {'不服输':'战','狠':'战','江湖气':'战','硬气':'战','义气':'战','冒险':'运',
+        '早慧':'智','懂规则':'智','善查':'智','开窍':'智','冷静':'智','生意经':'智','城府':'智',
+        '命硬':'体','能吃苦':'体','基本功':'体','硬撑':'体',
+        '重情':'社','人脉':'社','守信':'社','自在':'社','少年心事':'社','懂事':'社',
+        '运气':'运','念想':'运','大机缘':'运','赌对了':'运',
+        '一技之长':'智','藏拙':'智','愧疚':'体','怕失望':'智'};
+      st.tags.forEach(function(t){
+        const d = map[t];
+        if (d) st.dimBonus[d] = (st.dimBonus[d] || 0) + 1;
+      });
+      // 智力直接给"智"加成：这是 131 以上能玩出花样的底层原因
+      const iqBonus = Math.max(0, Math.round((b.iq - 100) * 0.18));
+      st.dimBonus['智'] = (st.dimBonus['智'] || 0) + iqBonus;
+
+      // 系统掌握度
+      LS.BRAIN.masteryOf(b);
+      b.tier = LS.BRAIN.tierOf(b.mastery);
+
+      st.maxHp = this.calcMaxHp();
+      st.hp = Math.round(st.maxHp * 0.92);
+      st.turn = 0;
+      st.level = 1;
+      st.expNeed = 100;
+      st.freePts = 0;
+
+      // 经济面板开张
+      st.econ = LS.ECON.init(b.iq);
+
+      // 穿越判定
+      const travel = this.rollTravel(sys, b);
+
+      this.phase = 'adult';
+      return {
+        system: sys,
+        isMaker: !!st.maker,
+        travel: travel,
+        iq: b.iq,
+        mastery: b.mastery,
+        tier: b.tier,
+        text: sys.awaken || ('【' + sys.name + '】已绑定。'),
+        panel: this.panelData()
+      };
+    },
+
+    rollSystem(w){
+      const all = LS.SYSTEMS.filter(function(s){ return s.id !== 'maker'; });
+      const self = this;
+      const pool = [];
+      all.forEach(function(s){
+        let weight = (LS.RARITY[s.rarity] || LS.RARITY.R).weight;
+        const overlap = (s.tags||[]).filter(function(t){ return (w.tags||[]).indexOf(t) >= 0; }).length;
+        weight += overlap * 12;
+        weight *= LS.Store.comboPenalty(w.id, s.id);
+        for (let i=0;i<Math.max(1, Math.round(weight));i++) pool.push(s);
+      });
+      (LS.Store.systems||[]).forEach(function(s){
+        for (let i=0;i<8;i++) pool.push(s);
+      });
+      return pool[Math.floor(this.rnd()*pool.length)];
+    },
+
+    /* 系统的"出身"决定你被带到哪里 */
+    rollTravel(sys, b){
+      const st = this.state;
+      if (st.worldId !== 'modern') return null;
+      let target = null;
+      const home = LS.SYS_HOME[sys.id];
+      if (home && home !== 'modern' && this.rnd() < 0.66) target = home;
+      else if (b.manga && this.rnd() < 0.5) target = this.rnd() < 0.5 ? 'ninja' : 'pirate';
+      else if (this.rnd() < 0.18) target = LS.pick(['isekai','xianxia','cyber','zombie'], this.rnd.bind(this));
+      if (!target) return null;
+
+      const w = LS.worldById(target);
+      st.worldId = w.id;
+      st.worldName = w.name;
+      const tierKey = b.iq >= 120 ? 'high' : b.iq >= 105 ? 'mid' : 'low';
+      const role = LS.pick(LS.TRAVEL_ROLE[tierKey], this.rnd.bind(this));
+      st.travelRole = role;
+      st.travelText = '你睁开眼，天花板不见了。\n空气里有' + (w.id === 'ninja' ? '铁锈和树叶' : w.id === 'pirate' ? '海盐和火药' : w.id === 'zombie' ? '铁锈和消毒水' : '一种说不上来的味道') + '。\n\n这里是' + w.name + '。你现在的身份：' + role + '。';
+      return { worldId: w.id, worldName: w.name, role: role, text: st.travelText };
+    },
+
+    /* ================= 面板 ================= */
+    calcMaxHp(){
+      return Math.round(100 + this.dimVal('体') * 3.2);
+    },
+
+    dimVal(dim){
+      const st = this.state;
+      if (!st || !st.system) return 10;
+      const vals = [];
+      (st.system.stats||[]).forEach(function(s){
+        if (s.dim === dim) vals.push(st.attrs[s.k] || 0);
+      });
+      let v;
+      if (!vals.length) v = 6 + (st.dimBonus[dim] || 0) * 1.5;
+      else {
+        const max = Math.max.apply(null, vals);
+        const sum = vals.reduce(function(a,b){ return a+b; },0);
+        v = max + (sum - max) * 0.2;
+      }
+      v += (st.dimBonus[dim] || 0) * 1.2;
+      v += (st.brain && st.brain.mastery ? st.brain.mastery * 0.12 : 0);
+      return Math.round(v * 10) / 10;
+    },
+
+    dims(){
+      const self = this;
+      const out = {};
+      LS.DIM_LIST.forEach(function(d){ out[d] = self.dimVal(d); });
+      return out;
+    },
+
+    panelData(){
+      const st = this.state, sys = st.system;
+      if (!sys) return null;
+      return {
+        name: st.name, age: st.age, hp: Math.round(st.hp), maxHp: st.maxHp,
+        level: st.level, freePts: st.freePts,
+        stats: (sys.stats||[]).map(function(s){
+          return { k:s.k, n:s.n, v: Math.round((st.attrs[s.k]||0)*10)/10, dim:s.dim };
+        }),
+        res: (sys.res||[]).map(function(r){
+          return { k:r.k, n:r.n, icon:r.icon || '◆', v: Math.round((st.res[r.k]||0)*10)/10 };
+        }),
+        dims: this.dims(),
+        tags: st.tags.slice(-8),
+        rarity: sys.rarity, systemName: sys.name, icon: sys.icon,
+        iq: st.brain.iq, mastery: st.brain.mastery,
+        build: st.build ? { name: st.build.name, tag: st.build.tag } : null,
+        deaths: st.deaths, deathWays: st.deathWays || {},
+        econ: st.econ ? {
+          cash: Math.round(st.econ.cash*10)/10,
+          debt: Math.round(st.econ.debt*10)/10,
+          active: Math.round(st.econ.active*10)/10,
+          passive: Math.round(st.econ.passive*10)/10,
+          expense: Math.round(st.econ.expense*10)/10,
+          net: LS.ECON.netWorth(st.econ)
+        } : null
+      };
+    },
+
+    /* ================= 成年回合 ================= */
+    beginAdult(){
+      if (this.state && !this.state.build) this.chooseBuild(null);   // 兜底：测试/回放时默认第一条
+      this.phase = 'adult';
+      return this.phase;
+    },
+
+    startYear(){
+      const st = this.state;
+      if (st.ended) return null;
+      st.turn += 1;
+      st.year = st.turn;
+      st.usedReroll = false;
+      this.systemUsed = false;
+
+      LS.ECON.settle(st.econ, st.age);
+      if (st.econ && st.econ.justBankrupt) {
+        st.log.push({ age:st.age, kind:'bad', text:'债务滚到你再也还不动，最后做了债务重组。征信黑了，日子还得照样过。' });
+      }
+      const pas = this.passive();
+      if (pas) st.log.push({ age: st.age, kind:'sys', text: pas });
+
+      st.maxHp = this.calcMaxHp();
+      if (st.hp > 0 && st.hp < st.maxHp) {
+        const regen = (this.buildMods().regen || 1);
+        st.hp = Math.min(st.maxHp, st.hp + Math.round(st.maxHp * 0.07 * regen));
+      }
+
+      const lifespan = Math.round(62 + this.dimVal('体') * 0.9 + (st.flags.longevity || 0));
+      if (st.age > lifespan) {
+        this.endRun('寿终正寝：你在睡梦中安静地走完了一生');
+        return null;
+      }
+      return this.buildYearQueue();
+    },
+
+    /* 一年可以撞上不止一件事 */
+    buildYearQueue(){
+      const st = this.state;
+      this.queue = [];
+      const self = this;
+
+      // 第一件：主事件（AI / 缓存 / 离线）
+      this.queue.push({ kind:'main' });
+
+      // 第二件：生活事件（按年龄/智商门控）
+      const life = this.pickLifeEvent();
+      if (life) this.queue.push({ kind:'life', ev:life });
+
+      // 第三件：经济决策（18 岁后，智力够才有选项；不够就是自动剧情）
+      if (st.age >= 18 && st.econ) {
+        const econ = this.pickEconEvent();
+        if (econ) this.queue.push({ kind:'econ', ev:econ });
+      }
+
+      // 只保留 2-3 件，年份越老事越少
+      if (this.queue.length > 2 && this.rnd() < 0.45) this.queue = this.queue.slice(0, 2);
+
+      return this.nextEvent();
+    },
+
+    pickLifeEvent(){
+      const st = this.state, b = st.brain;
+      const used = this.usedLife;
+      const iq = b.iq || this.estIQ();
+      let pool = LS.LIFE_EVENTS.filter(function(e){
+        if (st.age < e.minAge || st.age > e.maxAge) return false;
+        if (e.iqMax && iq > e.iqMax) return false;   // 智商够的人不会掉进这种坑
+        if (e.iqMin && iq < e.iqMin) return false;
+        return used.indexOf(e.id) < 0;
+      });
+      if (!pool.length) return null;
+      const weights = pool.map(function(e){
+        let w = e.weight || 5;
+        if (e.iqMax && iq > e.iqMax - 6) w = Math.round(w * 0.6);
+        return { e:e, w:w };
+      });
+      const arr = [];
+      weights.forEach(function(x){ for (let i=0;i<x.w;i++) arr.push(x.e); });
+      const ev = arr[Math.floor(this.rnd()*arr.length)];
+      used.push(ev.id);
+      return this.normalizeOffline(ev);
+    },
+
+    pickEconEvent(){
+      const st = this.state;
+      const iq = st.brain.iq;
+      const used = this.usedEvents;
+      const pool = LS.ECON_EVENTS.filter(function(e){
+        if (st.age < e.minAge || st.age > e.maxAge) return false;
+        if (e.iqMin && iq < e.iqMin) return false;
+        return used.indexOf(e.id) < 0;
+      });
+      if (!pool.length || this.rnd() > 0.55) return null;
+      const ev = pool[Math.floor(this.rnd()*pool.length)];
+      used.push(ev.id);
+      return this.normalizeOffline(ev);
+    },
+
+    nextEvent(){
+      const st = this.state;
+      const item = this.queue.shift();
+      if (!item) { this.phase = 'actions'; return null; }
+
+      if (item.kind === 'main') {
+        return this.makeMainEvent(); // async
+      }
+      const ev = item.ev;
+      const iq = st.brain.iq || this.estIQ();
+      // 选项数量：智商决定视野
+      let opts = ev.opts || [];
+      if (opts.length) {
+        const n = LS.BRAIN.hasChoice(st.age, iq);
+        if (opts.length > n) {
+          const self = this;
+          opts = opts.map(function(o){ return { o:o, r:self.rnd() }; })
+                     .sort(function(a,b){ return a.r - b.r; })
+                     .slice(0, n).map(function(x){ return x.o; });
+        }
+      }
+      this.pending = Object.assign({}, ev, {
+        opts: opts,
+        source: ev.opts && ev.opts.length ? '离线' : '没有选择',
+        auto: !opts.length ? ev.auto : null,
+        kind: item.kind
+      });
+      this.phase = 'event';
+      return this.pending;
+    },
+
+    async makeMainEvent(){
+      const st = this.state, w = LS.worldById(st.worldId), sys = st.system;
+      const key = LS.Store.snipKey({ worldId: st.worldId, systemId: st.systemId, age: st.age, kind:'evt' });
+
+      const mode = LS.AI.mode();
+      const canAI = mode !== 'offline' && this.aiUsed < this.aiBudget();
+      const wantFresh = canAI && !st.replay && (mode === 'always' || this.rnd() < 0.3);
+      let snip = wantFresh ? null : LS.Store.getSnip(key);
+
+      if (snip) {
+        this.pending = {
+          title: snip.title, text: snip.text,
+          opts: snip.opts.map(function(o){ return Object.assign({}, o); }),
+          source: '他人路径', key: key, kind:'main'
+        };
+        this.limitOpts();
+        this.phase = 'event';
+        return this.pending;
+      }
+
+      if (canAI) {
+        try {
+          const ev = await LS.AI.genEvent({
+            state: st, world: w, system: sys,
+            recent: st.timeline.slice(-4),
+            dims: this.dims()
+          });
+          this.aiUsed++;
+          st.aiUsed = this.aiUsed;
+          LS.Store.addSnip(key, {
+            title: ev.title, text: ev.text,
+            opts: ev.opts.map(function(o){ return { n:o.n, dim:o.dim, dc:o.dc, s:o.s, f:o.f, eff:o.eff, effF:o.effF }; }),
+            score: 3, at: Date.now()
+          });
+          this.pending = Object.assign({}, ev, { source:'AI 导演', key:key, kind:'main' });
+          this.limitOpts();
+          this.phase = 'event';
+          return this.pending;
+        } catch (e) {
+          this.lastAiError = e.message || String(e);
+        }
+      }
+
+      const ev = this.buildOfflineEvent(w, sys);
+      this.pending = Object.assign(ev, { source:'离线', key:key, kind:'main' });
+      this.limitOpts();
+      this.phase = 'event';
+      return this.pending;
+    },
+
+    limitOpts(){
+      const st = this.state, ev = this.pending;
+      if (!ev || !ev.opts) return;
+      const iq = st.brain.iq || this.estIQ();
+      const n = LS.BRAIN.hasChoice(st.age, iq);
+      if (ev.opts.length > n) {
+        const self = this;
+        ev.opts = ev.opts.map(function(o){ return { o:o, r:self.rnd() }; })
+                    .sort(function(a,b){ return a.r - b.r; })
+                    .slice(0, n).map(function(x){ return x.o; });
+        ev.limited = true;
+      }
+      // 智商 131+：多一条系统骚操作
+      if (iq >= 131 && st.system) {
+        ev.opts.push({
+          n: '【系统】换个它没想过的方式',
+          dim: '智',
+          dc: 22,
+          s: '你把面板翻过来看了一遍，发现规则里有一处写得很含糊。\n规则没写不能这么做。',
+          f: '你赌了一把，系统没接住。',
+          eff: { attrs: {}, res: {}, tags: ['骚操作'] },
+          effF: { hp: -8 },
+          _wild: true
+        });
+        ev.wild = true;
+      }
+    },
+
+    buildOfflineEvent(w, sys){
+      const st = this.state;
+      const self = this;
+      const wTags = (w.tags||[]).concat(sys.tags||[]);
+      let cands = LS.EVENTS.filter(function(t){ return self.usedEvents.indexOf(t.id) < 0; });
+      if (!cands.length) { this.usedEvents = []; cands = LS.EVENTS.slice(); }
+      const scored = cands.map(function(t){
+        let s = (t.weight || 5);
+        (t.tags||[]).forEach(function(tag){ if (wTags.indexOf(tag) >= 0) s += 4; });
+        return { t:t, s:s };
+      });
+      const pool = [];
+      scored.forEach(function(x){ for (let i=0;i<Math.max(1,Math.round(x.s));i++) pool.push(x.t); });
+      const tpl = pool[Math.floor(this.rnd()*pool.length)];
+      this.usedEvents.push(tpl.id);
+
+      const fill = function(str){
+        return String(str||'')
+          .replace(/\{place\}/g, LS.pick(w.places, self.rnd.bind(self)))
+          .replace(/\{threat\}/g, LS.pick(w.threats, self.rnd.bind(self)))
+          .replace(/\{npc\}/g, LS.pick(w.npcs, self.rnd.bind(self)))
+          .replace(/\{world\}/g, w.name);
+      };
+
+      return {
+        title: tpl.title,
+        text: fill(tpl.text),
+        opts: tpl.opts.map(function(o){
+          return { n:o.n, dim:o.dim, dc:o.dc, s:fill(o.s), f:fill(o.f), eff:o.eff||{}, effF:o.effF||{} };
+        })
+      };
+    },
+
+    normalizeOffline(tpl){
+      const w = LS.worldById(this.state.worldId);
+      const self = this;
+      const fill = function(str){
+        return String(str||'')
+          .replace(/\{place\}/g, LS.pick(w.places, self.rnd.bind(self)))
+          .replace(/\{threat\}/g, LS.pick(w.threats, self.rnd.bind(self)))
+          .replace(/\{npc\}/g, LS.pick(w.npcs, self.rnd.bind(self)))
+          .replace(/\{world\}/g, w.name);
+      };
+      let title = tpl.title, text = fill(tpl.text), auto = tpl.auto ? fill(tpl.auto) : null;
+      // 异世界版：跑滴滴 → 接私单打人
+      if (tpl.id === 'l_didi' && this.state.worldId !== 'modern') {
+        title = '接私活';
+        text = '白天在公会挂名，晚上接私单。有人管这叫"滴滴打人"——只要给钱，打谁都行。';
+        auto = '你从此没有过完整的夜。\n刀柄被汗浸得发亮，你也舍不得换。';
+      }
+      return {
+        title: title, text: text,
+        opts: (tpl.opts||[]).map(function(o){
+          return { n:o.n, dim:o.dim||'智', dc:o.dc||20, s:fill(o.s), f:fill(o.f),
+                   eff:o.eff||{}, effF:o.effF||{}, risk:o.risk||null };
+        }),
+        auto: auto,
+        eff: tpl.eff || null,
+        tag: tpl.tag || ''
+      };
+    },
+
+    aiBudget(){
+      const c = LS.Store.apiCfg();
+      return c.mode === 'always' ? 999 : (c.budget || 60);
+    },
+
+    passive(){
+      const st = this.state, mech = st.system ? st.system.mechanic : '';
+      const lines = [];
+      if (mech === 'signin') {
+        st.res.days = (st.res.days || 0) + 1;
+        const d = st.res.days;
+        st.res.pt = (st.res.pt || 0) + Math.round(5 + d * 0.3);
+        this.growRandom(1);
+        if (d === 30 || d === 100) { this.growRandom(2); lines.push('连续签到 ' + d + ' 天，奖励升级。'); }
+      }
+      if (mech === 'wealth') {
+        Object.keys(st.res).forEach(function(k){
+          if (st.res[k] > 20) st.res[k] = Math.round((st.res[k] * 1.14 + 5) * 10) / 10;
+        });
+        lines.push('资产自行增值。');
+      }
+      if (mech === 'fame') {
+        const f = st.res.fans != null ? 'fans' : (st.res.fan != null ? 'fan' : null);
+        if (f) {
+          st.res[f] = Math.round(st.res[f] * (1.06 + this.dimVal('社') * 0.004));
+          lines.push('粉丝数上涨到 ' + Math.round(st.res[f]) + '。');
+        }
+      }
+      if (mech === 'pact' && (st.res.debt || 0) > 80) {
+        st.hp -= 12;
+        lines.push('代价过高，反噬发作。');
+      }
+      if (mech === 'summon') this.growRandom(1, '战');
+      if (mech === 'maker') {
+        st.res.mat = (st.res.mat || 0) + 6;
+        if (!lines.length) lines.push('素材缓慢凝聚（+6）。');
+      }
+      return lines.join(' ');
+    },
+
+    growRandom(v, dim){
+      const st = this.state;
+      let pool = (st.system.stats||[]).filter(function(s){ return !dim || s.dim === dim; });
+      if (!pool.length) pool = st.system.stats || [];
+      if (!pool.length) return;
+      const s = pool[Math.floor(this.rnd()*pool.length)];
+      const cur = st.attrs[s.k] || 0;
+      const gain = Math.max(1, Math.round(v * 80 / (80 + cur) * (this.buildMods().gainMul || 1)));
+      st.attrs[s.k] = Math.round((cur + gain) * 10) / 10;
+      return gain;
+    },
+
+    odds(dim, dc){
+      const st = this.state;
+      const effDc = dc + Math.min(14, Math.floor(st.turn * 0.75));
+      let p = 0.5 + (this.dimVal(dim) - effDc) / (effDc * 1.7);
+      const mech = st.system ? st.system.mechanic : '';
+      if (mech === 'analysis') p += 0.08;
+      if (mech === 'sim') p += 0.03;
+      return clamp(p, 0.15, 0.94);
+    },
+
+    /* 只有系统给了你"看见"的能力，才显示概率 */
+    revealOdds(){
+      const st = this.state;
+      const mech = st.system ? st.system.mechanic : '';
+      const tier = st.brain && st.brain.tier;
+      return ['sim','analysis','mindread'].indexOf(mech) >= 0 || (tier && tier.showOdds);
+    },
+
+    /* ---------- 选择 ---------- */
+    chooseOption(i){
+      const ev = this.pending, st = this.state;
+      if (!ev || !ev.opts || !ev.opts[i]) return null;
+      const o = ev.opts[i];
+      const p = this.odds(o.dim, o.dc);
+      let ok = this.rnd() < p;
+      let crit = false;
+      let rerolled = false;
+
+      if (st.flags.autoWin) { st.flags.autoWin = 0; ok = true; rerolled = true; }
+
+      if (!ok && st.system && st.system.mechanic === 'luck' && !st.usedReroll) {
+        st.usedReroll = true; rerolled = true;
+        ok = this.rnd() < Math.min(0.92, p + 0.25);
+      }
+      const mech = st.system ? st.system.mechanic : '';
+      if (ok && (mech === 'analysis' || mech === 'sim') && this.rnd() < 0.18) crit = true;
+
+      const eff = ok ? (o.eff || {}) : (o.effF || {});
+      const chips = this.applyEff(eff, crit);
+      let text = ok ? (o.s || '你做到了。') : (o.f || '你失败了。');
+      if (crit) text += ' 这一切完成得比你想的更漂亮。';
+      if (rerolled) text = '（命运偏了一下头）' + text;
+
+      if (!ok && mech === 'reverse') {
+        st.attrs[st.system.stats[0].k] = (st.attrs[st.system.stats[0].k]||0) + 2;
+        st.res.bad = (st.res.bad || 0) + 1;
+      }
+
+      st.history.push({
+        age: st.age, title: ev.title, choice: o.n, ok: ok, dim: o.dim,
+        dc: o.dc, odds: Math.round(p*100), text: text.slice(0, 120)
+      });
+      st.timeline.push(st.age + '岁·' + ev.title + '（' + o.n + '）' + (ok?'成':'败'));
+      st.log.push({ age:st.age, kind: ok?'good':'bad', text:'【' + ev.title + '】' + text });
+
+      // 选项自带的风险判定
+      if (o.risk && this.rnd() < o.risk.p) {
+        text += '\n' + (o.risk.text || '');
+        this.applyBrain(o.risk);
+      }
+
+      let death = null;
+      if (st.hp <= 0) death = this.handleDeath('在' + st.age + '岁那年，你没能从「' + ev.title + '」里活下来');
+
+      this.result = { ok:ok, crit:crit, text:text, chips:chips, death:death, title:ev.title, source:ev.source };
+      this.phase = 'result';
+      if (death && death.ended) this.phase = 'end';
+      return this.result;
+    },
+
+    /* 自动事件：玩家没有选择权 */
+    autoResolve(){
+      const ev = this.pending, st = this.state;
+      if (!ev) return null;
+      const chips = this.applyEff(ev.eff || {});
+      if (ev.tag && st.tags.indexOf(ev.tag) < 0) st.tags.push(ev.tag);
+      st.log.push({ age:st.age, kind:'bad', text:'【' + ev.title + '】' + (ev.auto||'') });
+      st.timeline.push(st.age + '岁·' + ev.title + '（没有选择）');
+      let death = null;
+      if (st.hp <= 0) death = this.handleDeath('在' + st.age + '岁那年，你没能撑过去');
+      this.result = { ok:false, auto:true, text: ev.auto || '', chips:chips, death:death, title:ev.title };
+      this.phase = 'result';
+      if (death && death.ended) this.phase = 'end';
+      return this.result;
+    },
+
+    applyEff(eff, crit){
+      const st = this.state;
+      const chips = [];
+      if (!eff) return chips;
+      if (eff.attrs) {
+        Object.keys(eff.attrs).forEach(function(k){
+          let v = Number(eff.attrs[k]) || 0;
+          if (crit && v > 0) v = Math.round(v * 1.6 * 10)/10;
+          if (!v) return;
+          if (st.attrs[k] == null) return;
+          st.attrs[k] = Math.max(0, Math.round((st.attrs[k] + v)*10)/10);
+          const meta = (st.system.stats||[]).find(function(s){ return s.k === k; });
+          chips.push({ text:(meta?meta.n:k) + (v>0?' +':' ') + v, good: v>0 });
+        });
+      }
+      if (eff.hp) {
+        st.maxHp = this.calcMaxHp();
+        st.hp = clamp(st.hp + eff.hp, 0, st.maxHp);
+        chips.push({ text:'气血 ' + (eff.hp>0?'+':'') + eff.hp, good: eff.hp>0 });
+      }
+      if (eff.res) {
+        Object.keys(eff.res).forEach(function(k){
+          const v = Number(eff.res[k]) || 0;
+          if (!v) return;
+          st.res[k] = Math.round(((st.res[k]||0) + v)*10)/10;
+          const meta = (st.system.res||[]).find(function(r){ return r.k === k; });
+          chips.push({ text:(meta?meta.n:k) + (v>0?' +':' ') + v, good: v>0 });
+        });
+      }
+      if (eff.tags) {
+        eff.tags.forEach(function(t){
+          if (st.tags.indexOf(t) < 0) { st.tags.push(t); }
+        });
+      }
+      if (eff.brain) {
+        if (st.age < 18) this.applyBrain(eff.brain);
+        else {
+          const b = st.brain;
+          if (eff.brain.phy) {
+            b.phy = clamp(b.phy + eff.brain.phy, 5, 100);
+            st.maxHp = Math.max(60, st.maxHp + Math.round(eff.brain.phy * 2));
+            st.hp = Math.min(st.hp, st.maxHp);
+          }
+          if (eff.brain.cort) b.cortisol = clamp(b.cortisol + eff.brain.cort, 0, 100);
+        }
+      }
+      if (eff.econ && st.econ) {
+        LS.ECON.apply(st.econ, eff.econ).forEach(function(c){ chips.push(c); });
+      }
+      if (eff.flag) st.flags[eff.flag] = 1;
+
+      if (st.system && st.system.mechanic === 'levelUp') {
+        const hasExpRes = st.res.exp != null;
+        let cur = (hasExpRes ? st.res.exp : (st.exp || 0)) + 18;
+        while (cur >= st.expNeed) {
+          cur -= st.expNeed;
+          st.level += 1;
+          st.freePts += 2;
+          st.expNeed = Math.round(st.expNeed * 1.35);
+        }
+        if (hasExpRes) st.res.exp = cur; else st.exp = cur;
+      }
+      st.maxHp = this.calcMaxHp();
+      return chips;
+    },
+
+    handleDeath(reason, opts){
+      const st = this.state;
+      opts = opts || {};
+      if (st.system && st.system.mechanic === 'deathReturn') {
+        st.deaths += 1;
+        st.res.deaths = (st.res.deaths || 0) + 1;
+        const boost = 1 + st.deaths * 0.5;
+        st.maxHp = this.calcMaxHp();
+        st.hp = st.maxHp;
+        if (!opts.noBoost) {
+          (st.system.stats||[]).forEach(function(s){
+            st.attrs[s.k] = Math.round((st.attrs[s.k]||0) + Math.round(2 * boost));
+          });
+        }
+        st.log.push({ age:st.age, kind:'sys', text:'你死了。世界倒退。你重新睁开眼睛。' });
+        return { revived:true, ended:false, text: opts.noBoost
+          ? ('你死了。\n然后，你睁开了眼睛。\n第 ' + st.deaths + ' 次。')
+          : ('你死了。\n然后，你睁开了眼睛。\n第 ' + st.deaths + ' 次死亡，属性永久提升。') };
+      }
+      const rwKey = (st.system.res||[]).some(function(r){ return r.k === 'rw' || r.k === 'laps'; })
+        ? (st.res.rw != null ? 'rw' : 'laps') : null;
+      if (rwKey && st.res[rwKey] > 0) {
+        st.res[rwKey] -= 1;
+        st.maxHp = this.calcMaxHp();
+        st.hp = Math.round(st.maxHp * 0.75);
+        st.rewinds += 1;
+        this.growRandom(1);
+        return { revived:true, ended:false, text:'时间折了回去。\n你带着记忆回到一年前。' };
+      }
+      st.alive = false;
+      st.ended = true;
+      st.endReason = reason;
+      st.hp = 0;
+      return { revived:false, ended:true, text: reason };
+    },
+
+    /* ---------- 事件之后 ---------- */
+    afterEvent(){
+      const st = this.state;
+      if (st.ended) { this.phase = 'end'; return 'end'; }
+      if (this.queue.length) {
+        const ev = this.nextEvent();
+        return ev ? 'event' : 'actions';
+      }
+      st.ap = 3;
+      this.phase = 'actions';
+      return 'actions';
+    },
+
+    /* ================= 自创用法：玩家打字，AI 裁决 ================= */
+    researchAvailable(){
+      const st = this.state;
+      return !!(st && st.system && st.age >= 18 && st.researchYear !== st.age && !st.ended);
+    },
+
+    localResearch(idea){
+      const st = this.state, sys = st.system;
+      let score = 45;
+      const text = String(idea || '');
+      if (text.length >= 10) score += 5;
+      if (text.length >= 20) score += 5;
+      if (text.indexOf(String(sys.name).replace('系统','')) >= 0) score += 6;
+      if (/(每天|无限|直接|立刻|永久|无敌|全部|所有)/.test(text)) score -= 14;
+      if (/(换|轮流|组合|记录|研究|分析|借|代价|限制|反过来|先.*再)/.test(text)) score += 8;
+      if (/(死|复活|签到|抽|积分|复制|掠夺|回档|推演|粉丝|契约|词条)/.test(text)) score += 4;
+      score = Math.max(15, Math.min(88, score));
+      const feasible = score >= 50;
+      let reason;
+      if (!feasible) reason = '这个用法越过了系统的上限——它要的是代价，你给的是空想。';
+      else if (score >= 75) reason = '规则里确实留着这个口子，代价也算得过来。';
+      else reason = '说得通，但执行起来会打折扣。';
+      return { feasible: feasible, score: score, reason: '（离线审核）' + reason,
+               label: '', effect: { attrs:{}, res:{}, hp:0 }, source:'离线' };
+    },
+
+    async research(idea){
+      const st = this.state, sys = st.system, b = st.brain;
+      if (!this.researchAvailable()) return { error: '今年不能再研究了。' };
+      idea = String(idea || '').replace(/\s+/g, ' ').trim().slice(0, 80);
+      if (idea.length < 4) return { error: '再具体一点，至少写四个字。' };
+
+      st.researchYear = st.age;
+      const w = LS.worldById(st.worldId);
+      let v = null;
+      if (LS.AI.mode() !== 'offline' && this.aiUsed < this.aiBudget()) {
+        try {
+          v = await LS.AI.genResearch({ state: st, system: sys, world: w, idea: idea });
+          this.aiUsed++; st.aiUsed = this.aiUsed;
+        } catch (e) { this.lastAiError = e.message || ''; }
+      }
+      if (!v) v = this.localResearch(idea);
+
+      const iq = b.iq || 100;
+      const mastery = b.mastery || 0;
+      const iqF = clamp((iq - 82) / 58, 0, 1);
+      const chance = clamp(v.score / 100 * 0.55 + iqF * 0.25 + mastery / 100 * 0.2, 0.05, 0.95);
+
+      // 想法成立，但你未必想得到怎么落地——这一层由"从小到大的人生"决定
+      const blindP = clamp((115 - iq) / 50, 0, 0.75);
+      if (v.feasible && this.rnd() < blindP) {
+        const road = [b.parent.name + '的家庭', b.school.name];
+        if (b.ndi < 60) road.push('只有 ' + Math.round(b.ndi) + ' 的神经元发育');
+        if (b.cortisol > 60) road.push('长期偏高的皮质醇');
+        if (b.focus < 40) road.push('总被打断的专注力');
+        if (b.phy < 45) road.push('很少活动的身体');
+        const text = '你把这个想法在脑子里过了一遍，然后就卡住了。\n\n' +
+          '不是它不成立——是你说不出下一步该干什么。\n\n' +
+          '你从小到大的路：' + road.join('、') + '。这条路没教过你这种思路。\n\n' +
+          '（这个用法其实是成立的。只是你的脑子，到不了那儿。）';
+        st.log.push({ age: st.age, kind:'bad', text:'【研究】' + idea + ' —— 想不下去。' });
+        st.timeline.push(st.age + '岁·研究系统（想不下去）');
+        const r = { title:'研究：想不下去', text:text, chips:[], ok:false, blind:true,
+                    research:true, chance:Math.round(chance*100) };
+        this.result = r;
+        this.phase = 'actionResult';
+        return r;
+      }
+
+      const ok = this.rnd() < chance;
+      if (ok) {
+        const eff = v.effect || {};
+        const chips = this.applyEff({ attrs: eff.attrs || {}, res: eff.res || {}, hp: eff.hp || 0 });
+        b.mastery = clamp((b.mastery || 0) + 3, 0, 100);
+        b.tier = LS.BRAIN.tierOf(b.mastery);
+        st.customUses = st.customUses || [];
+        const rec = { age: st.age, idea: idea, label: v.label || '', systemId: sys.id, systemName: sys.name };
+        st.customUses.push(rec);
+        LS.Store.addResearch(Object.assign({ author: st.name, world: st.worldName }, rec));
+        st.log.push({ age: st.age, kind:'sys', text:'【研究成功】' + idea + (v.label ? '（' + v.label + '）' : '') });
+        st.timeline.push(st.age + '岁·自创用法：' + (v.label || idea.slice(0, 10)));
+        const text = '你把想法说了出来，系统沉默了 ' + (2 + Math.floor(this.rnd()*4)) + ' 秒。\n\n' +
+          '然后它给了你回应：这条路，走得通。\n\n' + (v.reason || '') +
+          '\n\n（掌握度 +3。这个用法已经写进系统库，别人也许会用上。）';
+        const r = { title:'研究：成立', text:text, chips:chips, ok:true,
+                    research:true, source:v.source, chance:Math.round(chance*100),
+                    label:v.label || '' };
+        this.result = r;
+        this.phase = 'actionResult';
+        return r;
+      }
+
+      b.mastery = clamp((b.mastery || 0) + 1, 0, 100);
+      b.tier = LS.BRAIN.tierOf(b.mastery);
+      const text = '你把想法说了出来。\n\n系统给了否定：\n' + (v.reason || '这条路径不成立。') +
+        '\n\n' + (iq < 110
+          ? '你不太确定自己是不是问错了方向。'
+          : '你记下了它否定的理由，下次换个角度。');
+      st.log.push({ age: st.age, kind:'bad', text:'【研究失败】' + idea + '：' + (v.reason || '') });
+      st.timeline.push(st.age + '岁·研究系统（被否）');
+      const r = { title:'研究：被否定', text:text, chips:[], ok:false,
+                  research:true, source:v.source, chance:Math.round(chance*100) };
+      this.result = r;
+      this.phase = 'actionResult';
+      return r;
+    },
+
+    /* 找死：一次行动力换一次死亡，同种死法收益指数递减 */
+    seekDeath(wayId){
+      const st = this.state, sys = st.system;
+      if (!sys || sys.mechanic !== 'deathReturn') return null;
+      if (st.ap <= 0) return { text:'没有行动力了。', chips:[] };
+      if (!st.deathWays) st.deathWays = {};
+      const ways = LS.DEATH_WAYS;
+      // 玩家可以指定死法；不指定就挑一种用得最少的
+      let way = wayId ? ways.find(function(w){ return w.id === wayId; }) : null;
+      if (!way && this.rnd() < 0.6) {
+        const sorted = ways.slice().sort(function(a,b){
+          return (st.deathWays[a.id]||0) - (st.deathWays[b.id]||0);
+        });
+        way = sorted[0];
+      } else {
+        way = ways[Math.floor(this.rnd()*ways.length)];
+      }
+
+      const n = st.deathWays[way.id] || 0;
+      st.deathWays[way.id] = n + 1;
+      st.ap -= 1;
+
+      const mods = this.buildMods();
+      const decay = mods.decay || 0.82;
+      const deathGain = mods.deathGain || 1;
+      const factor = Math.max(0.05, Math.pow(decay, n) * deathGain);
+
+      st.hp = 0;
+      const death = this.handleDeath('你在' + st.age + '岁那年，死于' + way.n + '。', { noBoost: true });
+      const chips = [];
+      let text = way.t + '\n\n';
+
+      if (death.revived) {
+        const pool = sys.stats || [];
+        const picks = [];
+        for (let i = 0; i < Math.min(2, pool.length); i++) picks.push(pool[(n + i) % pool.length]);
+        picks.forEach(function(s){
+          const cur = st.attrs[s.k] || 0;
+          // 数值越高涨得越慢，避免无限膨胀
+          const gain = Math.max(1, Math.round(6 * factor * 80 / (80 + cur)));
+          st.attrs[s.k] = Math.round((cur + gain) * 10) / 10;
+          chips.push({ text: s.n + ' +' + gain, good:true });
+        });
+        text += '第 ' + (n + 1) + ' 次。你睁开眼睛，身体比刚才更结实。';
+        text += '\n同一种死法收益 ×' + (Math.round(factor * 100) / 100);
+        if (n >= 2) text += '\n\n这一种死法对你越来越没用了。换个死法，或者换个活法。';
+      } else {
+        text += '这一次，没有人把你叫醒。';
+      }
+
+      st.log.push({ age:st.age, kind:'sys', text:text.replace(/\n/g,' ') });
+      st.timeline.push(st.age + '岁·找死（' + way.n + '）');
+      this.result = { ok:true, auto:false, text:text, chips:chips, death:death,
+                      title:'找死：' + way.n, seek:true,
+                      factor:Math.round(factor*100)/100, way:way.n, times:n+1 };
+      this.phase = death.ended ? 'end' : 'actionResult';
+      if (death.ended) this.phase = 'end';
+      return this.result;
+    },
+
+    freeAction(id){
+      const st = this.state;
+      if (st.ap <= 0) return null;
+      const fa = LS.FREE_ACTIONS.find(function(x){ return x.id === id; });
+      if (!fa) return null;
+      const p = this.odds(fa.dim, 20 + Math.floor(st.turn*0.8));
+      const ok = this.rnd() < p;
+      st.ap -= 1;
+      const chips = [];
+      if (ok) {
+        const g = fa.grow;
+        const pool = (st.system.stats||[]).filter(function(s){ return s.dim === g.dim; });
+        const target = pool.length ? pool[Math.floor(this.rnd()*pool.length)] : (st.system.stats||[])[0];
+        if (target) {
+          const cur = st.attrs[target.k] || 0;
+          const v = Math.max(1, Math.round(g.v * 80 / (80 + cur) * (this.buildMods().gainMul || 1)));
+          st.attrs[target.k] = Math.round((cur + v) * 10) / 10;
+          chips.push({ text: target.n + ' +' + v, good:true });
+        }
+        if (fa.eff && fa.eff.hp) {
+          st.hp = clamp(st.hp + fa.eff.hp, 0, this.calcMaxHp());
+          chips.push({text:'气血 +'+fa.eff.hp, good:true});
+        }
+      } else {
+        if (fa.effF && fa.effF.hp) {
+          st.hp = clamp(st.hp + fa.effF.hp, 0, this.calcMaxHp());
+          chips.push({text:'气血 '+fa.effF.hp, good:false});
+        }
+      }
+      if (ok && st.res.exp != null) st.res.exp += 8;
+      let text = ok ? LS.pick(fa.ok, this.rnd.bind(this)) : LS.pick(fa.bad, this.rnd.bind(this));
+      st.log.push({ age:st.age, kind: ok?'good':'bad', text: text });
+      let death = null;
+      if (st.hp <= 0) death = this.handleDeath('你在' + st.age + '岁那年耗尽了自己');
+      if (death && death.ended) this.phase = 'end';
+      return { ok:ok, text:text, chips:chips, death:death, ap:st.ap };
+    },
+
+    /* ---------- 系统能力（受"掌握度"影响） ---------- */
+    async systemAction(){
+      const st = this.state, sys = st.system;
+      if (!sys) return { text:'你没有系统。', chips:[] };
+      if (this.systemUsed) return { text:'本年已经用过一次了。', chips:[] };
+      this.systemUsed = true;
+      const mech = sys.mechanic;
+      const tier = st.brain.tier || LS.BRAIN.tierOf(0);
+      const scale = tier.sysScale * (this.buildMods().sysScale || 1);
+      const chips = [];
+      const rand = this.rnd.bind(this);
+      let text = '';
+
+      if (tier.key === 'none') {
+        // 完全不会用：只能瞎按
+        this.growRandom(Math.max(1, Math.round(1 * scale)));
+        text = '你把面板上的每个按钮都按了一遍，只有两个亮了。\n其中一个还按错了。';
+        chips.push({ text:'效果大打折扣', good:false });
+        st.log.push({ age:st.age, kind:'sys', text: text.replace(/\n/g,' ') });
+        this.systemUsed = true;
+        return { text:text, chips:chips };
+      }
+
+      switch(mech){
+        case 'deathReturn': {
+          if (rand() < 0.55) {
+            text = '你又一次把命押在了桌上。';
+            this.growRandom(Math.round(5*scale), '战');
+            st.hp = clamp(st.hp - 25, 0, this.calcMaxHp());
+            chips.push({text:'气血 -25', good:false});
+          } else {
+            st.hp = 0;
+            text = '你主动走进了必死之地。\n心跳停止了七秒。';
+          }
+          break;
+        }
+        case 'gacha': {
+          const key = st.res.ticket != null ? 'ticket' : (st.res.roll != null ? 'roll' : (st.res.card != null ? 'card' : null));
+          if (key) {
+            if (st.res[key] <= 0) { this.systemUsed = false; return { text:'没有次数了。', chips:[] }; }
+            st.res[key] -= 1;
+          }
+          const r = rand() / Math.max(0.6, scale);
+          if (r < 0.1) { text = '白光一闪。\n【N】一次性纸巾。'; this.growRandom(1); }
+          else if (r < 0.55) { text = '【R】普通强化。'; this.growRandom(Math.round(2*scale)); }
+          else if (r < 0.85) { text = '【SR】稀有垂青。'; this.growRandom(Math.round(4*scale)); st.hp = Math.min(st.maxHp, st.hp+10); }
+          else { text = '【SSR】系统罕见地沉默了两秒。'; this.growRandom(Math.round(7*scale)); st.freePts += 1; }
+          break;
+        }
+        case 'sim': {
+          if ((st.res.sim||0) > 0) st.res.sim -= 1;
+          text = '你在脑中过了一遍未来的分支。\n有些路看起来安全，其实尽头是墙。';
+          if (this.pending && this.pending.opts) this.pending.opts.forEach(function(o){ o._revealed = true; });
+          this.growRandom(1);
+          break;
+        }
+        case 'mindread': {
+          if ((st.res.mp||0) > 0) st.res.mp = Math.max(0, st.res.mp - 12);
+          text = '你听见了他们没说出口的话。';
+          this.growRandom(1, '智');
+          break;
+        }
+        case 'analysis': {
+          text = '环境在你眼里变成了一排数字。';
+          this.growRandom(1, '智');
+          break;
+        }
+        case 'copy': {
+          if ((st.res.slots||0) <= 0) { this.systemUsed = false; return { text:'复制槽已满。', chips:[] }; }
+          st.res.slots -= 1;
+          text = '你盯住眼前的一切，把其中一项"应该是我的东西"抽了出来。';
+          this.growRandom(Math.round(3*scale));
+          break;
+        }
+        case 'leech':
+        case 'hunt': {
+          const p = this.odds('战', 24);
+          if (rand() < p) {
+            text = '你找到了猎物。过程不必细说，结果是：你变强了。';
+            this.growRandom(Math.round(3*scale), '战');
+            st.res.kills = (st.res.kills||0) + 1;
+            st.hp = Math.min(st.maxHp, st.hp + 8);
+          } else {
+            text = '猎物比你想的凶。你带着伤回来了。';
+            st.hp = clamp(st.hp - 18, 0, this.calcMaxHp());
+          }
+          break;
+        }
+        case 'shop': {
+          const r = rand();
+          if (r < 0.3) { text = '商城里刷出一件保命道具。'; st.hp = Math.min(st.maxHp, st.hp+20); }
+          else if (r < 0.7) { text = '你挑了一份强化素材，直接用了。'; this.growRandom(Math.round(3*scale)); }
+          else { text = '你什么都没买，只是把货架看了一遍。'; this.growRandom(1); }
+          break;
+        }
+        case 'pact': {
+          st.res.pacts = (st.res.pacts||0) + 1;
+          st.res.debt = (st.res.debt||0) + 20;
+          (sys.stats||[]).forEach(function(s){
+            if (s.k === 'debt') return;
+            if (s.k === 'soul') { st.attrs.soul = Math.max(0, (st.attrs.soul||100) - 10); return; }
+            st.attrs[s.k] = Math.round((st.attrs[s.k]||0) + Math.round(5*scale));
+          });
+          text = '你在契约上按了手印。\n力量涌上来的那一刻，你听见有人在很远的地方笑。';
+          break;
+        }
+        case 'quest': {
+          const p = this.odds('智', 22);
+          if (rand() < p) { text = '任务完成。系统难得地给了一句评价：还不错。'; this.growRandom(Math.round(3*scale)); st.res.qp = (st.res.qp||0) + 10; }
+          else { text = '任务失败。它没有惩罚你，只是安静地记了一笔。'; st.dimBonus['运'] = (st.dimBonus['运']||0) - 1; }
+          break;
+        }
+        case 'rewind': {
+          if ((st.res.rw||0) > 0) { st.res.rw -= 1; text = '你把这一刻钉成了存档点。'; st.flags.savepoint = 1; }
+          else text = '没有回档次数了。';
+          break;
+        }
+        case 'maker': {
+          return this.craftSystem();
+        }
+        case 'luck': {
+          if ((st.res.fate||0) > 0) {
+            st.res.fate -= 1;
+            st.flags.autoWin = 1;
+            text = '你顺应了一次天命。\n接下来的一次判定，世界会让着你。';
+          } else { text = '天命值不够了。'; this.systemUsed = false; }
+          break;
+        }
+        default: {
+          this.growRandom(Math.round(2*scale));
+          const act = (sys.acts||[])[0];
+          text = act ? ('你用了【' + act.n + '】。' + (act.d||'')) : '你使用了一次系统能力。';
+        }
+      }
+      const death = st.hp <= 0 ? this.handleDeath('你在' + st.age + '岁那年死在了自己手里') : null;
+      if (death && death.revived) text += '\n' + death.text;
+      st.log.push({ age:st.age, kind:'sys', text: text.replace(/\n/g,' ') });
+      if (death && death.ended) this.phase = 'end';
+      return { text:text, chips:chips, death:death };
+    },
+
+    async craftSystem(){
+      const st = this.state;
+      if ((st.res.mat||0) < 10) return { text:'素材不足，造不出稳定结构。', chips:[] };
+      st.res.mat -= 10;
+      let sys = null;
+      if (LS.AI.mode() !== 'offline' && this.aiUsed < this.aiBudget()) {
+        try {
+          sys = await LS.AI.genSystem(null);
+          this.aiUsed++; st.aiUsed = this.aiUsed;
+        } catch(e){ this.lastAiError = e.message; }
+      }
+      if (!sys) {
+        const base = LS.SYSTEMS.filter(function(s){ return s.id !== 'maker'; });
+        const src = base[Math.floor(this.rnd()*base.length)];
+        const prefix = LS.pick(['暗面','无声','万界','逆序','慈悲','疯狂','残缺','第二'], this.rnd.bind(this));
+        sys = JSON.parse(JSON.stringify(src));
+        sys.id = 'cus_' + Date.now().toString(36);
+        sys.name = prefix + sys.name.replace('系统','') + '系统';
+        sys.tagline = '由一位制造师在' + st.age + '岁那年写下的规则。';
+        sys.desc = '它不是天生的。它是某个人用素材、算力和一段人生拼出来的。';
+        sys.rarity = 'SR';
+        sys.custom = true;
+      }
+      sys.authorPathId = st.id;
+      sys.authorName = st.name;
+      sys.authorWorld = st.worldName;
+      sys.createdAt = Date.now();
+      LS.Store.saveSystem(sys);
+      st.made = (st.made||0) + 1;
+      st.res.made = (st.res.made||0) + 1;
+      st.tags.push('制造师');
+      st.maxHp = this.calcMaxHp();
+      st.hp = Math.min(st.maxHp, st.hp + 10);
+      this.growRandom(2, '灵');
+      return {
+        text: '你从自己的面板里抽出一根发光的线，剪断，重新接上。\n\n【' + sys.name + '】诞生了。\n它会在某个陌生人的十八岁，成为他的命运。',
+        chips: [{text:'新系统入库：' + sys.name, good:true}],
+        system: sys
+      };
+    },
+
+    addPoint(k){
+      const st = this.state;
+      if (st.freePts <= 0) return false;
+      if (st.attrs[k] == null) return false;
+      st.attrs[k] = Math.round((st.attrs[k] + 1)*10)/10;
+      st.freePts -= 1;
+      st.maxHp = this.calcMaxHp();
+      return true;
+    },
+
+    endYear(){
+      const st = this.state;
+      if (st.ended) { this.phase = 'end'; return 'end'; }
+      // 年度账单写进日志
+      if (st.econ && st.age >= 18) {
+        const e = st.econ;
+        st.log.push({ age:st.age, kind:'sys', text:
+          '这一年：主动收入 ' + Math.round(e.active*10)/10 + ' 万，被动 ' + Math.round(e.passive*10)/10 +
+          ' 万，支出 ' + Math.round(e.expense*10)/10 + ' 万。' +
+          (e.debt > 0 ? '负债 ' + Math.round(e.debt) + ' 万。' : '没有负债。') });
+      }
+      st.age += 1;
+      if (st.age % 10 === 0) {
+        st.log.push({ age:st.age, kind:'say', text:'你 ' + st.age + ' 岁了。' });
+      }
+      this.phase = 'adult';
+      return 'next';
+    },
+
+    computeScore(){
+      const st = this.state;
+      const dims = this.dims();
+      let s = 0;
+      Object.keys(dims).forEach(function(d){ s += Math.min(dims[d], 120) * 1.5; });
+      s += Math.min(st.age, 100) * 2;
+      s += Math.min(st.tags.length, 20) * 3;
+      s += (LS.RARITY[st.rarity] ? LS.RARITY[st.rarity].score : 0);
+      s += Math.min(st.deaths, 15) * 8 + Math.min(st.rewinds, 10) * 5;
+      s += Math.min(st.made || 0, 8) * 30;
+      s += Math.max(0, Math.round((st.brain.iq - 100) * 2));
+      if (st.econ) s += Math.max(-60, Math.min(120, Math.round(LS.ECON.netWorth(st.econ) * 0.4)));
+      if (st.alive) s += 60;
+      return Math.round(s);
+    },
+
+    rankOf(score){
+      if (score >= 1200) return { t:'SSS · 传说', c:'#D99A2B', d:'你的名字会被写进某种"设定集"里。' };
+      if (score >= 900) return { t:'SS · 传奇', c:'#C77B2B', d:'一个时代里，能出几个你这样的人？' };
+      if (score >= 700) return { t:'S · 顶尖', c:'#8E6FD8', d:'你活成了别人口中的"如果当年"。' };
+      if (score >= 520) return { t:'A · 出色', c:'#4F9DD1', d:'你确实改变了一些事情，包括你自己。' };
+      if (score >= 350) return { t:'B · 不错', c:'#4C9A72', d:'普通人的上限，你已经摸到了。' };
+      if (score >= 200) return { t:'C · 平凡', c:'#8E9AA6', d:'你活过、爱过、也认输过。' };
+      return { t:'D · 微尘', c:'#A08C7D', d:'世界没有记住你，但你确实来过。' };
+    },
+
+    endRun(reason, reasonTag){
+      const st = this.state;
+      if (st.ended && st.pathSaved) return st.pathId;
+      st.ended = true;
+      st.alive = st.hp > 0;
+      st.endReason = reason;
+      st.endTag = reasonTag || (st.alive ? '寿终' : '死亡');
+      st.score = this.computeScore();
+      st.rank = this.rankOf(st.score);
+
+      const b = st.brain;
+      const path = {
+        id: st.id, at: Date.now(), v: LS.VERSION,
+        name: st.name, gender: st.gender,
+        worldId: st.worldId, worldName: st.worldName,
+        startWorld: 'modern',
+        systemId: st.systemId, systemName: st.systemName, rarity: st.rarity,
+        seed: st.seed, age: st.age, score: st.score, rank: st.rank.t,
+        reason: reason, endTag: st.endTag,
+        attrs: Object.assign({}, st.attrs), res: Object.assign({}, st.res),
+        statsSchema: ((st.system&&st.system.stats)||[]).map(function(x){ return {k:x.k,n:x.n,dim:x.dim}; }),
+        tags: st.tags.slice(0, 20),
+        maker: !!st.maker, made: st.made || 0,
+        deaths: st.deaths, aiUsed: st.aiUsed,
+        iq: b.iq, mastery: b.mastery,
+        econ: st.econ ? { net: LS.ECON.netWorth(st.econ), debt: Math.round(st.econ.debt*10)/10, active: st.econ.active, passive: st.econ.passive } : null,
+        parent: b.parent ? b.parent.name : '',
+        school: b.school ? b.school.name : '',
+        timeline: st.timeline.slice(-24),
+        childMemories: st.childMemories.map(function(m){ return m.age + '岁·' + m.title + '：' + m.choice; }),
+        ratingCount: 0, ratingSum: 0
+      };
+      LS.Store.savePath(path);
+      st.pathSaved = true;
+      st.pathId = path.id;
+      this.pathRecord = path;
+      this.phase = 'end';
+      return path;
+    },
+
+    exportRun(){
+      const st = this.state;
+      return {
+        v: LS.VERSION, name: st.name, worldId: st.worldId, systemId: st.systemId,
+        seed: st.seed, maker: st.maker, age: st.age, score: st.score || 0,
+        iq: st.brain ? st.brain.iq : 0,
+        timeline: st.timeline.slice(-12)
+      };
+    }
+  };
+
+  LS.Game = Game;
+})();
