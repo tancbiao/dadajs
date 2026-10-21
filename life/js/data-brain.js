@@ -162,18 +162,19 @@ LS.BRAIN = (function(){
   /* ---------- 18 岁结算 ---------- */
   function finalIQ(b){
     const p = b.parent;
-    let iq = b.geneIQ
-      + 0.30 * (b.ndi - 70)
-      + 0.09 * (b.focus - 42)
-      + 0.04 * (b.mirror - 42)
-      - 0.10 * Math.max(0, b.cortisol - 45)
-      - 0.05 * b.sleepDebt
-      + (b.eduIQ || 0)
-      + p.guide;
-    if (b.earlyEdu === 'enrich') iq += 1.5;
-    if (b.earlyEdu === 'drill') iq -= 1.2;
+    // 四块分开算，报告里要能看见各自贡献
+    const gene = b.geneIQ;
+    const growth = 0.30 * (b.ndi - 70) + 0.09 * (b.focus - 42) + 0.04 * (b.mirror - 42);
+    const selfIQ = Math.round((growth + (b.selfIQ || 0) - 0.05 * b.sleepDebt) * 10) / 10;
+    let family = p.guide + (b.familyIQ || 0) - 0.10 * Math.max(0, b.cortisol - 45);
+    if (b.earlyEdu === 'enrich') family += 1.5;
+    if (b.earlyEdu === 'drill') family -= 1.2;
+    family = Math.round(family * 10) / 10;
+    const edu = Math.round((b.eduIQ || 0) * 10) / 10;
+    let iq = gene + selfIQ + family + edu;
     iq = Math.round(clamp(iq, 62, 160));
     b.iq = iq;
+    b.iqParts = { gene: Math.round(gene), family: family, self: selfIQ, edu: edu };
     return iq;
   }
 

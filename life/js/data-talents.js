@@ -13,7 +13,7 @@ LS.TALENTS = [
     desc:'一岁半能说完整句子，三岁自己看说明书。亲戚说这孩子将来不得了。',
     start:{ iq:20 },
     good:{ iq:0.4, ndi:0.6, focus:0.3 },
-    bad:{ iq:-1.2, cort:2.2, ndi:-0.8 },
+    bad:{ iq:-0.3, cort:2.2, ndi:-0.8 },
     badText:'你学得太快，四十分钟的课你十分钟就懂了，剩下的三十分钟只能发呆。老师说你不专心，建议去查一下。',
     crisis:{ age:9, text:'医院的确诊单上写着两个缩写。你父母拿着它，像拿着一份说明书。', eff:{ iq:-25, cort:8, focus:-6 }, tag:'被确诊' }
   },
@@ -85,7 +85,7 @@ LS.TALENTS = [
     desc:'三岁能背下整本绘本，连页码都不错。',
     start:{ iq:8, focus:6 },
     good:{ iq:0.3, focus:0.4 },
-    bad:{ iq:-0.6, focus:-0.7, cort:2 },
+    bad:{ iq:-0.2, focus:-0.7, cort:2 },
     badText:'你能背下整篇课文，却讲不出它什么意思。老师说你"死记硬背"。',
     crisis:{ age:9, text:'试卷开始考"理解"，你第一次觉得自己脑子不够用。', eff:{ iq:-10, focus:-5 }, tag:'背不动了' }
   },
@@ -103,7 +103,7 @@ LS.TALENTS = [
     desc:'你闭着眼也能画出家里的平面图，方向感好得离谱。',
     start:{ iq:5, focus:4 },
     good:{ iq:0.3, focus:0.3 },
-    bad:{ iq:-0.4, focus:-0.5, cort:1.2 },
+    bad:{ iq:-0.15, focus:-0.5, cort:1.2 },
     badText:'这个本事在考试里不算分。你父母说："画这些有什么用。"',
     crisis:{ age:9, text:'你的草稿本被撕了，因为上面画满了地图。', eff:{ focus:-5, cort:5 }, tag:'被撕掉' }
   },

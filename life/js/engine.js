@@ -994,7 +994,7 @@ window.LS = window.LS || {};
       if (eff.focus) b.focus = Math.max(5, Math.min(100, b.focus + eff.focus * mult));
       if (eff.mirror) b.mirror = Math.max(5, Math.min(100, b.mirror + eff.mirror * mult));
       if (eff.cort) b.cortisol = Math.max(0, Math.min(100, b.cortisol + eff.cort * mult));
-      if (eff.iq) b.geneIQ = Math.round((b.geneIQ || 100) + eff.iq * mult);
+      if (eff.iq) { const d = Math.round(eff.iq * mult * 10) / 10; b.geneIQ = Math.round((b.geneIQ || 100) + d); b.familyIQ = Math.round(((b.familyIQ || 0) + d) * 10) / 10; }
 
       // 危机节点：天赋被现实撞碎的那一刻
       const c = t.crisis;
@@ -1005,7 +1005,7 @@ window.LS = window.LS || {};
         const scale = safe ? 0.4 : 1;
         const ce = {};
         Object.keys(c.eff || {}).forEach(function(k){ ce[k] = Math.round((c.eff[k] || 0) * scale); });
-        if (ce.iq) b.geneIQ = Math.round((b.geneIQ || 100) + ce.iq);
+        if (ce.iq) { b.geneIQ = Math.round((b.geneIQ || 100) + ce.iq); b.familyIQ = Math.round(((b.familyIQ || 0) + ce.iq) * 10) / 10; }
         if (ce.cort) b.cortisol = Math.min(100, b.cortisol + ce.cort);
         if (ce.focus) b.focus = Math.max(5, b.focus + ce.focus);
         if (ce.phy) b.phy = Math.max(5, b.phy + ce.phy);
@@ -1030,6 +1030,7 @@ window.LS = window.LS || {};
       if (bb.mirror) b.mirror = clamp(b.mirror + bb.mirror, 5, 100);
       if (bb.travel) { b.travel = clamp((b.travel || 0) + bb.travel, 0, 100); b.novel = (b.novel || 0) + 1; }
       if (bb.phy) b.phy = clamp(b.phy + bb.phy, 5, 100);
+      if (bb.iq) b.selfIQ = Math.round(((b.selfIQ || 0) + bb.iq) * 10) / 10;
       if (bb.res) b.res = clamp(b.res + bb.res, 5, 100);
       // 年度生活修正（下一年发育时用）
       b.mods = b.mods || {};

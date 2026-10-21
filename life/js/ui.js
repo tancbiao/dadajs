@@ -1319,7 +1319,9 @@ window.LS = window.LS || {};
             <div><span>世界</span><b>${esc(st.worldName)}</b></div>
             <div><span>系统</span><b>${esc(st.systemName||'无')}</b></div>
             <div><span>智商</span><b>${b.iq}（${b.iq>=131?'天才':b.iq>=120?'聪明':b.iq>=110?'中上':b.iq>=95?'普通':'偏慢'}）</b></div>
-            <div><span>教育影响</span><b>智力 ${b.eduIQ>0?'+':''}${b.eduIQ||0}</b></div>
+            <div><span>家庭影响</span><b>${(b.iqParts && b.iqParts.family>0?'+':'') + ((b.iqParts&&b.iqParts.family)||0)}</b></div>
+            <div><span>自我成长</span><b>${(b.iqParts && b.iqParts.self>0?'+':'') + ((b.iqParts&&b.iqParts.self)||0)}</b></div>
+            <div><span>教育影响</span><b>${(b.iqParts && b.iqParts.edu>0?'+':'') + ((b.iqParts&&b.iqParts.edu)||0)}</b></div>
             <div><span>系统掌握度</span><b>${b.mastery}%</b></div>
             <div><span>家庭</span><b>${esc(b.parent.name)}</b></div>
             <div><span>净资产</span><b class="${net<0?'neg':''}">${LS.ECON.money(net, st.worldId)}</b></div>
