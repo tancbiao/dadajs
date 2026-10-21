@@ -1609,15 +1609,24 @@ window.LS = window.LS || {};
                     .slice(0, n).map(function(x){ return x.o; });
         ev.limited = true;
       }
-      // 智商 131+：多一条系统骚操作
+      // 智商 131+：多一条系统骚操作（真的有收益，不是空选项）
       if (iq >= 131 && st.system) {
+        const stats = st.system.stats || [];
+        const pickIdx = stats.length ? Math.floor(this.rnd() * stats.length) : -1;
+        const pick = pickIdx >= 0 ? stats[pickIdx] : null;
+        const resList = st.system.res || [];
+        const resPick = resList.length ? resList[Math.floor(this.rnd() * resList.length)] : null;
+        const attrs = {};
+        const res = {};
+        if (pick) attrs[pick.k] = 3 + Math.floor(this.rnd() * 3);
+        if (resPick) res[resPick.k] = 5 + Math.floor(this.rnd() * 6);
         ev.opts.push({
           n: '【系统】换个它没想过的方式',
           dim: '智',
           dc: 22,
-          s: '你把面板翻过来看了一遍，发现规则里有一处写得很含糊。\n规则没写不能这么做。',
-          f: '你赌了一把，系统没接住。',
-          eff: { attrs: {}, res: {}, tags: ['骚操作'] },
+          s: '你把面板翻过来看了一遍，发现规则里有一处写得很含糊。\n规则没写不能这么做。\n\n系统沉默了两秒，然后照做了。',
+          f: '你赌了一把，系统没接住。规则里那句话，原来是防着你的。',
+          eff: { attrs: attrs, res: res, tags: ['骚操作'] },
           effF: { hp: -8 },
           _wild: true
         });

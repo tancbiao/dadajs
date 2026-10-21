@@ -434,7 +434,7 @@ window.LS = window.LS || {};
           <div class="options">
             ${it.opts.map(function(o,i){
               return `<button class="opt" data-act="childopt" data-val="${i}">
-                <span class="opt-idx">${'ABC'[i]}</span>
+                <span class="opt-idx">${('ABCDEFG'[i] || String(i+1))}</span>
                 <span class="opt-main"><b>${esc(o.n)}</b></span>
               </button>`;
             }).join('')}
@@ -789,7 +789,7 @@ window.LS = window.LS || {};
             ${ev.opts.map(function(o,i){
               const p = (reveal && o.dim) ? Math.round(G.odds(o.dim, o.dc)*100) : null;
               return `<button class="opt" data-act="opt" data-val="${i}">
-                <span class="opt-idx">${'ABC'[i]}</span>
+                <span class="opt-idx">${('ABCDEFG'[i] || String(i+1))}</span>
                 <span class="opt-main">
                   <b>${esc(o.n)}</b>
                   ${p != null ? `<i>成功率 <em class="${p>=60?'good':p>=35?'mid':'bad'}">${p}%</em></i>` : ''}
