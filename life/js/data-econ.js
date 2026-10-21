@@ -137,6 +137,15 @@ LS.ECON = (function(){
       if (age >= 60) e.active = Math.round(e.salary * 0.45 * 10) / 10;
     }
 
+    // 三种支出汇（sink）：让钱必须花出去。系数 [PLACEHOLDER]，待 playtest 校准
+    if (e.graduated && LS.ECON && LS.ECON.sinks) {
+      const k = LS.ECON.sinks;
+      const identity = Math.max(0, e.active) * k.identity;          // 身份成本
+      const risk = Math.max(0, e.cash) * k.risk + Math.max(0, e.debt) * 0.02;  // 风险成本
+      const relation = Math.max(0, e.linkMark || 0) * k.relation;   // 关系成本
+      e.expense = Math.round((2.2 + identity + risk + relation) * 10) / 10;
+    }
+
     let flow = e.active + e.passive - e.expense;
     e.cash = Math.round((e.cash + flow) * 10) / 10;
 

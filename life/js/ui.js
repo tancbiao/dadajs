@@ -79,6 +79,7 @@ window.LS = window.LS || {};
               '<em>继续 →</em></button>';
           })()}
           <button class="btn btn-primary btn-lg btn-block" data-act="go" data-val="create">出生</button>
+          <button class="btn btn-ghost btn-block" data-act="slicegame">⏱️ 十分钟版 · 现代都市 18–40 岁</button>
           <div class="hero-links">
             <button class="link" data-act="go" data-val="paths">别人的人生</button>
             <span>·</span>
@@ -156,7 +157,7 @@ window.LS = window.LS || {};
         case 'start': {
           const nm = ($('#nameInput') && $('#nameInput').value || '').trim();
           this.create.name = nm.slice(0,8);
-          this.startGame({ gender:this.create.gender, name:this.create.name || null, maker:this.create.maker, systemId:this.create.sysId || null });
+          this.startGame({ gender:this.create.gender, name:this.create.name || null, maker:this.create.maker, systemId:this.create.sysId || null, talent:this.create.talent || null });
           break;
         }
         case 'childnext':
@@ -194,6 +195,10 @@ window.LS = window.LS || {};
           await this.enterWorld(); break;
         case 'resume':
           this.resumeGame(); break;
+        case 'picktalent':
+          this.create.talent = val; this.createScreen(); break;
+        case 'slicegame':
+          LS.Game.newGame({ slice:true }); this.game(); break;
         case 'civstart': {
           const r = LS.Game.civStart(val);
           if (r && r.error) this.toast(r.error);
@@ -248,6 +253,10 @@ window.LS = window.LS || {};
 
     createScreen(){
       this.screen = 'create';
+      if (!this.create.offer && window.LS && LS.Talent) {
+        this.create.offer = LS.Talent.offer(Math.random);
+        this.create.talent = this.create.offer[0].id;
+      }
       $('#stage').innerHTML = `
         <section class="panel">
           <div class="panel-head">
@@ -257,6 +266,17 @@ window.LS = window.LS || {};
           <div class="world-brief">
             <b>🏙️ 现代都市 · 20XX 年</b>
             <p>十八岁之前你都在这里。十八岁之后会不会去别的地方——要看你那天遇上的是个什么系统。</p>
+          </div>
+          <div class="form-row">
+            <label>天赋</label>
+            <div class="talent-list">
+              ${(this.create.offer || []).map((t) => `<button class="talent-chip ${this.create.talent===t.id?'on':''}" data-act="picktalent" data-val="${t.id}">
+                <span class="tc-ico">${t.icon}</span>
+                <b>${esc(t.n)}</b>
+                <i>${esc(t.desc)}</i>
+                <em class="tc-warn">只有高知 / 放养的父母才养得住</em>
+              </button>`).join('')}
+            </div>
           </div>
           <div class="form-row">
             <label>名字</label>

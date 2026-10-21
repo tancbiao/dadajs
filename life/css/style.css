@@ -932,3 +932,15 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 .pr-bar{ height:5px; border-radius:5px; background:#E6EEF6; overflow:hidden; margin-top:5px; }
 .pr-bar i{ display:block; height:100%; background:linear-gradient(90deg,#8FB8E8,#4F79B8); }
 .pr-step{ font-style:normal; font-size:10.5px; color:#6B7F94; display:block; margin-top:5px; }
+
+/* ================= 天赋选择 ================= */
+.talent-list{ display:flex; flex-direction:column; gap:8px; }
+.talent-chip{
+  text-align:left; background:#FFFCFA; border:1px solid var(--line2); border-radius:14px;
+  padding:10px 12px; display:flex; flex-direction:column; gap:3px;
+}
+.talent-chip.on{ border-color:var(--rose); background:#FFF4F6; box-shadow:0 4px 14px rgba(226,102,138,.12); }
+.tc-ico{ font-size:20px; }
+.talent-chip b{ font-size:14px; }
+.talent-chip i{ font-style:normal; font-size:11px; color:var(--muted); line-height:1.65; }
+.tc-warn{ font-style:normal; font-size:10px; color:#B4575F; background:#FFF6F6; border-radius:8px; padding:2px 8px; align-self:flex-start; margin-top:2px; }

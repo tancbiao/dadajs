@@ -189,11 +189,23 @@ window.LS = window.LS || {};
         dimBonus:{战:0,智:0,体:0,社:0,运:0,财:0,灵:0},
         made:0, aiUsed:0, devDone:0, customActs:[],
         buildId:null, build:null, deathWays:{},
+        slice: !!(LS.SLICE && opts && opts.slice),
+        talentId: (opts && opts.talent) || null,
+        talentCrisis: 0,
         lifeVar: Math.round((this.rnd() * 26 - 10)),   // 每个人天生寿元不同
         achievements: [],
         startedAt: Date.now()
       };
       this.state = st;
+      // 天赋：选了就用选的，没选就随机给一个（老存档兼容）
+      if (LS.Talent) {
+        let tid = st.talentId;
+        if (!tid) {
+          const offer = LS.Talent.offer(this.rnd.bind(this));
+          tid = offer[0].id;
+        }
+        LS.Talent.apply(st, tid);
+      }
       this.aiUsed = 0;
       this.usedEvents = [];
       this.usedChild = [];
@@ -213,7 +225,7 @@ window.LS = window.LS || {};
       // 童年节奏：1-9 无选择；10 岁开智；10-17 六次事件
       // 另外在 8/11/12/16 岁各插一场"学校生活"：10 岁前由学校替你决定，10 岁后你才有得选
       const evtAges = [10, 11, 13, 14, 15, 17];
-      const lifeAges = { 8:null, 9:null, 10:null, 11:'l_manga', 12:null, 13:null, 14:'l_novel', 15:null, 16:null };
+      const lifeAges = { 8:null, 9:null, 10:'l_hw_crash', 11:'l_manga', 12:null, 13:'l_smoke_hard', 14:'l_novel', 15:null, 16:null };
       this.plan = [];
       // 1–5 岁：一张速写卡带过（学《人生重开模拟器》的节奏，别让玩家点九次）
       this.plan.push({ age:5, kind:'batch', from:1, to:5 });
@@ -464,6 +476,7 @@ window.LS = window.LS || {};
       LS.BRAIN.yearDevelop(b, age, mods);
       b.mods = null;
       st.devDone = age;
+      this.talentTick(age);
     },
 
     /* 学校生活事件（童年版）：10 岁前由学校替你决定，10 岁后才给你选 */
@@ -842,6 +855,45 @@ window.LS = window.LS || {};
       return this.pending;
     },
 
+    /* 天赋每年结算：养得住就长，养不住就碎 */
+    talentTick(age){
+      const st = this.state, b = st.brain;
+      const t = LS.Talent && LS.Talent.byId(st.talentId);
+      if (!t) return;
+      const safe = LS.TALENT_SAFE_PARENTS.indexOf(b.parent.id) >= 0;
+      const eff = safe ? (t.good || {}) : (t.bad || {});
+      const mult = safe ? 1 : (age >= 10 ? 1.4 : 1);   // 越往后越难扭转
+
+      if (eff.ndi) b.ndi = Math.max(5, Math.min(100, b.ndi + eff.ndi * mult));
+      if (eff.focus) b.focus = Math.max(5, Math.min(100, b.focus + eff.focus * mult));
+      if (eff.mirror) b.mirror = Math.max(5, Math.min(100, b.mirror + eff.mirror * mult));
+      if (eff.cort) b.cortisol = Math.max(0, Math.min(100, b.cortisol + eff.cort * mult));
+      if (eff.iq) b.geneIQ = Math.round((b.geneIQ || 100) + eff.iq * mult);
+
+      // 危机节点：天赋被现实撞碎的那一刻
+      const c = t.crisis;
+      // 高知/放养家庭有机会把天赋保住；其余家庭几乎必然被撞碎
+      const crisisHit = c ? (safe ? this.rnd() < 0.35 : true) : false;
+      if (c && age === c.age && !st.talentCrisis && crisisHit) {
+        st.talentCrisis = 1;
+        const scale = safe ? 0.4 : 1;
+        const ce = {};
+        Object.keys(c.eff || {}).forEach(function(k){ ce[k] = Math.round((c.eff[k] || 0) * scale); });
+        if (ce.iq) b.geneIQ = Math.round((b.geneIQ || 100) + ce.iq);
+        if (ce.cort) b.cortisol = Math.min(100, b.cortisol + ce.cort);
+        if (ce.focus) b.focus = Math.max(5, b.focus + ce.focus);
+        if (ce.phy) b.phy = Math.max(5, b.phy + ce.phy);
+        if (c.tag) st.tags.push(c.tag);
+        st.timeline.push(age + '岁·' + t.n + '：' + c.text);
+        b.log.push({ age: age, text: '【天赋危机】' + t.n + '：' + c.text });
+      }
+      if (c && age === c.age && safe && !crisisHit) {
+        st.flags.talentKept = 1;
+        st.tags.push('天赋保住了');
+        st.timeline.push(age + '岁·' + t.n + '被父母保住了');
+      }
+    },
+
     /* 脑发育增量（童年用，成年后只影响身体） */
     applyBrain(bb){
       const b = this.state.brain;
@@ -925,6 +977,7 @@ window.LS = window.LS || {};
 
       // 经济面板开张
       st.econ = LS.ECON.init(b.iq, 'modern');
+      LS.ECON.sinks = st.slice ? LS.SLICE.sinks : null;
 
       // 这个系统有哪几种常见的活法（系统文套路）
       st.tropes = [];
@@ -951,7 +1004,9 @@ window.LS = window.LS || {};
     },
 
     rollSystem(w){
-      const all = LS.SYSTEMS.filter(function(s){ return s.id !== 'maker'; });
+      let all = LS.SYSTEMS.filter(function(s){ return s.id !== 'maker'; });
+      const allow = (this.state && this.state.slice && LS.SLICE) ? LS.SLICE.systems : null;
+      if (allow) all = all.filter(function(s){ return allow.indexOf(s.id) >= 0; });
       const self = this;
       const pool = [];
       all.forEach(function(s){
@@ -970,6 +1025,7 @@ window.LS = window.LS || {};
     /* 系统的"出身"决定你被带到哪里 */
     rollTravel(sys, b){
       const st = this.state;
+      if (st.slice) { st.flags.stayed = 1; return null; }   // 切片不穿越
       if (st.worldId !== 'modern') return null;
       // 极少数人运气好，被留在了原来的世界
       if (this.rnd() < 0.1) {
@@ -1048,6 +1104,14 @@ window.LS = window.LS || {};
       return Math.round(v * 10) / 10;
     },
 
+    visibleDims(){
+      const all = this.dims();
+      if (!this.state || !this.state.slice || !LS.SLICE) return all;
+      const out = {};
+      LS.SLICE.dims.forEach(function(d){ out[d] = all[d]; });
+      return out;
+    },
+
     dims(){
       const self = this;
       const out = {};
@@ -1067,7 +1131,7 @@ window.LS = window.LS || {};
         res: (sys.res||[]).map(function(r){
           return { k:r.k, n:r.n, icon:r.icon || '◆', v: Math.round((st.res[r.k]||0)*10)/10 };
         }),
-        dims: this.dims(),
+        dims: this.visibleDims(),
         tags: st.tags.slice(-8),
         rarity: sys.rarity, systemName: sys.name, icon: sys.icon,
         iq: st.brain.iq, mastery: st.brain.mastery,
@@ -1160,6 +1224,7 @@ window.LS = window.LS || {};
       const st = this.state;
       const w = LS.worldById(st.worldId) || {};
       let r = 0.0025 + Math.max(0, st.age - 45) * 0.0014 + (w.danger || 1) * 0.0014;
+      if (st.flags.smoker && st.age >= 40) r += 0.0035;
       if (st.flags.riskMul != null) r *= st.flags.riskMul;
       if (st.flags.immortal) r *= 0.15;
       r -= this.dimVal('体') * 0.00012;
@@ -1201,6 +1266,7 @@ window.LS = window.LS || {};
       let cap = 3;
       if (age >= 60) cap = 1;
       else if (age >= 30) cap = 2;
+      if (st.slice && LS.SLICE) cap = LS.SLICE.eventCap;
 
       if (this.queue.length > cap) this.queue = this.queue.slice(0, cap);
 
@@ -1764,6 +1830,7 @@ window.LS = window.LS || {};
     apMax(){
       const st = this.state;
       if (!st) return 3;
+      if (st.slice && LS.SLICE) return LS.SLICE.apMax + (this.buildMods().apBonus || 0);
       const bonus = this.buildMods().apBonus || 0;
       if (st.age < 45) return 3 + bonus;
       if (st.age < 60) return 2 + bonus;
@@ -2321,6 +2388,11 @@ window.LS = window.LS || {};
           '这一年：收入 ' + M(e.active) + '，被动 ' + M(e.passive) +
           '，支出 ' + M(e.expense) + '。' +
           (e.debt > 0 ? '负债 ' + M(e.debt) + '。' : '没有负债。') });
+      }
+      // 切片：四十岁收束，一局到此为止
+      if (st.slice && LS.SLICE && st.age + 1 > LS.SLICE.to) {
+        this.endRun('四十岁这年，你把账本合上，不再往下算了。', '收束');
+        return 'end';
       }
       st.age += 1;
       if (st.age % 10 === 0) {
