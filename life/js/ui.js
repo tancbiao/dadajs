@@ -214,6 +214,8 @@ window.LS = window.LS || {};
           LS.Game.phase = 'actionResult';
           this.actionResultScreen(); break;
         }
+        case 'dofast':
+          await this.doFast(parseInt(val,10) || 5); break;
         case 'dostory':
           await this.doStory(); break;
         case 'aiending':
@@ -972,6 +974,7 @@ window.LS = window.LS || {};
               ${tier.key === 'none' ? '随便按一个' : '使用系统能力'}
             </button>
           </div>
+          ${this.fastButton()}
           <button class="btn btn-primary btn-block" data-act="endyear">结束这一年 · 进入 ${st.age+1} 岁</button>
         </section>
         ${this.logBlock(8)}
@@ -994,6 +997,31 @@ window.LS = window.LS || {};
         </section>
         ${this.panelBlock()}
       `;
+    },
+
+    fastButton(){
+      const n = LS.Game.canFast ? LS.Game.canFast() : 0;
+      if (!n) return '';
+      return '<button class="btn btn-ghost btn-block" data-act="dofast" data-val="' + n + '">⏩ 快进 ' + n + ' 年（自动选最稳的）</button>';
+    },
+
+    async doFast(years){
+      const G = LS.Game;
+      $('#stage').innerHTML = '<section class="loading-card"><div class="spinner"></div><p>正在快进 ' + years + ' 年……</p></section>';
+      const rows = await G.fastForward(years);
+      if (G.state.ended) { this.ending(); return; }
+      this.fastScreen(rows);
+    },
+
+    fastScreen(rows){
+      const st = LS.Game.state;
+      const list = (rows || []).map(function(r){
+        return '<div class="fast-row"><b>' + r.age + ' 岁</b><span>' + esc(r.text) + '</span></div>';
+      }).join('');
+      $('#stage').innerHTML = this.topbar() +
+        '<section class="panel"><div class="panel-head"><h2>' + st.age + ' 岁</h2><p class="muted">这几年过得很快，你只记得这些。</p></div>' +
+        '<div class="fast-list">' + list + '</div>' +
+        '<button class="btn btn-primary btn-block" data-act="backactions">继续</button></section>';
     },
 
     async doStory(){

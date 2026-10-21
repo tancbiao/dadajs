@@ -277,6 +277,50 @@ window.LS = window.LS || {};
       return lines.join('\n');
     },
 
+    /* ================= 快进：把年纪一口气过掉 ================= */
+    canFast(){
+      const st = this.state;
+      if (!st || !st.system || st.ended) return 0;
+      if (st.age < 30) return 0;
+      return st.age >= 50 ? 10 : 5;
+    },
+
+    async fastForward(years){
+      const st = this.state;
+      const rows = [];
+      this._fast = true;
+      for (let i = 0; i < years; i++) {
+        if (st.ended) break;
+        const age0 = st.age;
+        const ev = await this.startYear();
+        if (!ev) break;
+        let guard = 0;
+        while (this.phase === 'event' && guard++ < 5) {
+          let pick = 0;
+          if (this.pending.opts && this.pending.opts.length > 1) {
+            let best = -1;
+            const self = this;
+            this.pending.opts.forEach(function(o, k){
+              const p = self.odds(o.dim, o.dc);
+              if (p > best) { best = p; pick = k; }
+            });
+          }
+          if (this.pending.auto) this.autoResolve();
+          else this.chooseOption(pick);
+          const r = await this.afterEvent();
+          if (r === 'actions' || r === 'end' || st.ended) break;
+        }
+        const first = this.result ? String(this.result.text || '').split('\n')[0] : '';
+        rows.push({ age: age0, text: (this.pending && this.pending.title ? this.pending.title + ' · ' : '') + first.slice(0, 34) });
+        if (st.ended) break;
+        st.ap = 0;
+        this.endYear();
+        if (st.ended) break;
+      }
+      this._fast = false;
+      return rows;
+    },
+
     /* ================= 主导剧情：直接去做一件大事 ================= */
     storyAvailable(){
       const st = this.state;
@@ -320,6 +364,17 @@ window.LS = window.LS || {};
         st.brain.mastery = Math.min(100, (st.brain.mastery || 0) + 2);
         chips.push({ text:'战力提升', good:true });
         st.timeline.push(st.age + '岁·' + text0.slice(0, 14));
+        // 余波：名声会自己找上门
+        if (LS.makeWave) {
+          st.waves = st.waves || [];
+          const tier = (dc >= 48) ? 'top' : 'mid';
+          const count = (dc >= 48) ? 3 : 1;
+          const pool = (LS.WAVES[tier] || []).slice();
+          for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(this.rnd() * (i + 1)); const t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+          for (let i = 0; i < count && i < pool.length; i++) {
+            st.waves.push({ at: st.age + 1 + i, tpl: pool[i] });
+          }
+        }
         const text = '你去了。\n\n' + (tier === '顶尖存在'
           ? '那不是一场势均力敌的战斗。你准备了很多年，把所有能算的都算了一遍。\n\n最后站着的人是你。'
           : '比想象中顺利。你花了半炷香的时间，收尾很干净。') +
@@ -1347,6 +1402,22 @@ window.LS = window.LS || {};
 
     buildYearQueue(){
       const st = this.state;
+      // 先看有没有"去年那件事"的余波到了
+      if (st.waves && st.waves.length) {
+        const idx = st.waves.findIndex(function(w){ return w.at <= st.age; });
+        if (idx >= 0) {
+          const w = st.waves[idx].tpl;
+          st.waves.splice(idx, 1);
+          this.queue = [];
+          this.pending = {
+            kind:'wave', age:st.age, title:w.t, text:w.x, wave:true,
+            opts: w.opts.map(function(o){ return { n:o.n, dim:o.dim, dc:o.dc, s:o.s, f:o.f, eff:o.eff||{}, effF:o.effF||{} }; }),
+            source:'余波'
+          };
+          this.phase = 'event';
+          return this.pending;
+        }
+      }
       const nb = this.numbTick();
       if (nb) return nb;
       this.queue = [];
@@ -1469,7 +1540,7 @@ window.LS = window.LS || {};
       const key = LS.Store.snipKey({ worldId: st.worldId, systemId: st.systemId, age: st.age, kind:'evt' });
 
       const mode = LS.AI.mode();
-      const canAI = mode !== 'offline' && this.aiUsed < this.aiBudget();
+      const canAI = mode !== 'offline' && !this._fast && this.aiUsed < this.aiBudget();
       const wantFresh = canAI && !st.replay && (mode === 'always' || this.rnd() < 0.3);
       let snip = wantFresh ? null : LS.Store.getSnip(key);
 
@@ -1779,6 +1850,11 @@ window.LS = window.LS || {};
 
       const eff = ok ? (o.eff || {}) : (o.effF || {});
       const chips = this.applyEff(eff, crit);
+      if (eff.bounty) {
+        st.bounty = (st.bounty || 0) + eff.bounty;
+        chips.push({ text:'悬赏金 ' + (eff.bounty > 0 ? '+' : '') + LS.fmtBounty(Math.abs(eff.bounty)), good: eff.bounty > 0 });
+      }
+      if (eff.tag && st.tags.indexOf(eff.tag) < 0) st.tags.push(eff.tag);
       let text = ok ? (o.s || '你做到了。') : (o.f || '你失败了。');
       if (crit) text += ' 这一切完成得比你想的更漂亮。';
       if (rerolled) text = '（命运偏了一下头）' + text;
