@@ -899,6 +899,13 @@ window.LS = window.LS || {};
       // 经济面板开张
       st.econ = LS.ECON.init(b.iq, 'modern');
 
+      // 这个系统有哪几种常见的活法（系统文套路）
+      st.tropes = [];
+      if (LS.Tropes) {
+        const pool = (sys.tags || []).concat(['系统']);
+        st.tropes = LS.Tropes.pick(pool, this.rnd.bind(this), 2).map(function(t){ return t.id; });
+      }
+
       // 穿越判定
       const travel = this.rollTravel(sys, b);
 
@@ -966,6 +973,16 @@ window.LS = window.LS || {};
       st.flags.crossed = 1;
       // 同一份身家，换成这个世界的钱与身份
       if (LS.ECON.remap) LS.ECON.remap(st.econ, w.id);
+      // 把玩家这套系统的常见练法，写成这个世界里可能发生的支线
+      if (LS.Tropes && LS.Lore && st.tropes && st.tropes.length) {
+        const self = this;
+        const seeds = st.tropes.map(function(id){
+          const t = LS.Tropes.byId(id);
+          const r = t ? LS.Tropes.routeOf(t, self.rnd.bind(self)) : null;
+          return (t && r) ? LS.Tropes.toSeed(t, r) : null;
+        }).filter(Boolean);
+        if (seeds.length) LS.Lore.merge(w.id, { fanfic: seeds });
+      }
       // 先垫一层网文套路支线，保证没网也能有'那个味'
       if (LS.Webnovel && LS.Lore) {
         try { LS.Lore.merge(w.id, { fanfic: LS.Webnovel.seeds(w.tags, this.rnd.bind(this), 3) }); } catch(e){}

@@ -899,3 +899,19 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
   position:relative; z-index:1; margin-top:10px; font-size:11px; color:var(--muted);
   letter-spacing:1px; animation:wrUp .7s .55s ease both;
 }
+
+/* ================= 系统文套路 ================= */
+.trope-card{
+  margin-top:14px; padding:13px 14px; border-radius:16px;
+  background:linear-gradient(135deg,#FFF9F2,#F6F3FF); border:1px solid #E8DDF3;
+}
+.tc-head{ display:flex; justify-content:space-between; align-items:baseline; gap:8px; }
+.tc-head b{ font-size:13px; color:#5B4A7A; }
+.tc-head span{ font-size:10px; letter-spacing:2px; color:#9A8CB4; }
+.tc-list{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
+.tc-item b{ font-size:13px; color:var(--ink); }
+.tc-item i{ font-style:normal; font-size:11px; color:var(--muted); margin-left:7px; }
+.tc-routes{ display:flex; flex-wrap:wrap; gap:6px; margin-top:5px; }
+.tc-routes span{
+  font-size:10.5px; color:#6B5A8A; background:#F1EBFA; border-radius:8px; padding:2px 8px;
+}

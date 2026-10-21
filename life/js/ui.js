@@ -552,6 +552,8 @@ window.LS = window.LS || {};
           <b>你没有离开 · 运气好得不像话</b>
         </section>`}
 
+        ${this.tropeCard()}
+
         <section class="build-card">
           <div class="bc-head"><b>选择系统开发路线</b><span>同一个系统，练法不同</span></div>
           <div class="build-list">
@@ -627,6 +629,24 @@ window.LS = window.LS || {};
         }
       }
       this.awakenScreen();
+    },
+
+    tropeCard(){
+      const st = LS.Game.state;
+      if (!st || !st.tropes || !st.tropes.length || !LS.Tropes) return '';
+      const list = st.tropes.map(function(id){ return LS.Tropes.byId(id); }).filter(Boolean);
+      if (!list.length) return '';
+      let html = '<section class="trope-card">' +
+        '<div class="tc-head"><b>这个系统的常见活法</b><span>系统文套路</span></div>' +
+        '<div class="tc-list">';
+      list.forEach(function(t){
+        html += '<div class="tc-item"><b>' + esc(t.n) + '</b><i>' + esc(t.core || '') + '</i>';
+        html += '<div class="tc-routes">' + (t.routes || []).map(function(r){
+          return '<span title="' + esc(r.d) + '">' + esc(r.n) + '</span>';
+        }).join('') + '</div></div>';
+      });
+      html += '</div></section>';
+      return html;
     },
 
     applyTheme(worldId){
