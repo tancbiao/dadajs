@@ -746,3 +746,16 @@ select.input{ appearance:none; }
   font-family:"Songti SC","STSong",serif;
 }
 .sci[open] summary{ border-bottom:1px dashed #CFE0EC; margin-bottom:8px; }
+
+/* ================= 童年速写 / 平静的一年 ================= */
+.batch-lines{ margin:12px 0 4px; display:flex; flex-direction:column; gap:9px; }
+.batch-line{
+  display:flex; gap:9px; align-items:flex-start;
+  font-family:"Songti SC","STSong",serif; font-size:13.5px; line-height:1.85; color:var(--ink2);
+  padding-left:10px; border-left:2px solid #F0DED2;
+}
+.batch-line b{
+  flex:none; font-family:Georgia,serif; font-size:11px; color:var(--rose-d);
+  background:#FFF1F4; border-radius:7px; padding:2px 6px; margin-top:3px;
+}
+.quiet-card{ background:linear-gradient(180deg,#FFFDFA,#FAF6F1); }

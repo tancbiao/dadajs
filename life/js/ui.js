@@ -310,6 +310,23 @@ window.LS = window.LS || {};
         return;
       }
 
+      // 1–5 岁速写卡
+      if (it.kind === 'batch') {
+        $('#stage').innerHTML = `
+          ${this.topbar()}
+          <section class="year-card">
+            <div class="yc-age">${it.from}–${it.to} 岁</div>
+            <div class="batch-lines">
+              ${it.lines.map(function(l){ return `<p class="batch-line"><b>${l.age}</b>${esc(l.text)}</p>`; }).join('')}
+            </div>
+            <button class="btn btn-primary btn-block" data-act="childnext">继续</button>
+            <button class="btn btn-ghost btn-block" data-act="fastchild">快进到下一件大事</button>
+          </section>
+          ${this.logBlock(4)}
+        `;
+        return;
+      }
+
       if (it.kind === 'say') {
         $('#stage').innerHTML = `
           ${this.topbar()}
@@ -534,6 +551,21 @@ window.LS = window.LS || {};
       if (!ev) { this.game(); return; }
       const reveal = G.revealOdds();
       const tier = st.brain.tier || LS.BRAIN.tierOf(0);
+
+      if (ev.kind === 'quiet') {
+        $('#stage').innerHTML = `
+          ${this.topbar()}
+          <section class="year-card quiet-card">
+            <div class="yc-age">${st.age} 岁</div>
+            <h2 class="ev-title">${esc(ev.title)}</h2>
+            <p class="narration">${nl2br(ev.text)}</p>
+            <button class="btn btn-primary btn-block" data-act="afterresult">继续</button>
+          </section>
+          ${this.panelBlock()}
+          ${this.logBlock(4)}
+        `;
+        return;
+      }
 
       if (ev.auto) {
         $('#stage').innerHTML = `

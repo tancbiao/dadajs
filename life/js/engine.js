@@ -213,7 +213,9 @@ window.LS = window.LS || {};
       const evtAges = [10, 11, 13, 14, 15, 17];
       const lifeAges = { 8:null, 9:null, 10:null, 11:'l_manga', 12:null, 13:null, 14:'l_novel', 15:null, 16:null };
       this.plan = [];
-      for (let age=1; age<=9; age++) {
+      // 1–5 岁：一张速写卡带过（学《人生重开模拟器》的节奏，别让玩家点九次）
+      this.plan.push({ age:5, kind:'batch', from:1, to:5 });
+      for (let age=6; age<=9; age++) {
         this.plan.push({ age:age, kind:'say' });
         if (lifeAges[age] !== undefined) this.plan.push({ age:age, kind:'life', force:lifeAges[age] });
       }
@@ -456,6 +458,22 @@ window.LS = window.LS || {};
         return this.pending;
       }
 
+      /* 1–5 岁：一张卡写五年，发育照算（一年都不能少） */
+      if (step.kind === 'batch') {
+        const from = step.from, to = step.to;
+        const lines = [];
+        const self = this;
+        for (let a = from; a <= to; a++) {
+          const bank = CHILD_LINES[childBucket(a)];
+          lines.push({ age:a, text: LS.pick(bank, self.rnd.bind(self)) });
+          this.develop(a);
+        }
+        this.pending = { kind:'batch', age:to, from:from, to:to, lines:lines };
+        st.log.push({ age:to, kind:'say', text: lines.map(function(l){ return l.age + '岁：' + l.text; }).join(' ') });
+        this.phase = 'child';
+        return this.pending;
+      }
+
       /* 教育政策：同一个年龄只结算一次；新政策优先单独成卡 */
       let edu;
       if (this.eduAge !== step.age) {
@@ -633,7 +651,7 @@ window.LS = window.LS || {};
       // 教育政策卡看完后，回到同一年的正常内容
       if (this.eduReplay) { this.eduReplay = false; return this.buildChildItem(); }
       const cur = this.plan[this.idx];
-      if (cur && cur.age >= 1 && cur.age <= 17) this.develop(cur.age);
+      if (cur && cur.kind !== 'batch' && cur.age >= 1 && cur.age <= 17) this.develop(cur.age);
       this.idx++;
       if (this.idx >= this.plan.length) this.idx = this.plan.length - 1;
       this.buildChildItem();
@@ -959,8 +977,26 @@ window.LS = window.LS || {};
         if (econ) this.queue.push({ kind:'econ', ev:econ });
       }
 
-      // 只保留 2-3 件，年份越老事越少
-      if (this.queue.length > 2 && this.rnd() < 0.45) this.queue = this.queue.slice(0, 2);
+      // 按年龄减量：18–29 最多 3 件，30–59 两件，60 以后只留主事件
+      const age = st.age;
+      let cap = 3;
+      if (age >= 60) cap = 1;
+      else if (age >= 30) cap = 2;
+
+      if (this.queue.length > cap) this.queue = this.queue.slice(0, cap);
+
+      // 上了年纪，有些年份就是安安静静地过去了
+      if (age >= 65 && this.rnd() < 0.28) {
+        st.log.push({ age: age, kind:'say', text: '这一年没什么事发生。你把窗帘洗了，天气好的时候下楼走了走。' });
+        this.pending = {
+          kind:'quiet', age:age, title:'平静的一年',
+          text:'这一年没什么事发生。\n\n你把窗帘洗了，天气好的时候下楼走了走。电视里还在吵，但你已经不太关心了。',
+          auto:true, opts:[], source:''
+        };
+        this.queue = [];
+        this.phase = 'event';
+        return this.pending;
+      }
 
       return this.nextEvent();
     },
