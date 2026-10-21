@@ -894,3 +894,8 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 .ach span{ font-size:18px; }
 .ach b{ font-size:12.5px; }
 .ach i{ font-style:normal; font-size:10.5px; color:var(--muted); line-height:1.6; }
+
+.wr-kb{
+  position:relative; z-index:1; margin-top:10px; font-size:11px; color:var(--muted);
+  letter-spacing:1px; animation:wrUp .7s .55s ease both;
+}

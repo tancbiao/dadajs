@@ -191,7 +191,7 @@ window.LS = window.LS || {};
         case 'backactions':
           this.actionsScreen(); break;
         case 'enterworld':
-          this.awakenScreen(); break;
+          await this.enterWorld(); break;
         case 'resume':
           this.resumeGame(); break;
         case 'civstart': {
@@ -586,6 +586,8 @@ window.LS = window.LS || {};
       const stars = '★'.repeat(Math.max(1, Math.min(5, w.danger || 1))) + '☆'.repeat(5 - Math.max(1, Math.min(5, w.danger || 1)));
       this.applyTheme(w.id);
       const isekaiEdu = st.econ ? st.econ.eduName : '';
+      const LL = LS.Lore ? LS.Lore.get(w.id) : { chars:[], fanfic:[] };
+      const loreInfo = LL.chars.length + ' 位人物 · ' + LL.fanfic.length + ' 条同人支线';
       $('#stage').innerHTML = `
         <section class="world-reveal">
           <div class="wr-rings"></div>
@@ -601,10 +603,30 @@ window.LS = window.LS || {};
             <div><span>危险等级</span><b class="danger">${stars}</b></div>
           </div>
           <div class="wr-buff">落地加成 · 全属性 +${st.flags.travelBoost || 0}%</div>
+          <div class="wr-kb">知识库：${loreInfo}</div>
           <p class="wr-text">${nl2br(st.travelText || '')}</p>
           <button class="btn btn-primary btn-lg btn-block" data-act="enterworld">在这里活下去</button>
         </section>
       `;
+    },
+
+    async enterWorld(){
+      const G = LS.Game, st = G.state, w = LS.worldById(st.worldId);
+      const key = 'ls.lore.done.' + w.id;
+      let done = false;
+      try { done = localStorage.getItem(key) === '1'; } catch(e){}
+      if (LS.AI.available() && !done && w.id !== 'modern') {
+        $('#stage').innerHTML = '<section class="loading-card"><div class="spinner"></div><p>正在考据「' + esc(w.name) + '」的人物与势力……</p><p class="muted small">这份设定会存进知识库，之后再进这个世界不用重查。</p></section>';
+        try {
+          const lore = await LS.AI.genLore(w);
+          if (lore) LS.Lore.merge(w.id, lore);
+          try { localStorage.setItem(key, '1'); } catch(e){}
+          this.toast('已收录 ' + ((lore && lore.chars && lore.chars.length) || 0) + ' 位人物', 1800);
+        } catch(e) {
+          this.toast('考据失败，先用内置设定：' + (e.message || e), 2600);
+        }
+      }
+      this.awakenScreen();
     },
 
     applyTheme(worldId){

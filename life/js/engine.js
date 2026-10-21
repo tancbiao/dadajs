@@ -1269,10 +1269,12 @@ window.LS = window.LS || {};
             state: st, world: w, system: sys,
             recent: st.timeline.slice(-4),
             memory: this.lifeMemory(),
+            lore: LS.Lore ? LS.Lore.prompt(st.worldId) : '',
             dims: this.dims()
           });
           this.aiUsed++;
           st.aiUsed = this.aiUsed;
+          if (LS.Lore && LS.Lore.noteEvent) LS.Lore.noteEvent(st.worldId, ev.title, ev.text);
           LS.Store.addSnip(key, {
             title: ev.title, text: ev.text,
             opts: ev.opts.map(function(o){ return { n:o.n, dim:o.dim, dc:o.dc, s:o.s, f:o.f, eff:o.eff, effF:o.effF }; }),
