@@ -985,3 +985,15 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 .fast-row{ display:flex; gap:10px; padding:7px 2px; border-bottom:1px dashed var(--line); font-size:12px; color:var(--ink2); }
 .fast-row b{ flex:none; width:44px; color:var(--rose-d); font-family:Georgia,serif; font-size:11.5px; }
 .fast-row span{ line-height:1.6; }
+
+/* 续玩卡：结束 / 继续 */
+.resume-card{ display:flex; flex-direction:column; gap:3px; width:100%; margin:6px 0 12px; padding:14px 16px;
+  border-radius:18px; text-align:left; background:linear-gradient(135deg,#FFF6F8,#F3F7FF);
+  border:1px solid var(--line2); box-shadow:var(--shadow-s); }
+.resume-card .rc-tag{ font-size:10px; letter-spacing:2px; color:var(--rose-d); }
+.resume-card b{ font-size:16px; }
+.resume-card i{ font-style:normal; font-size:11.5px; color:var(--muted); }
+.rc-actions{ display:flex; gap:8px; margin-top:9px; }
+.rc-actions button{ flex:1; padding:9px 0; border-radius:12px; font-size:12.5px; border:1px solid var(--line2); }
+.rc-end{ background:#FFF9F9; color:#B4575F; border-color:#EED2D2; }
+.rc-go{ background:var(--rose); color:#fff; border-color:var(--rose); }

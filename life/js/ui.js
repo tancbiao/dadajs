@@ -72,11 +72,14 @@ window.LS = window.LS || {};
             if (!snap || !snap.state) return '';
             var s = snap.state;
             var where = s.system ? (s.worldName + ' · ' + (s.system.name||'')) : '尚未觉醒';
-            return '<button class="resume-card" data-act="resume">' +
+            return '<div class="resume-card">' +
               '<span class="rc-tag">未完成的人生</span>' +
               '<b>' + esc(s.name||'无名') + ' · ' + s.age + ' 岁</b>' +
               '<i>' + esc(where) + '</i>' +
-              '<em>继续 →</em></button>';
+              '<div class="rc-actions">' +
+                '<button class="rc-end" data-act="endlife">结束这一生</button>' +
+                '<button class="rc-go" data-act="resume">继续 →</button>' +
+              '</div></div>';
           })()}
           <button class="btn btn-primary btn-lg btn-block" data-act="go" data-val="create">出生</button>
           <button class="btn btn-ghost btn-block" data-act="slicegame">⏱️ 十分钟版 · 现代都市 18–40 岁</button>
@@ -196,6 +199,15 @@ window.LS = window.LS || {};
           await this.enterWorld(); break;
         case 'resume':
           this.resumeGame(); break;
+        case 'endlife': {
+          const snap = LS.Store.loadRun ? LS.Store.loadRun() : null;
+          if (!snap || !snap.state) { this.toast('没有正在进行的人生'); break; }
+          if (typeof confirm === 'function' && !confirm('结束这一生？会立刻结算，之后不能继续。')) break;
+          LS.Game.resumeRun();
+          LS.Game.endRun('你在这里停下了。后面的路，你没有再走。', '收束');
+          this.ending();
+          break;
+        }
         case 'picktalent':
           this.create.talent = val; this.createScreen(); break;
         case 'slicegame':
