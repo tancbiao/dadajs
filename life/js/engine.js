@@ -966,6 +966,10 @@ window.LS = window.LS || {};
       st.flags.crossed = 1;
       // 同一份身家，换成这个世界的钱与身份
       if (LS.ECON.remap) LS.ECON.remap(st.econ, w.id);
+      // 先垫一层网文套路支线，保证没网也能有'那个味'
+      if (LS.Webnovel && LS.Lore) {
+        try { LS.Lore.merge(w.id, { fanfic: LS.Webnovel.seeds(w.tags, this.rnd.bind(this), 3) }); } catch(e){}
+      }
       // 落地那一刻，身体被这个世界重写了一遍——这是"大杀四方"的本钱
       const boost = 1 + Math.min(0.35, 0.15 + skill / 400);
       Object.keys(st.attrs).forEach(function(k){
