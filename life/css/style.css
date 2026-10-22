@@ -1046,3 +1046,12 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
   background:#B4575F; color:#fff; font-size:13px;
 }
 .alert-pop.gone{ display:none; }
+
+.iq-parts{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:10px;
+}
+.iq-parts div{
+  background:#FFFDFA; border:1px solid var(--line); border-radius:12px; padding:7px 6px; text-align:center;
+}
+.iq-parts span{ display:block; font-size:9.5px; color:var(--muted); }
+.iq-parts b{ font-size:14px; color:var(--ink); }

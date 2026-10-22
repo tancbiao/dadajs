@@ -575,6 +575,12 @@ window.LS = window.LS || {};
             <b>${b.iq}</b>
             <i>智商 · 全国儿童均值 106</i>
           </div>
+          <div class="iq-parts">
+            <div><span>原生智力</span><b>${(b.iqParts&&b.iqParts.gene)||b.geneIQ||100}</b></div>
+            <div><span>家庭影响</span><b>${((b.iqParts&&b.iqParts.family)>0?"+":"")+((b.iqParts&&b.iqParts.family)||0)}</b></div>
+            <div><span>自我成长</span><b>${((b.iqParts&&b.iqParts.self)>0?"+":"")+((b.iqParts&&b.iqParts.self)||0)}</b></div>
+            <div><span>教育影响</span><b>${((b.iqParts&&b.iqParts.edu)>0?"+":"")+((b.iqParts&&b.iqParts.edu)||0)}</b></div>
+          </div>
           <p class="rc-verdict">${esc(verdict)}</p>
           <div class="rc-bars">
             ${this.bar('神经元发育', b.ndi)}
@@ -1365,6 +1371,7 @@ window.LS = window.LS || {};
             <div><span>世界</span><b>${esc(st.worldName)}</b></div>
             <div><span>系统</span><b>${esc(st.systemName||'无')}</b></div>
             <div><span>智商</span><b>${b.iq}（${b.iq>=131?'天才':b.iq>=120?'聪明':b.iq>=110?'中上':b.iq>=95?'普通':'偏慢'}）</b></div>
+            <div><span>原生智力</span><b>${(b.iqParts&&b.iqParts.gene)||b.geneIQ||100}</b></div>
             <div><span>家庭影响</span><b>${(b.iqParts && b.iqParts.family>0?'+':'') + ((b.iqParts&&b.iqParts.family)||0)}</b></div>
             <div><span>自我成长</span><b>${(b.iqParts && b.iqParts.self>0?'+':'') + ((b.iqParts&&b.iqParts.self)||0)}</b></div>
             <div><span>教育影响</span><b>${(b.iqParts && b.iqParts.edu>0?'+':'') + ((b.iqParts&&b.iqParts.edu)||0)}</b></div>
