@@ -647,11 +647,25 @@ window.LS = window.LS || {};
 
       // 10 岁前：没有选择权
       if (step.age < 10) {
-        const o = opts[0];
+        // 十岁前不由你选：卷王班这种随机，其余取第一条
+        const o = (tpl.id === 'l_elite_class' && opts.length > 1) ? opts[Math.floor(this.rnd()*opts.length)] : opts[0];
         if (o.brain) this.applyBrain(o.brain);
         const text = '【' + ev.title + '】\n\n' + ev.text + '\n\n' + (o.s || '');
         this.pending = { kind:'say', age:step.age, text:text, title:ev.title, sci:tpl.sci || '', eduLines: this._showEduLines || [] };
         st.log.push({ age:step.age, kind:'say', text:text });
+        this.phase = 'child';
+        return this.pending;
+      }
+
+      // 8 岁还没开智：卷王班这类事件由父母/学校替你决定，随机抽一条
+      if (tpl.id === 'l_elite_class') {
+        const pick = Math.floor(this.rnd() * (ev.opts || []).length);
+        const o = ev.opts[pick];
+        this.pending = {
+          kind:'event', age:step.age, id:tpl.id, title:ev.title, text:ev.text,
+          opts:[o], autoPick:true, life:true, sci:tpl.sci || '',
+          eduLines: this._showEduLines || []
+        };
         this.phase = 'child';
         return this.pending;
       }
@@ -1408,6 +1422,24 @@ window.LS = window.LS || {};
 
     buildYearQueue(){
       const st = this.state;
+      // 18 岁后：有些事不由你选（马斯洛 + 人格）
+      if (st.age >= 18 && LS.pickAutoEvent && this.rnd() < 0.42) {
+        let ev = null;
+        const recent = (st.needLog || []).slice(-3).map(function(x){ return x.title; });
+        for (let t = 0; t < 3; t++) {
+          const cand = LS.pickAutoEvent(st, this.rnd.bind(this));
+          if (cand && recent.indexOf(cand.t) < 0) { ev = cand; break; }
+          if (!ev) ev = cand;
+        }
+        if (ev) {
+          st.needLog = st.needLog || [];
+          st.needLog.push({ age: st.age, need: ev.need, title: ev.t });
+          st.log.push({ age: st.age, kind:'say', text:'【' + ev.t + '】' + ev.x.replace(/\n+/g,' ') });
+          this.pending = { kind:'quiet', age: st.age, title: ev.t, text: ev.x, auto:true, opts:[], source:'处境' };
+          this.phase = 'event';
+          return this.pending;
+        }
+      }
       // 每 8 年：性格结算
       if (st.mbti && st.age >= 26 && (st.age - 18) % 8 === 0) {
         const now = LS.MBTI.of({ brain: st.brain, dims: this.dims() });
@@ -1822,7 +1854,8 @@ window.LS = window.LS || {};
       if (!pool.length) return null;
       const s = pool[Math.floor(this.rnd()*pool.length)];
       const cur = st.attrs[s.k] || 0;
-      const gain = Math.max(1, Math.round(v * 80 / (80 + cur) * (this.buildMods().gainMul || 1)));
+      const drift = this.state && this.state.flags && this.state.flags.driftT ? 0.8 : 1;
+      const gain = Math.max(1, Math.round(v * 80 / (80 + cur) * (this.buildMods().gainMul || 1) * drift));
       this._lastGrow = { k:s.k, n:s.n, gain:gain };
       st.attrs[s.k] = Math.round((cur + gain) * 10) / 10;
       return { k:s.k, n:s.n, gain:gain };
@@ -1832,6 +1865,16 @@ window.LS = window.LS || {};
       const st = this.state;
       const effDc = dc + Math.min(14, Math.floor(st.turn * 0.75));
       let p = 0.5 + (this.dimVal(dim) - effDc) / (effDc * 1.7);
+      // 人格影响：这件事符不符合你的性子
+      if (st.mbti) {
+        const code = st.mbti.code || '';
+        if (dim === '社') p += code[0] === 'E' ? 0.06 : (code === 'INFJ' ? 0.01 : -0.06);
+        if (dim === '智') p += code[1] === 'N' ? 0.04 : -0.01;
+        if (dim === '灵') p += code[2] === 'F' ? 0.04 : 0;
+        if (dim === '财') p += code[2] === 'T' ? 0.03 : 0;
+        if (dim === '体') p += code[3] === 'J' ? 0.02 : 0;
+        if (st.mbti.stable === 'T') p -= 0.04;   // 浮动型：越紧张越失手
+      }
       const mech = st.system ? st.system.mechanic : '';
       if (mech === 'analysis') p += 0.08;
       if (mech === 'sim') p += 0.03;
@@ -1853,6 +1896,24 @@ window.LS = window.LS || {};
       const o = ev.opts[i];
       const p = this.odds(o.dim, o.dc);
       let ok = this.rnd() < p;
+      // 做了不符合性格的事：皮质醇上升，浮动值累积
+      if (st.mbti && o.dim) {
+        const code = st.mbti.code || '';
+        const conflict = (o.dim === '社' && code[0] === 'I' && code !== 'INFJ') ||
+                         (o.dim === '灵' && code[2] === 'T');
+        if (conflict) {
+          st.mbtiDrift = (st.mbtiDrift || 0) + 1;
+          st.brain.cortisol = Math.min(100, (st.brain.cortisol || 0) + 2);
+          if (st.mbtiDrift >= 3 && st.mbti.stable !== 'T') {
+            st.mbti.stable = 'T';
+            st.mbti.full = code + '-T';
+            st.mbti.stableName = '浮动型';
+            st.mbti.effect = LS.MBTI_STABLE.T.effect;
+            st.flags.driftT = 1;
+            st.timeline.push(st.age + '岁·性格转向浮动型');
+          }
+        }
+      }
       let crit = false;
       let rerolled = false;
 

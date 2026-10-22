@@ -124,6 +124,14 @@ window.LS = window.LS || {};
     },
     closeSheet(){ $('#sheet').classList.remove('show'); },
 
+    alertBlock(it){
+      const bad = (it && it.policyLines || []).filter(function(l){ return l.good === false; });
+      if (!bad.length) return '';
+      return '<div class="alert-pop"><b>⚠️ 学校 / 家长这边出了状况</b>' +
+        bad.map(function(l){ return '<p>' + esc(l.t) + '</p>'; }).join('') +
+        '<button class="alert-ok" data-act="dismissalert">知道了</button></div>';
+    },
+
     mbtiBlock(m){
       if (!m) return '';
       return '<div class="mbti-card">' +
@@ -208,6 +216,11 @@ window.LS = window.LS || {};
           this.actionsScreen(); break;
         case 'enterworld':
           await this.enterWorld(); break;
+        case 'dismissalert': {
+          const el = document.querySelector('.alert-pop');
+          if (el) el.classList.add('gone');
+          break;
+        }
         case 'resume':
           this.resumeGame(); break;
         case 'endlife': {
@@ -393,6 +406,7 @@ window.LS = window.LS || {};
             <h2 class="ev-title">${esc(it.title)}</h2>
             <p class="narration">${nl2br(it.text)}</p>
             ${this.sciHtml(it.sci)}
+            ${this.alertBlock(it)}
             ${this.eduLinesHtml(it.policyLines)}
             ${this.eduLinesHtml(it.eduLines)}
             <button class="btn btn-primary btn-block" data-act="childnext">继续</button>

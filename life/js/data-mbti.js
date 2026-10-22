@@ -57,7 +57,7 @@ LS.MBTI_TYPES = {
 
 /* 稳定 / 浮动 两档 */
 LS.MBTI_STABLE = {
-  S: { n:'稳定型', tag:'-S', desc:'情绪起伏不大，遇事能等一等。', effect:'皮质醇回落更快，成年后性格变化慢' },
+  A: { n:'稳定型', tag:'-A', desc:'情绪起伏不大，遇事能等一等。', effect:'皮质醇回落更快，成年后性格变化慢' },
   T: { n:'浮动型', tag:'-T', desc:'心里一直在打仗，容易反复。', effect:'压力下更容易走极端，性格可能中途改道' }
 };
 
@@ -75,7 +75,7 @@ LS.MBTI = {
     const J = (b.focus || 42) >= 55 ? 'J' : 'P';
 
     const code = E + N + F + J;
-    const stable = (b.cortisol || 0) < 60 && (b.ndi || 0) > 55 ? 'S' : 'T';
+    const stable = (b.cortisol || 0) < 60 && (b.ndi || 0) > 55 ? 'A' : 'T';
     const base = LS.MBTI_TYPES[code] || LS.MBTI_TYPES.ISTJ;
     return {
       code: code,
