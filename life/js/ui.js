@@ -124,6 +124,17 @@ window.LS = window.LS || {};
     },
     closeSheet(){ $('#sheet').classList.remove('show'); },
 
+    mbtiBlock(m){
+      if (!m) return '';
+      return '<div class="mbti-card">' +
+        '<div class="mb-top"><b>' + esc(m.full) + '</b><span>' + esc(m.name) + ' · ' + esc(m.stableName) + '</span></div>' +
+        '<p class="mb-core">' + esc(m.core) + '</p>' +
+        '<div class="mb-row"><i>原生家庭</i><span>' + esc(m.family) + '</span></div>' +
+        '<div class="mb-row"><i>生活轨迹</i><span>' + esc(m.track) + '</span></div>' +
+        '<p class="mb-eff">' + esc(m.effect) + '</p>' +
+      '</div>';
+    },
+
     toast(msg, ms){
       const t = $('#toast');
       t.textContent = msg;
