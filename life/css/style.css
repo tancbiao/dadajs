@@ -997,3 +997,37 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 .rc-actions button{ flex:1; padding:9px 0; border-radius:12px; font-size:12.5px; border:1px solid var(--line2); }
 .rc-end{ background:#FFF9F9; color:#B4575F; border-color:#EED2D2; }
 .rc-go{ background:var(--rose); color:#fff; border-color:var(--rose); }
+
+/* ================= 人格卡 ================= */
+.mbti-card{
+  margin:10px 0 4px; padding:13px 14px; border-radius:16px;
+  background:linear-gradient(135deg,#F7F5FF,#FFF8F2); border:1px solid #E2DAF2;
+}
+.mb-top{ display:flex; align-items:baseline; gap:8px; }
+.mb-top b{ font-size:20px; letter-spacing:1px; color:#5B4A7A; font-family:Georgia,serif; }
+.mb-top span{ font-size:11.5px; color:var(--muted); }
+.mb-core{ font-size:12.5px; color:var(--ink2); margin-top:5px; font-family:"Songti SC",serif; }
+.mb-row{ display:flex; gap:8px; margin-top:7px; font-size:11.5px; line-height:1.75; }
+.mb-row i{ flex:none; width:52px; font-style:normal; color:#8A7CA8; }
+.mb-row span{ color:var(--ink2); }
+.mb-eff{ margin-top:8px; font-size:10.5px; color:#8A7CA8; background:#F3EEFA; border-radius:8px; padding:5px 9px; }
+.mb-change{ margin-top:10px; font-size:11.5px; color:var(--muted); border-left:2px solid var(--pink); padding-left:10px; }
+
+/* ================= 手机端：按钮固定 + 结果弹层 ================= */
+@media (max-width:560px){
+  .year-card .btn-primary, .year-card .btn-block{
+    position:sticky; bottom:calc(10px + env(safe-area-inset-bottom)); z-index:5;
+  }
+  .year-card.result{
+    position:fixed; left:0; right:0; bottom:0; margin:0 auto; max-width:560px;
+    max-height:82vh; overflow-y:auto; z-index:60;
+    border-radius:24px 24px 0 0; box-shadow:0 -12px 40px rgba(80,60,50,.18);
+    animation:sheetUp .24s ease both;
+  }
+  .year-card.result::before{
+    content:''; display:block; width:38px; height:4px; border-radius:4px;
+    background:#E4D8D0; margin:0 auto 10px;
+  }
+  .options{ max-height:46vh; overflow-y:auto; }
+}
+@keyframes sheetUp{ from{ transform:translateY(24px); opacity:.6; } to{ transform:translateY(0); opacity:1; } }

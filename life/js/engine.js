@@ -226,7 +226,7 @@ window.LS = window.LS || {};
       // 童年节奏：1-9 无选择；10 岁开智；10-17 六次事件
       // 另外在 8/11/12/16 岁各插一场"学校生活"：10 岁前由学校替你决定，10 岁后你才有得选
       const evtAges = [10, 11, 13, 14, 15, 17];
-      const lifeAges = { 8:null, 9:'l_expert_test', 10:'l_hw_crash', 11:'l_manga', 12:null, 13:'l_smoke_hard', 14:'l_novel', 15:null, 16:null };
+      const lifeAges = { 8:'l_elite_class', 9:'l_expert_test', 10:'l_hw_crash', 11:'l_manga', 12:null, 13:'l_smoke_hard', 14:'l_novel', 15:null, 16:null };
       this.plan = [];
       // 1–5 岁：一张速写卡带过（学《人生重开模拟器》的节奏，别让玩家点九次）
       this.plan.push({ age:2, kind:'batch', from:1, to:2 });
@@ -1107,6 +1107,11 @@ window.LS = window.LS || {};
       LS.ECON.sinks = st.slice ? LS.SLICE.sinks : null;
 
       // 这个系统有哪几种常见的活法（系统文套路）
+      // 18 岁：人格定型
+      if (LS.MBTI) {
+        st.mbti = LS.MBTI.of({ brain: b, dims: this.dims() });
+        st.mbtiHistory = [{ age: 18, mbti: st.mbti }];
+      }
       st.tropes = [];
       if (LS.Tropes) {
         const pool = (sys.tags || []).concat(['系统']);
@@ -1403,6 +1408,18 @@ window.LS = window.LS || {};
 
     buildYearQueue(){
       const st = this.state;
+      // 每 8 年：性格结算
+      if (st.mbti && st.age >= 26 && (st.age - 18) % 8 === 0) {
+        const now = LS.MBTI.of({ brain: st.brain, dims: this.dims() });
+        const prev = st.mbti;
+        st.mbtiHistory = st.mbtiHistory || [];
+        st.mbtiHistory.push({ age: st.age, mbti: now });
+        st.mbti = now;
+        this.pending = { kind:'mbti', age: st.age, mbti: now, prev: prev, auto:true, opts:[] };
+        st.log.push({ age: st.age, kind:'sys', text:'性格结算：' + now.full + '（' + now.name + '）' });
+        this.phase = 'event';
+        return this.pending;
+      }
       // 先看有没有"去年那件事"的余波到了
       if (st.waves && st.waves.length) {
         const idx = st.waves.findIndex(function(w){ return w.at <= st.age; });

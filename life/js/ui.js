@@ -543,6 +543,7 @@ window.LS = window.LS || {};
       $('#stage').innerHTML = `
         ${this.topbar()}
         <section class="report-card">
+          ${this.mbtiBlock(st.mbti)}
           <div class="rc-head"><b>神经发育报告</b><span>18 岁</span></div>
           <div class="rc-iq">
             <b>${b.iq}</b>
@@ -745,6 +746,25 @@ window.LS = window.LS || {};
       if (!ev) { this.game(); return; }
       const reveal = G.revealOdds();
       const tier = st.brain.tier || LS.BRAIN.tierOf(0);
+
+      if (ev.kind === 'mbti') {
+        const m = ev.mbti, p = ev.prev || {};
+        const changed = p.full && p.full !== m.full;
+        $('#stage').innerHTML = `
+          ${this.topbar()}
+          <section class="year-card mbti-year">
+            <div class="yc-age">${ev.age} 岁 · 性格结算</div>
+            <h2 class="ev-title">你还是你，但不太一样了</h2>
+            ${this.mbtiBlock(m)}
+            <p class="mb-change">${changed
+              ? ('十八岁时你是 ' + esc(p.full) + '（' + esc(p.name) + '），现在是 ' + esc(m.full) + '（' + esc(m.name) + '）。')
+              : '八年过去，你的类型没有变。变的是你对它的用法。'}</p>
+            <button class="btn btn-primary btn-block" data-act="afterresult">继续</button>
+          </section>
+          ${this.logBlock(4)}
+        `;
+        return;
+      }
 
       if (ev.kind === 'quiet') {
         $('#stage').innerHTML = `
