@@ -944,9 +944,13 @@ window.LS = window.LS || {};
       return this.pending;
     },
 
-    childChoose(i){
+    childChoose(i, name){
       const ev = this.pending;
       if (!ev || ev.kind !== 'event') return null;
+      if (name) {
+        const hit = ev.opts.findIndex(function(x){ return x.n === name; });
+        if (hit >= 0) i = hit;
+      }
       const o = ev.opts[i];
       if (!o) return null;
       const st = this.state;
@@ -1890,9 +1894,15 @@ window.LS = window.LS || {};
     },
 
     /* ---------- 选择 ---------- */
-    chooseOption(i){
+    chooseOption(i, name){
       const ev = this.pending, st = this.state;
-      if (!ev || !ev.opts || !ev.opts[i]) return null;
+      if (!ev || !ev.opts || !ev.opts.length) return null;
+      // 用选项文字校正索引：防止列表被重排后点 A 触发 B
+      if (name) {
+        const hit = ev.opts.findIndex(function(o){ return o.n === name; });
+        if (hit >= 0) i = hit;
+      }
+      if (!ev.opts[i]) return null;
       const o = ev.opts[i];
       const p = this.odds(o.dim, o.dc);
       let ok = this.rnd() < p;

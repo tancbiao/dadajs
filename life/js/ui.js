@@ -125,7 +125,8 @@ window.LS = window.LS || {};
     closeSheet(){ $('#sheet').classList.remove('show'); },
 
     alertBlock(it){
-      const bad = (it && it.policyLines || []).filter(function(l){ return l.good === false; });
+      const all = [].concat((it && it.policyLines) || [], (it && it.eduLines) || []);
+      const bad = all.filter(function(l){ return l.good === false || /投诉|中断/.test(String(l.t || '')); });
       if (!bad.length) return '';
       return '<div class="alert-pop"><b>⚠️ 学校 / 家长这边出了状况</b>' +
         bad.map(function(l){ return '<p>' + esc(l.t) + '</p>'; }).join('') +
@@ -191,13 +192,13 @@ window.LS = window.LS || {};
           break;
         }
         case 'childopt':
-          G.childChoose(parseInt(val,10)); this.game(); break;
+          G.childChoose(parseInt(val,10), el && el.getAttribute('data-name')); this.game(); break;
         case 'awaken':
           this.doAwaken(); break;
         case 'beginadult':
           LS.Game.beginAdult(); this.beginYear(); break;
         case 'opt':
-          this.doChoose(parseInt(val,10)); break;
+          this.doChoose(parseInt(val,10), el && el.getAttribute("data-name")); break;
         case 'autonext':
           G.autoResolve(); this.resultScreen(); break;
         case 'afterresult':
@@ -458,7 +459,7 @@ window.LS = window.LS || {};
           ${this.sciHtml(it.sci)}
           <div class="options">
             ${it.opts.map(function(o,i){
-              return `<button class="opt" data-act="childopt" data-val="${i}">
+              return `<button class="opt" data-act="childopt" data-val="${i}" data-name="${esc(o.n)}">
                 <span class="opt-idx">${('ABCDEFG'[i] || String(i+1))}</span>
                 <span class="opt-main"><b>${esc(o.n)}</b></span>
               </button>`;
@@ -833,7 +834,7 @@ window.LS = window.LS || {};
           <div class="options">
             ${ev.opts.map(function(o,i){
               const p = (reveal && o.dim) ? Math.round(G.odds(o.dim, o.dc)*100) : null;
-              return `<button class="opt" data-act="opt" data-val="${i}">
+              return `<button class="opt" data-act="opt" data-val="${i}" data-name="${esc(o.n)}">
                 <span class="opt-idx">${('ABCDEFG'[i] || String(i+1))}</span>
                 <span class="opt-main">
                   <b>${esc(o.n)}</b>
@@ -1142,8 +1143,8 @@ window.LS = window.LS || {};
       `);
     },
 
-    doChoose(i){
-      const r = LS.Game.chooseOption(i);
+    doChoose(i, name){
+      const r = LS.Game.chooseOption(i, name);
       if (!r) return;
       this.resultScreen();
     },

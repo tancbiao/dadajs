@@ -1034,7 +1034,7 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 
 /* 教育负面弹窗 */
 .alert-pop{
-  position:fixed; left:50%; top:18%; transform:translateX(-50%); z-index:80;
+  position:fixed; left:0; right:0; top:16%; margin:0 auto; z-index:80;
   width:min(88vw,420px); background:#FFF8F8; border:1px solid #EBC9C9; border-radius:18px;
   padding:16px 16px 12px; box-shadow:0 18px 48px rgba(120,60,60,.22);
   animation:sheetUp .22s ease both;
