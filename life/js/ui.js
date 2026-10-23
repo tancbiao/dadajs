@@ -97,6 +97,7 @@ window.LS = window.LS || {};
           <button class="tile" data-act="go" data-val="paths"><span class="tile-ico">📜</span><b>人生路径库</b><i>读过别人的一生</i></button>
           <button class="tile" data-act="go" data-val="rank"><span class="tile-ico">🏆</span><b>排行榜</b><i>最离谱的人生</i></button>
           <button class="tile" data-act="go" data-val="settings"><span class="tile-ico">⚙️</span><b>设置</b><i>API / 存档 / 导出</i></button>
+          <button class="tile" data-act="feedback"><span class="tile-ico">💬</span><b>给个反馈</b><i>三句话，帮我把这游戏改好</i></button>
         </section>
         <p class="footnote">前十年的孩子，是被养出来的，不是自己选的。<br>十八岁以后，你才知道自己被杀成了什么形状。</p>
       `;
@@ -253,6 +254,18 @@ window.LS = window.LS || {};
         }
         case 'dofast':
           await this.doFast(parseInt(val,10) || 5); break;
+        case 'feedback':
+          this.feedbackScreen(); break;
+        case 'fbstar':
+          this.fb.stars = parseInt(val,10) || 0; this.feedbackScreen(); break;
+        case 'fbtag':
+          { const i = this.fb.tags.indexOf(val); if (i>=0) this.fb.tags.splice(i,1); else this.fb.tags.push(val); this.feedbackScreen(); } break;
+        case 'fbsubmit':
+          this.submitFeedback(); break;
+        case 'fbcopy':
+          LS.Feedback.copy().then(()=>this.toast('已复制，直接粘给我就行')).catch(()=>this.toast('复制失败，试试导出')); break;
+        case 'fbexport':
+          LS.Feedback.download(); break;
         case 'dostory':
           await this.doStory(); break;
         case 'aiending':
@@ -1069,6 +1082,39 @@ window.LS = window.LS || {};
       return '<button class="btn btn-ghost btn-block" data-act="dofast" data-val="' + n + '">⏩ 快进 ' + n + ' 年（自动选最稳的）</button>';
     },
 
+    feedbackScreen(){
+      const st = LS.Game.state || {};
+      this.fb = this.fb || { stars:0, tags:[], good:'', bored:'', want:'', contact:'' };
+      const tags = ['开局太长','事件太多','选项看不懂','数值没反馈','结局太仓促','世界观很爽','人格结算有意思','想再来一局'];
+      const stars = [1,2,3,4,5].map((n)=>'<button class="fb-star ' + (this.fb.stars>=n?'on':'') + '" data-act="fbstar" data-val="' + n + '">★</button>').join('');
+      const tagHtml = tags.map((t)=>'<button class="chip ' + (this.fb.tags.indexOf(t)>=0?'on':'') + '" data-act="fbtag" data-val="' + t + '">' + t + '</button>').join('');
+      this.sheet('<div class="sheet-head"><b>给这一版打个分</b><button class="icon-btn" data-act="closesheet">✕</button></div>' +
+        '<div class="fb-wrap">' +
+        '<div class="fb-stars">' + stars + '</div>' +
+        '<p class="fb-hint">你在 ' + (st.age||'—') + ' 岁 · ' + esc(st.worldName||'还没出生') + (st.mbti? ' · ' + esc(st.mbti.full):'') + '</p>' +
+        '<div class="fb-tags">' + tagHtml + '</div>' +
+        '<label class="fb-label">哪一刻最爽？</label><textarea id="fbGood" class="input" rows="2" maxlength="120"></textarea>' +
+        '<label class="fb-label">哪一段最闷 / 想跳过？</label><textarea id="fbBored" class="input" rows="2" maxlength="120"></textarea>' +
+        '<label class="fb-label">最想让我改什么？</label><textarea id="fbWant" class="input" rows="2" maxlength="120"></textarea>' +
+        '<label class="fb-label">留个联系方式（可不填）</label><input id="fbContact" class="input" maxlength="40">' +
+        '<button class="btn btn-primary btn-block" data-act="fbsubmit">提交反馈</button>' +
+        '<div class="fb-foot"><button class="link" data-act="fbcopy">复制全部反馈</button><span>·</span><button class="link" data-act="fbexport">导出 JSON</button></div>' +
+        '<p class="fb-note">反馈只存在你本机。想让我看到，点「复制」后直接发我。已收集 ' + LS.Feedback.count() + ' 条。</p>' +
+        '</div>');
+    },
+
+    submitFeedback(){
+      const g = function(id){ const el = document.querySelector(id); return el ? el.value.trim() : ''; };
+      const st = LS.Game.state || {};
+      if (!this.fb.stars) { this.toast('先点几颗星'); return; }
+      LS.Feedback.save({ at: Date.now(), stars: this.fb.stars, tags: this.fb.tags.slice(),
+        good: g('#fbGood'), bored: g('#fbBored'), want: g('#fbWant'), contact: g('#fbContact'),
+        age: st.age || null, world: st.worldName || '', mbti: st.mbti ? st.mbti.full : '' });
+      this.fb = { stars:0, tags:[], good:'', bored:'', want:'', contact:'' };
+      this.closeSheet();
+      this.toast('收到了，谢谢。已存本机，点「复制」可以直接发我', 2600);
+    },
+
     async doFast(years){
       const G = LS.Game;
       $('#stage').innerHTML = '<section class="loading-card"><div class="spinner"></div><p>正在快进 ' + years + ' 年……</p></section>';
@@ -1365,6 +1411,7 @@ window.LS = window.LS || {};
           <p class="end-reason">${esc(st.endReason||'')}</p>
           ${st.epilogueText ? `<p class="end-epi">${nl2br(st.epilogueText)}</p>` : ''}
           ${LS.AI.available() ? `<button class="btn btn-ghost btn-block" data-act="aiending">让导演写完这一段</button>` : ''}
+          <button class="btn btn-ghost btn-block" data-act="feedback">💬 这一局，打个分</button>
           <div class="end-score"><b>${st.score||0}</b><span>人生评分</span></div>
           <p class="end-comment">${esc(rank.d)}</p>
           <div class="end-grid">

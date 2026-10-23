@@ -1055,3 +1055,14 @@ body[data-world="abyss"]{ --bg:#F1F7F8; --glow1:#DCEDEF; --glow2:#E7F0F6; --rose
 }
 .iq-parts span{ display:block; font-size:9.5px; color:var(--muted); }
 .iq-parts b{ font-size:14px; color:var(--ink); }
+
+/* 反馈 */
+.fb-wrap{ padding:4px 2px 8px; }
+.fb-stars{ display:flex; gap:6px; justify-content:center; margin:4px 0 8px; }
+.fb-star{ background:none; border:none; font-size:28px; color:#E6DDE6; line-height:1; }
+.fb-star.on{ color:#F2A93B; }
+.fb-hint{ text-align:center; font-size:11px; color:var(--muted); }
+.fb-tags{ display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 4px; }
+.fb-label{ display:block; font-size:11.5px; color:var(--muted); margin-top:10px; margin-bottom:4px; }
+.fb-foot{ display:flex; gap:8px; justify-content:center; align-items:center; margin-top:10px; font-size:11px; color:var(--muted); }
+.fb-note{ font-size:10.5px; color:var(--muted); margin-top:8px; line-height:1.7; }
