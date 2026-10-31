@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>问卷分析报告 · 2026 城西科技节</title>
+<style>
+:root{
+  --ink:#16233D; --ink2:#3D4C68; --ink3:#7C8AA3;
+  --blue:#1B4F96; --navy:#0E2356; --cyan:#159ACB; --gold:#C08F16;
+  --bg:#F3F6FA; --line:#E2E9F2; --ok:#0E8F5E; --warn:#B4552A;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;
+  font-size:15.5px;line-height:1.85;-webkit-font-smoothing:antialiased}
+.page{max-width:860px;margin:0 auto;background:#fff;box-shadow:0 0 0 1px #E6ECF4,0 8px 40px rgba(20,35,61,.07)}
+
+.masthead{background:linear-gradient(155deg,#0A1B45,#1B4F96 55%,#1A7FB0);color:#fff;padding:38px 46px 34px;position:relative;overflow:hidden}
+.masthead::after{content:"";position:absolute;right:-90px;top:-110px;width:320px;height:320px;border-radius:50%;
+  background:radial-gradient(circle,rgba(192,143,22,.26),rgba(192,143,22,0) 68%)}
+.mh{position:relative;z-index:1}
+.school{font-size:12.5px;letter-spacing:.16em;color:#A8C2E4;margin-bottom:14px}
+h1{font-size:31px;line-height:1.32;margin:0 0 12px;font-weight:800;letter-spacing:-.5px}
+h1 b{color:#E8C25A}
+.deck{font-size:14.5px;line-height:1.7;color:#C6D8EF;margin:0;max-width:660px}
+.metaline{margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,.16);
+  font-size:12px;color:#93AFD3;display:flex;gap:18px;flex-wrap:wrap}
+
+.body{padding:34px 46px 44px}
+
+/* 摘要速览 */
+.summary{background:#F6FAFF;border:1px solid #DCE8F6;border-radius:14px;padding:24px 26px;margin:0 0 30px}
+.summary h2{margin:0 0 14px;font-size:17px;color:var(--navy)}
+.summary ol{margin:0;padding-left:22px}
+.summary li{margin-bottom:11px;font-size:14.5px;line-height:1.75;color:var(--ink2)}
+.summary li b{color:var(--blue)}
+.summary li:last-child{margin-bottom:0}
+
+h2{font-size:20px;margin:40px 0 6px;font-weight:800;letter-spacing:-.2px;padding-left:13px;border-left:4px solid var(--gold);line-height:1.4}
+h2 span{color:var(--ink3);font-weight:400;font-size:14px;margin-left:8px}
+h3{font-size:15.5px;margin:24px 0 8px;font-weight:700;color:var(--blue)}
+p{margin:0 0 15px;text-align:justify}
+strong{font-weight:700;color:var(--navy);background:linear-gradient(transparent 62%,#FBEFC6 62%);padding:0 2px}
+em{font-style:normal;color:var(--gold);font-weight:700}
+
+/* 数字卡 */
+.figures{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:10px 0 24px}
+.fig{background:linear-gradient(170deg,#F7FAFE,#EDF4FC);border:1px solid #DFEAF7;border-radius:12px;padding:16px 12px 13px;text-align:center}
+.fig b{display:block;font-size:31px;line-height:1.05;color:var(--blue);font-weight:800;letter-spacing:-1px}
+.fig span{display:block;font-size:12px;color:var(--ink3);margin-top:4px}
+.fig i{display:block;font-size:10.5px;color:#9AA9BF;font-style:normal;margin-top:1px}
+
+/* 图表 */
+.chart{background:#FAFCFE;border:1px solid var(--line);border-radius:13px;padding:19px 21px 16px;margin:20px 0}
+.chart-t{font-size:13.5px;font-weight:700;color:var(--blue);margin:0 0 3px}
+.chart-s{font-size:11.5px;color:var(--ink3);margin:0 0 15px}
+.reading{margin:14px 0 0;padding:11px 14px;background:#FFFDF6;border-left:3px solid var(--gold);
+  border-radius:0 8px 8px 0;font-size:13px;color:var(--ink2);line-height:1.75}
+.reading b{color:var(--gold)}
+
+.bar{margin-bottom:10px}
+.bar-top{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;margin-bottom:4px;gap:10px}
+.bar-top .nm{flex:1;color:var(--ink2)}
+.bar-top .vl{color:var(--blue);font-weight:700;font-size:12.5px;white-space:nowrap}
+.bar-bg{height:9px;background:#E7EEF7;border-radius:5px;overflow:hidden}
+.bar-bg i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,#4E93D8,#1B4F96)}
+.bar.gold .bar-bg i{background:linear-gradient(90deg,#E2BC55,#B8901F)}
+.bar.gold .bar-top .vl{color:var(--gold)}
+.bar.low .bar-bg i{background:linear-gradient(90deg,#E0906A,#B4552A)}
+.bar.low .bar-top .vl{color:var(--warn)}
+
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.gauge{text-align:center}
+.gauge .num{font-size:36px;font-weight:800;line-height:1.1;letter-spacing:-1.5px}
+.gauge.ok .num{color:var(--ok)} .gauge.warn .num{color:var(--gold)}
+.gauge .cap{font-size:12px;color:var(--ink3);margin-top:3px}
+.gauge .track{height:8px;background:#E7EEF7;border-radius:4px;margin:8px 0 0;overflow:hidden}
+.gauge .track i{display:block;height:100%;border-radius:4px}
+.gauge.ok .track i{background:linear-gradient(90deg,#3FCB93,#0E8F5E)}
+.gauge.warn .track i{background:linear-gradient(90deg,#F0CE72,#C08F16)}
+
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:11px;margin-top:4px}
+.trio .box{text-align:center;padding:14px 6px;border-radius:11px;background:#fff;border:1px solid var(--line)}
+.trio .box .who{font-size:11.5px;color:var(--ink3);margin-bottom:6px}
+.trio .box .pct{font-size:29px;font-weight:800;color:var(--blue);line-height:1.1;letter-spacing:-1px}
+.trio .box .said{font-size:11px;color:var(--ink3);margin-top:4px;line-height:1.5}
+
+blockquote{margin:16px 0;padding:13px 17px;background:#F6FAFF;border-left:3px solid var(--cyan);
+  border-radius:0 9px 9px 0;font-size:13.5px;color:var(--ink2);line-height:1.75}
+blockquote .from{display:block;font-size:11.5px;color:var(--ink3);margin-top:7px}
+blockquote p{margin:0 0 6px}
+
+/* 表格 */
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin:14px 0 6px}
+th,td{text-align:left;padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{background:#F5F9FD;font-weight:700;color:var(--ink2);font-size:12.5px}
+td.c{text-align:center;font-weight:700;color:var(--blue);white-space:nowrap}
+td.tag{white-space:nowrap;font-weight:700}
+.tag-p1{color:#B4372A}.tag-p2{color:var(--gold)}.tag-p3{color:var(--ink3)}
+
+ul.tight{margin:8px 0 16px;padding-left:22px}
+ul.tight li{margin-bottom:7px}
+.ideas{display:grid;grid-template-columns:1fr 1fr;gap:7px 14px;margin:10px 0 4px}
+.idea{font-size:13px;color:var(--ink2);background:#FAFCFE;border:1px dashed #D8E4F2;border-radius:8px;padding:7px 12px}
+
+.coda{background:linear-gradient(160deg,#0E2356,#1B4F96);color:#fff;border-radius:14px;padding:24px 26px;margin:32px 0 0}
+.coda p{color:#D3E1F2;margin:0 0 10px;font-size:14px;line-height:1.8}
+.coda p:last-child{margin-bottom:0}
+.coda b{color:#E8C25A}
+
+.sign{margin-top:30px;padding-top:16px;border-top:1px solid var(--line);font-size:12px;color:var(--ink3);line-height:1.9;text-align:right}
+.note{font-size:11px;color:#9AA9BF;margin-top:16px;line-height:1.7;border-top:1px dashed #E2E9F2;padding-top:11px}
+
+@media (max-width:640px){
+  .masthead{padding:26px 22px 24px} h1{font-size:23px}
+  .body{padding:24px 20px 30px}
+  .figures{gap:7px} .fig b{font-size:24px} .fig span{font-size:10.5px}
+  .duo{grid-template-columns:1fr}
+  .trio{grid-template-columns:repeat(3,1fr)} .trio .box .pct{font-size:22px}
+  .chart{padding:14px 13px} .ideas{grid-template-columns:1fr}
+}
+@media print{
+  @page{size:A4;margin:13mm 15mm}
+  html,body{background:#fff} body{font-size:12.5px;line-height:1.7}
+  .page{max-width:none;box-shadow:none}
+  .masthead{padding:24px 15mm 20px;margin:0 -15mm} .masthead::after{display:none}
+  h1{font-size:24px} .body{padding:18px 0 0}
+  p{margin-bottom:10px} h2{font-size:16.5px;margin:20px 0 7px} h2 span{font-size:12.5px}
+  .summary{padding:16px 18px} .summary li{font-size:12.5px;margin-bottom:7px}
+  .figures{gap:7px;margin:6px 0 14px} .fig{padding:11px 7px 9px} .fig b{font-size:24px}
+  .chart{padding:13px 15px 11px;margin:12px 0}
+  blockquote{margin:11px 0;padding:9px 13px;font-size:12.5px}
+  table{font-size:12px} th,td{padding:7px 10px}
+  .coda{padding:15px 17px;margin:16px 0 0} .coda p{font-size:12.5px}
+  .sign{margin-top:14px} .note{font-size:10px}
+  .masthead,.summary,.coda,.fig,.chart,blockquote{ -webkit-print-color-adjust:exact; print-color-adjust:exact }
+  h2,h3{break-after:avoid} .chart,blockquote,.figures,.summary,.coda{break-inside:avoid}
+}
+
+/* 站内顶栏 */
+.topnav{position:sticky;top:0;z-index:60;background:rgba(14,35,86,.95);backdrop-filter:blur(8px);
+  color:#fff;font-size:13px;padding:9px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.topnav a{color:#BFD3EC;text-decoration:none;font-weight:700;white-space:nowrap}
+.topnav a:hover{color:#fff}
+.topnav .t{color:#8FA9CC;font-size:11.5px;text-align:right;line-height:1.3}
+@media print{.topnav{display:none}}
+</style>
+</head>
+<body>
+<div class="topnav">
+  <a href="index.html">‹ 返回问卷首页</a>
+  <span class="t">2026 霜降科技节 · 活动后问卷 · 623 份样本</span>
+</div>
+<div class="page">
+
+  <div class="masthead">
+    <div class="mh">
+      <div class="school">天等县城西小学 · 2026 霜降科技节</div>
+      <h1>活动后问卷<b>数据分析报告</b></h1>
+      <p class="deck">623 份匿名问卷：学生及家长 522 份、小摊主与学生工作人员 66 份、教师 35 份。本报告回答三个问题——这一次办得怎么样？孩子得到了什么？下一次怎么办？</p>
+      <div class="metaline"><span>问卷时间：2026 年 10 月 29–30 日</span><span>统计截止：10 月 30 日 11:30</span><span>整理：谭政</span></div>
+    </div>
+  </div>
+
+  <div class="body">
+
+    <!-- ============ 核心结论 ============ -->
+    <div class="summary">
+      <h2>核心结论速览</h2>
+      <ol>
+        <li><b>「学生自主办节」的方向得到三方确认。</b>65.9% 的学生、88.6% 的教师希望下一次延续「学生自己摆摊」；89.4% 的小摊主仍愿意再来。希望回到「老师安排节目表演」的：学生仅 5.6%，教师 <b>0 人</b>。</li>
+        <li><b>教师「办得好，但不累」。</b>整体满意度 4.4 分，劳累度仅 1.82 分（34 人中 19 人打 1 分）；82.8% 的教师愿意承担同等或更多工作。学生自主承办没有把负担转嫁给教师。</li>
+        <li><b>氛围与价值被高度认可，秩序与节奏是短板。</b>教师六项分项打分：学生参与热度 4.83 分最高，现场秩序与时间节奏均为 4.06 分垫底。</li>
+        <li><b>摆摊意愿强烈且可转化。</b>79.5% 的学生动了摆摊念头，61.8% 愿意报名；小摊主 84.6% 在开摊后数分钟内上手，0 人「到现在还没会」。</li>
+        <li><b>小摊主的收获集中在软技能</b>：与队友分工配合 66.2%、敢与陌生人交流 56.9%、能把东西讲清楚 56.9%。</li>
+        <li><b>问题集中在三处</b>：奖品兑换点不足（出现「集满 10 章未兑换」）、体验时间偏紧、部分摊位知识讲解停留在「玩」的层面。已列入改进清单（见第六节）。</li>
+      </ol>
+    </div>
+
+    <!-- ============ 样本 ============ -->
+    <h2>一、样本概况<span>谁填了、填了多少</span></h2>
+    <div class="figures">
+      <div class="fig"><b>522</b><span>学生 / 家长问卷</span><i>覆盖 1–6 年级</i></div>
+      <div class="fig"><b>66</b><span>小摊主问卷</span><i>摊主及工作人员</i></div>
+      <div class="fig"><b>35</b><span>教师问卷</span><i>班主任与摊位指导</i></div>
+    </div>
+    <p>全部问卷通过微信扫码匿名填写，不收集姓名与手机号。学生卷覆盖六个年级：四年级最多（160 份，30.7%），其次为六年级 105 份、五年级 94 份、三年级 72 份、二年级 48 份、一年级 43 份。<strong>高年级（四至六）合计占 68.8%</strong>，与现场主要由高年级承担摊主、低年级随班体验的结构一致。</p>
+    <p>同一天内回收 611 份，次日补收 12 份，回收高峰与活动结束时间吻合，无异常刷量迹象（同一网络每日限额 5–12 份）。</p>
+
+    <!-- ============ 学生卷 ============ -->
+    <h2>二、学生卷<span>逛了什么、想要什么（n=522）</span></h2>
+
+    <h3>2.1 参与广度：一半孩子逛了 10 个以上摊位</h3>
+    <p>50.0% 的孩子逛了 10 个以上摊位，20.0% 逛了 7–10 个；逛 1–3 个的仅 5.7%。三批分流的时间设计基本保证了体验量，但「记不清了」（10.7%）与「时间太少」的反馈提示：对低年级和后排摊位来说，可逛范围仍受时间约束。</p>
+
+    <h3>2.2 最受欢迎的摊位：能摸、能吃、能玩</h3>
+    <div class="chart">
+      <p class="chart-t">学生印象最深的摊位 TOP 8</p>
+      <p class="chart-s">n = 522 · 单选 · 最高票得票率 10.2%</p>
+      <div class="bar"><div class="bar-top"><span class="nm">仓鼠观察</span><span class="vl">53 票（10.2%）</span></div><div class="bar-bg"><i style="width:100%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">爆米花兑换</span><span class="vl">35 票（6.7%）</span></div><div class="bar-bg"><i style="width:66%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">旋转竹蜻蜓</span><span class="vl">33 票（6.3%）</span></div><div class="bar-bg"><i style="width:62%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">棉花糖兑换</span><span class="vl">30 票（5.7%）</span></div><div class="bar-bg"><i style="width:57%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">科幻画 / 心理画 / 非遗画展</span><span class="vl">24 票（4.6%）</span></div><div class="bar-bg"><i style="width:45%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">3D 打印摊</span><span class="vl">20 票（3.8%）</span></div><div class="bar-bg"><i style="width:38%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">K 歌之王</span><span class="vl">20 票（3.8%）</span></div><div class="bar-bg"><i style="width:38%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">五色糯米饭科普</span><span class="vl">18 票（3.4%）</span></div><div class="bar-bg"><i style="width:34%"></i></div></div>
+      <div class="reading"><b>解读：</b>头部是「能摸的动物 + 能吃的食物」，科技含量最高的无人机、AI 识别等摊位未进前五——<b>孩子的注意力被「可触摸的真实感」抓住，而不是被技术本身</b>。这与 55.2% 的孩子选择「最喜欢能自己动手做、动手玩」互为印证。此外，40 人（7.7%）选「上面都没有或记不清了」，摊位辨识度（编号、地图、广播提示）仍有提升空间。</div>
+    </div>
+
+    <h3>2.3 摆摊意愿：79.5% 动了心，61.8% 愿意真报名</h3>
+    <p>「今天有没有冒出『我也想摆个摊』的念头？」——<strong>31.2% 选「有，很强烈」，48.3% 选「有一点」，合计 79.5%</strong>。追问到行动层面：「如果下次公开招募摊主，你会自己报名吗？」61.8% 给出肯定回答，其中 13.9% 想单独申报、47.9% 想和同学一起搞。</p>
+    <p>这个差距（心动 79.5% → 行动 61.8%）是正常的意愿衰减，但值得注意的是<strong>「想和同学一起搞」的压倒性多数</strong>——下一次招募时以 2–3 人小组为单位设置摊位，比鼓励个人申报更符合孩子的真实意愿。</p>
+
+    <h3>2.4 下一次的形式：三分之二要延续学生自主</h3>
+    <p>「如果下一次还办这样的活动，孩子更希望是？」——<strong>65.9% 选择「像今天这样，学生自己摆摊」</strong>，18.0% 选择「两种都要」，仅 5.6% 选择「老师安排节目表演」。</p>
+
+    <h3>2.5 学生自己交上来了一批点子</h3>
+    <p>开放题「如果让你自己策划一个摊位，你想搞什么」共收到百余条回答，可直接作为下一次摊位招募的参考池：</p>
+    <div class="ideas">
+      <div class="idea">拼豆手工摊</div><div class="idea">自己卷棉花糖（体验式，非兑换式）</div>
+      <div class="idea">立瓶子比赛</div><div class="idea">匿名秘密分享站（心理减压）</div>
+      <div class="idea">投篮 / 打篮球摊位</div><div class="idea">魔方挑战（想再办）</div>
+      <div class="idea">印印象换奖品</div><div class="idea">小吃摊</div>
+    </div>
+
+    <!-- ============ 小摊主卷 ============ -->
+    <h2>三、小摊主卷<span>一次完整的「职业初体验」（n=66）</span></h2>
+
+    <h3>3.1 上手速度：84.6% 在几分钟之内</h3>
+    <div class="chart">
+      <p class="chart-t">小摊主：大概过了多久就「上手」了</p>
+      <p class="chart-s">n = 65 · 无一人选择「到现在还没太会」</p>
+      <div class="bar gold"><div class="bar-top"><span class="nm">一开摊就会</span><span class="vl">44.6%（29 人）</span></div><div class="bar-bg"><i style="width:44.6%"></i></div></div>
+      <div class="bar gold"><div class="bar-top"><span class="nm">几分钟</span><span class="vl">40.0%（26 人）</span></div><div class="bar-bg"><i style="width:40.0%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">半小时左右</span><span class="vl">12.3%（8 人）</span></div><div class="bar-bg"><i style="width:12.3%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">一两个小时</span><span class="vl">3.1%（2 人）</span></div><div class="bar-bg"><i style="width:3.1%"></i></div></div>
+      <div class="reading"><b>解读：</b>开摊前的紧张是普遍的（42.4% 自述「紧张，不知道该怎么开口」），但真正卡住的时间极短。<b>社交压力的阈值在真实场景里远低于课堂</b>——这一条是本次问卷最有教学价值的数据。</div>
+    </div>
+
+    <h3>3.2 收获：三项软技能，而不是知识点</h3>
+    <p>「最大的收获」按提及率排序：与队友分工配合 66.2%、敢主动跟不认识的人说话 56.9%、能把东西讲清楚 56.9%、被夸时的成就感 36.9%、自己想办法解决问题 30.8%。这些正是综合实践活动课程强调的社会性发展目标。</p>
+
+    <h3>3.3 难处：超过一半的孩子「没遇到」</h3>
+    <p>51.5% 的小摊主表示全程没有遇到难处；遇到的问题依次为太累（22.7%）、有人插队（18.2%）、东西被弄坏（7.6%）。没有出现霸凌、冲突升级等严重情况。</p>
+    <p>他们希望的下一次支持，排前三的是：<strong>更多物料和道具（50.0%）、多几个人手（39.4%）、中间能有休息时间（39.4%）</strong>——全是运营层面的诉求，而不是逃避式的诉求。</p>
+
+    <h3>3.4 再来一次的意愿：4.22 / 5</h3>
+    <p>「还想再当一次摊主」平均 4.22 分；89.4% 愿意在下一次活动中继续（47.0% 做好这次这个，42.4% 策划全新摊位）。这批孩子已经具备「传帮带」的条件——问卷里他们给新手写的建议（「不要紧张，就像平常回答问题一样」「多吆喝几声」）可以直接用于下一次的摊主培训。</p>
+
+    <!-- ============ 教师卷 ============ -->
+    <h2>四、教师卷<span>氛围获认可，秩序与节奏是短板（n=35）</span></h2>
+
+    <h3>4.1 六项分项：参与热度 4.83 最高，秩序与节奏 4.06 垫底</h3>
+    <div class="chart">
+      <p class="chart-t">教师对六个维度的分项评价（1–5 分）</p>
+      <p class="chart-s">n = 35 · 矩阵题逐项平均</p>
+      <div class="bar"><div class="bar-top"><span class="nm">学生参与的热度</span><span class="vl">4.83</span></div><div class="bar-bg"><i style="width:96.6%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">对孩子的成长价值</span><span class="vl">4.62</span></div><div class="bar-bg"><i style="width:92.4%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">学生自主的程度</span><span class="vl">4.43</span></div><div class="bar-bg"><i style="width:88.6%"></i></div></div>
+      <div class="bar"><div class="bar-top"><span class="nm">摊位内容的水平</span><span class="vl">4.29</span></div><div class="bar-bg"><i style="width:85.8%"></i></div></div>
+      <div class="bar low"><div class="bar-top"><span class="nm">现场秩序</span><span class="vl">4.06</span></div><div class="bar-bg"><i style="width:81.2%"></i></div></div>
+      <div class="bar low"><div class="bar-top"><span class="nm">时间节奏（三批次）</span><span class="vl">4.06</span></div><div class="bar-bg"><i style="width:81.2%"></i></div></div>
+      <div class="reading"><b>解读：</b>「孩子的参与度和成长价值」得到最高认可，而「秩序」「节奏」两项虽仍在 4 分以上（良好），但明显低于其他维度——<b>不是办砸了，而是最容易改进的两处</b>。它们恰好对应学生反馈里的「排队久」「时间不够」，也与兑换拥堵直接相关。</div>
+    </div>
+
+    <h3>4.2 办得好，但不累</h3>
+    <div class="chart">
+      <p class="chart-t">教师自评：满意度与劳累度（满分 5）</p>
+      <p class="chart-s">满意度 n=35 · 劳累度 n=34</p>
+      <div class="duo">
+        <div class="gauge ok"><div class="num">4.4</div><div class="cap">活动整体满意度</div><div class="track"><i style="width:88%"></i></div></div>
+        <div class="gauge warn"><div class="num">1.82</div><div class="cap">劳累程度（越低越轻松）</div><div class="track"><i style="width:36%"></i></div></div>
+      </div>
+      <div class="reading"><b>解读：</b>34 位教师中 19 人劳累度打 1 分、0 人打 5 分。<b>学生自主承办没有把负担转嫁给教师</b>——当一个摊位的工作被孩子接手，教师从「主演」退到了「场务」。这解释了为什么 82.8% 的教师愿意在下一次承担同等（57.1%）甚至更多（25.7%）的工作。</div>
+    </div>
+
+    <h3>4.3 对「学生自主办节」的态度：担忧集中在安全与质量，且可控</h3>
+    <p>教师对学生自主策划的担忧排序：安全问题 51.4%、内容质量不够 40.0%、现场秩序乱 40.0%。而本次实践恰好提供了反证：<strong>一位教师在「最超出预期」中写道，学生自主选择摊位活动，没有出现安全问题</strong>；秩序获得 4.06 分的评价。真正的短板「知识性不足」被多位教师点名——这不是自主办节的代价，而是下一次培训要补的课。</p>
+
+    <h3>4.4 频率与形式</h3>
+    <p>「这种科技节多久办一次合适」：<strong>一个学期一次 48.6%、一年一次 37.1%</strong>，另有 5.7% 选择每周一次（多为摊位指导老师），<strong>无人选择「不再举办」</strong>。「如果下一次还办这样的活动，您更倾向哪种形式」：88.6% 选择「学生自主策划摆摊（延续这次）」，11.4% 选择两者结合或再看，0 人选择「老师组织文艺表演」。</p>
+
+    <!-- ============ 改进清单 ============ -->
+    <h2>五、问题清单<span>按优先级排列，来自三方原话</span></h2>
+
+    <table>
+      <tr><th style="width:52px">优先级</th><th style="width:190px">问题</th><th>证据</th><th style="width:200px">改进方向</th></tr>
+      <tr><td class="tag tag-p1">P1</td><td class="tag">奖品兑换点不足</td>
+        <td>多位教师与学生提到爆米花、棉花糖排长队；有学生集满 10 章未兑换：「我攒了那么多积分，结果都白费了」</td>
+        <td>兑换点从 1 处增至 3–4 处分区设置；或改「章换券、离场兑」分流</td></tr>
+      <tr><td class="tag tag-p1">P1</td><td class="tag">体验时间偏紧</td>
+        <td>「给的时间太少」高频出现；教师对时间节奏打分垫底（4.06）；10.7% 学生记不清逛了什么</td>
+        <td>批次时长增加 20–30 分钟；或减少每批摊位密度、提高流转</td></tr>
+      <tr><td class="tag tag-p2">P2</td><td class="tag">知识讲解停留在「玩」</td>
+        <td>教师原话：「摊主学生对于知识原理的解读传达还不够到位，体验的学生只能停在玩的表面」</td>
+        <td>让摊主为自己的项目写一张原理小海报；开摊前 10 分钟讲解培训；设「讲解之星」加分</td></tr>
+      <tr><td class="tag tag-p2">P2</td><td class="tag">摊位辨识度不足</td>
+        <td>7.7% 学生「记不清了」；低年级找不到目标摊位</td>
+        <td>摊位编号上牌 + 现场平面图 + 广播报号；学生问卷 Q3 已按类分组，可复用分类做导览</td></tr>
+      <tr><td class="tag tag-p3">P3</td><td class="tag">物料与人手不足</td>
+        <td>小摊主诉求：更多物料道具 50.0%、多几个人手 39.4%、休息时间 39.4%</td>
+        <td>招募时按摊位收集物料清单；每摊配轮换制，保证摊主能轮休</td></tr>
+      <tr><td class="tag tag-p3">P3</td><td class="tag">现场卫生与收尾</td>
+        <td>教师提到「现场卫生有待加强」「收尾清理」在累源中占比不低</td>
+        <td>摊主分组包干收尾；把「清完才算收摊」写进摊主须知</td></tr>
+    </table>
+
+    <h2>六、下一次行动建议</h2>
+
+    <h3>6.1 形式：延续「学生自主策划摆摊」</h3>
+    <p>三方数据（65.9% / 88.6% / 89.4%）已经足够下结论。<strong>教师问卷里没有一个人希望回到「老师安排节目表演」</strong>，这应作为下一次活动定位的直接依据。</p>
+
+    <h3>6.2 招募：以 2–3 人小组为单位，用孩子的点子做种子</h3>
+    <p>47.9% 的孩子想「和同学一起搞」。招募公告可直接引用学生自己提交的点子（拼豆、卷棉花糖体验、立瓶子比赛、匿名秘密分享站、投篮摊……），让报名的孩子从「认领摊位」变成「认领自己的点子」。</p>
+
+    <h3>6.3 培训：让这 66 位小摊主当教练</h3>
+    <p>本次问卷里小摊主给新手写的建议，就是现成的培训教材。可组织一次 20 分钟的「老摊主讲给新摊主」分享会，把「上手只要几分钟」的经验前移到开摊之前，同时解决知识讲解不足的问题。</p>
+
+    <h3>6.4 节奏：一学期一次，兑换与时长同步调整</h3>
+    <p>教师的主流意见（48.6%）是「一个学期一次」，本学年第二个节点可设在春季学期。兑换点、批次时长两个 P1 问题在下一次必须先解决。</p>
+
+    <div class="coda">
+      <p>623 份问卷回答了筹备会上悬而未决的问题：<b>学生自主办节不是冒险，是三方共识</b>。</p>
+      <p>它同时指出了下一次要把力气花在哪：不在「要不要让孩子办」，而在<b>兑换、时间、知识性</b>这三件具体的事上。</p>
+      <p>数据已经齐了，下一步是把它变成筹备会上的两个决定。</p>
+    </div>
+
+    <div class="sign">
+      <b>天等县城西小学</b>　2026 年 10 月 30 日<br>
+      统计口径：问卷于 10 月 29–30 日通过微信扫码匿名填写，不含姓名与手机号；同一网络每日限填 5–12 份<br>
+      数据看板：api.kexvefuxi.cn/wj/admin.html（密码向课程中心索取）· 引语均为填写者原话
+    </div>
+
+    <p class="note">样本说明：学生卷由家长协助孩子作答，年级为自报；小摊主卷含摊主、助手及摄影广播等学生工作人员；教师卷为匿名，身份单选必填。所有百分比按对应问卷的有效作答人数计算，多选题按提及次数统计、合计可超 100%。开放题引语保留原话（含口语与标点），未作修饰。</p>
+
+  </div>
+</div>
+</body>
+</html>

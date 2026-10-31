@@ -1,36 +1,847 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>2026 科技节活动后问卷 · 正在打开</title>
-<meta http-equiv="refresh" content="0; url=https://api.kexvefuxi.cn/wj/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="format-detection" content="telephone=no">
+<title>2026 城西科技节 · 活动后问卷</title>
+<meta property="og:type" content="website">
+<meta property="og:title" content="2026 城西科技节 · 活动后问卷">
+<meta property="og:description" content="老师、家长、小摊主三份匿名问卷，约 3 分钟。说说这次办得怎么样，下一次还办不办。">
+<meta property="og:image" content="https://api.kexvefuxi.cn/wj/og.png">
+<meta property="og:url" content="https://api.kexvefuxi.cn/wj/">
+<meta name="description" content="城西小学 2026 科技节活动后反馈问卷：老师、学生家长、小摊主三份问卷。">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%231A4F96'/%3E%3Ctext x='50' y='68' font-size='54' text-anchor='middle' fill='%23C9A227' font-family='sans-serif'%3E%E9%97%AE%3C/text%3E%3C/svg%3E">
 <style>
-  :root{--bg:#F2F6FB;--card:#fff;--ink:#14213D;--sub:#7C8AA3;--accent:#1B4F96;--gold:#C08F16;--line:#E2E9F2}
-  *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;
-    background:radial-gradient(1200px 600px at 50% -10%,#EAF2FC 0%,var(--bg) 60%);
-    font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif;color:var(--ink);padding:24px}
-  .box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:34px 36px;
-    max-width:460px;width:100%;text-align:center;box-shadow:0 10px 34px rgba(20,35,61,.08)}
-  .ic{font-size:44px;line-height:1}
-  h1{font-size:20px;margin:14px 0 6px}
-  p{color:var(--sub);font-size:14px;line-height:1.75;margin:6px 0}
-  a.go{display:inline-block;margin-top:18px;background:linear-gradient(135deg,#1B4F96,#0E2356);color:#fff;text-decoration:none;
-    padding:12px 26px;border-radius:999px;font-size:15px;font-weight:600}
-  a.go:active{transform:translateY(1px)}
-  .addr{margin-top:16px;font-size:12px;color:#AAB7C9;word-break:break-all}
-  .note{margin-top:20px;padding-top:16px;border-top:1px dashed var(--line);font-size:12px;color:#AAB7C9}
+:root{
+  --ink:#14213D; --ink2:#4A5875; --ink3:#8B97AD;
+  --blue:#1A4F96; --blue-d:#0E2356; --cyan:#17A8D8; --gold:#C9A227;
+  --bg:#F2F6FB; --card:#FFFFFF; --line:#E3EAF4;
+  --ok:#12A66A; --warn:#E8892C;
+  --r:16px;
+  --sh:0 2px 10px rgba(20,33,61,.06), 0 8px 28px rgba(20,33,61,.05);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  font-size:16px; line-height:1.65;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:env(safe-area-inset-bottom);
+  overflow-x:hidden;
+}
+.wrap{max-width:620px;margin:0 auto;padding:0 16px 120px}
+.hide{display:none!important}
+
+/* ---------- 顶部 ---------- */
+.hero{
+  background:linear-gradient(160deg,#0E2356 0%,#1A4F96 52%,#1778B8 100%);
+  color:#fff;padding:26px 16px 30px;position:relative;overflow:hidden;
+}
+.hero::after{
+  content:"";position:absolute;right:-56px;top:-56px;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(201,162,39,.34),rgba(201,162,39,0) 68%);
+}
+.hero-inner{max-width:620px;margin:0 auto;position:relative;z-index:1}
+.badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.26);
+  color:#fff;font-size:12px;letter-spacing:.06em;padding:4px 11px;border-radius:999px;
+}
+.hero h1{font-size:23px;line-height:1.32;margin:12px 0 6px;font-weight:800;letter-spacing:-.2px}
+.hero p{margin:0;font-size:13.5px;color:rgba(255,255,255,.82);line-height:1.6}
+
+/* ---------- 卡片 ---------- */
+.card{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:20px 18px;margin-top:14px}
+.card-h{font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px;margin:0 0 4px}
+.card-sub{font-size:13px;color:var(--ink3);margin:0 0 14px}
+
+/* ---------- 角色选择 ---------- */
+.pick{
+  display:flex;align-items:center;gap:14px;width:100%;text-align:left;
+  background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);
+  padding:17px 16px;margin-top:12px;cursor:pointer;font-family:inherit;
+  transition:border-color .16s,transform .1s,box-shadow .16s;
+  box-shadow:0 1px 3px rgba(20,33,61,.04);
+}
+.pick:active{transform:scale(.985)}
+.pick:hover{border-color:#A9C4E8;box-shadow:0 4px 16px rgba(26,79,150,.12)}
+.grp-title{font-size:13px;color:var(--ink3);letter-spacing:.04em;
+  margin:2px 0 12px;display:flex;align-items:center;gap:10px}
+.grp-title::after{content:"";flex:1;height:1px;background:var(--line)}
+.pick.rep .ico{background:#EAF7F1}
+.pick.rep .tt{color:#0E8F5E}
+
+.pick .ico{
+  flex:0 0 46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;background:#EAF2FC;
+}
+.pick.b .ico{background:#FDF4E0}
+.pick.c .ico{background:#E7F6F1}
+.pick.rep .ico{background:#EAF7F1}
+.pick.rep .tt{color:#0E8F5E}
+.pick .txt{flex:1;min-width:0}
+.pick .tt{display:block;font-size:16px;font-weight:700;margin-bottom:2px;line-height:1.4}
+.pick .dd{display:block;font-size:12.5px;color:var(--ink3);line-height:1.5}
+.pick .go{flex:0 0 auto;color:var(--ink3);font-size:19px;line-height:1}
+.foot-note{text-align:center;font-size:12px;color:var(--ink3);margin-top:26px;line-height:1.8}
+.foot-note b{color:var(--ink2);font-weight:600}
+
+/* ---------- 进度条 ---------- */
+.prog{position:fixed;top:0;left:0;right:0;height:3px;background:rgba(26,79,150,.1);z-index:60}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#17A8D8,#1A4F96);transition:width .25s}
+
+/* ---------- 问卷 ---------- */
+.qhead{
+  background:linear-gradient(160deg,#0E2356,#1A4F96);color:#fff;padding:18px 16px 22px;
+  position:relative;overflow:hidden;
+}
+.qhead::after{
+  content:"";position:absolute;left:-40px;bottom:-70px;width:170px;height:170px;border-radius:50%;
+  background:radial-gradient(circle,rgba(23,168,216,.3),rgba(23,168,216,0) 70%);
+}
+.qhead-in{max-width:620px;margin:0 auto;position:relative;z-index:1}
+.qhead h2{margin:0 0 5px;font-size:19px;font-weight:800;letter-spacing:-.2px}
+.qhead p{margin:0;font-size:13px;color:rgba(255,255,255,.8)}
+.back{
+  background:rgba(255,255,255,.15);border:0;color:#fff;font-size:13px;font-family:inherit;
+  padding:5px 12px;border-radius:999px;margin-bottom:10px;cursor:pointer;
+}
+
+.sec{margin-top:22px}
+.sec-t{
+  font-size:12px;font-weight:700;letter-spacing:.1em;color:var(--blue);
+  display:flex;align-items:center;gap:8px;margin:0 0 2px;padding-left:2px;
+}
+.sec-t::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,#CBDCF0,transparent)}
+
+.q{background:var(--card);border-radius:var(--r);padding:18px 16px;margin-top:11px;box-shadow:0 1px 4px rgba(20,33,61,.05)}
+.q-n{font-size:11px;font-weight:700;color:var(--gold);letter-spacing:.08em;margin-bottom:5px}
+.q-t{font-size:15.5px;font-weight:600;line-height:1.55;margin:0 0 3px}
+.q-t em{color:var(--warn);font-style:normal;font-size:11px;font-weight:600;margin-left:5px;vertical-align:top}
+.q-h{font-size:12.5px;color:var(--ink3);margin:0 0 12px;line-height:1.55}
+.q-by{display:inline-block;font-size:11.5px;color:#9A7311;background:#FDF6E3;border:1px solid #F0E3BC;
+border-radius:99px;padding:2px 10px;margin:2px 0 10px;line-height:1.5}
+.opts{display:flex;flex-direction:column;gap:8px;margin-top:11px}
+.opts.cols2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opts.cols2 .opt{padding:11px 10px;font-size:14px}
+.opt{
+  display:flex;align-items:flex-start;gap:10px;width:100%;text-align:left;
+  border:1.5px solid var(--line);background:#FCFDFF;border-radius:11px;
+  padding:11px 13px;font-size:14.5px;font-family:inherit;color:var(--ink);
+  cursor:pointer;transition:.15s;line-height:1.45;
+}
+.opt:active{transform:scale(.99)}
+.opt .dot{
+  flex:0 0 19px;height:19px;border-radius:50%;border:2px solid #C6D4E6;
+  margin-top:1px;position:relative;transition:.15s;
+}
+.opt .dot.sq{border-radius:6px}
+.opt.on{border-color:var(--blue);background:#EEF5FE;color:var(--blue-d);font-weight:600}
+.opt.on .dot{border-color:var(--blue);background:var(--blue)}
+.opt.on .dot::after{
+  content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;
+  border:2px solid #fff;border-top:0;border-left:0;transform:rotate(42deg);
+}
+.opt.on .dot.sq::after{left:5.5px;top:2.5px}
+
+/* 分组选项（摊位多时按类折叠） */
+.groups{margin-top:11px}
+.grp{border:1.5px solid var(--line);border-radius:12px;margin-bottom:8px;overflow:hidden;background:#FCFDFF;transition:.15s}
+.grp.open{border-color:#A9C4E8;background:#fff;box-shadow:0 2px 10px rgba(26,79,150,.07)}
+.grp.picked{border-color:#8FD3B4;background:#F5FCF8}
+.grp-h{display:flex;align-items:center;gap:8px;width:100%;background:none;border:0;font-family:inherit;
+padding:12px 13px;cursor:pointer;text-align:left;font-size:14.5px;font-weight:700;color:var(--ink)}
+.grp-n{flex:0 0 auto}
+.grp-pick{flex:1;min-width:0;font-size:12.5px;font-weight:600;color:var(--ok);
+overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+.grp-c{font-size:11.5px;color:var(--ink3);font-weight:400;flex:0 0 auto}
+.grp-x{flex:0 0 15px;text-align:center;color:var(--ink3);font-weight:400;font-size:15px;line-height:1}
+.grp.open .grp-x{color:var(--blue)}
+.grp-b{display:none;padding:3px 9px 11px;grid-template-columns:1fr 1fr;gap:7px}
+.grp.open .grp-b{display:grid}
+.grp-b .opt{padding:10px 9px;font-size:13.5px}
+.grp-b .opt .dot{flex:0 0 17px;height:17px;margin-top:0}
+.grp-b .opt .dot::after{left:4.5px;top:1.5px;width:4px;height:8px}
+.grpextra{margin-top:2px}
+.grpextra .opt{font-size:13.5px;padding:10px 12px}
+
+/* 评分 */
+.scale{display:flex;gap:7px;margin-top:12px}
+.scale button{
+  flex:1;border:1.5px solid var(--line);background:#FCFDFF;border-radius:11px;
+  padding:11px 0 9px;font-family:inherit;cursor:pointer;transition:.15s;
+}
+.scale button b{display:block;font-size:17px;font-weight:700;color:var(--ink2);line-height:1.2}
+.scale button span{display:block;font-size:10px;color:var(--ink3);margin-top:2px;transform:scale(.92)}
+.scale button.on{background:var(--blue);border-color:var(--blue)}
+.scale button.on b,.scale button.on span{color:#fff}
+.scale-legend{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink3);margin-top:7px}
+
+/* 矩阵 */
+.mx{margin-top:12px;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.mx-row{display:flex;align-items:center;gap:6px;padding:9px 10px;border-bottom:1px solid var(--line);background:#fff}
+.mx-row:last-child{border-bottom:0}
+.mx-row:nth-child(even){background:#FAFCFE}
+.mx-lab{flex:1;font-size:13.5px;line-height:1.35;color:var(--ink)}
+.mx-pick{display:flex;gap:4px}
+.mx-pick button{
+  width:29px;height:29px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-family:inherit;font-size:12.5px;font-weight:600;color:var(--ink3);cursor:pointer;padding:0;transition:.12s;
+}
+.mx-pick button.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.mx-head{display:flex;padding:7px 10px 6px;background:#F3F7FC;font-size:10.5px;color:var(--ink3);align-items:center}
+.mx-head .mx-lab{font-size:11px}
+.mx-head .mx-pick{display:flex;gap:4px;width:153px;justify-content:space-between;padding:0 1px}
+.mx-head .mx-pick i{width:29px;text-align:center;font-style:normal}
+
+/* 文本 */
+textarea{
+  width:100%;border:1.5px solid var(--line);border-radius:11px;background:#FCFDFF;
+  padding:11px 13px;font-family:inherit;font-size:14.5px;line-height:1.6;color:var(--ink);
+  resize:vertical;min-height:68px;transition:.15s;
+}
+textarea:focus{outline:0;border-color:var(--blue);background:#fff;box-shadow:0 0 0 3px rgba(26,79,150,.08)}
+textarea::placeholder{color:#AEBBCC}
+.cnt{text-align:right;font-size:11px;color:var(--ink3);margin-top:5px}
+
+/* 底部提交 */
+.bar{
+  position:fixed;left:0;right:0;bottom:0;z-index:50;
+  background:rgba(255,255,255,.94);backdrop-filter:blur(12px);
+  border-top:1px solid var(--line);padding:11px 16px calc(11px + env(safe-area-inset-bottom));
+}
+.bar-in{max-width:620px;margin:0 auto;display:flex;align-items:center;gap:12px}
+.bar-tip{font-size:12px;color:var(--ink3);flex:1;line-height:1.4}
+.bar-tip b{color:var(--blue);font-weight:700}
+.btn{
+  border:0;border-radius:12px;background:linear-gradient(135deg,#1A4F96,#0E2356);color:#fff;
+  font-family:inherit;font-size:15.5px;font-weight:700;padding:13px 30px;cursor:pointer;
+  letter-spacing:.02em;box-shadow:0 4px 14px rgba(26,79,150,.28);transition:.15s;white-space:nowrap;
+}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.55;box-shadow:none}
+.btn.gold{background:linear-gradient(135deg,#D9B23A,#B8901C);box-shadow:0 4px 14px rgba(201,162,39,.3)}
+
+/* 完成页 */
+.done{text-align:center;padding:52px 20px 40px}
+.done .ring{
+  width:78px;height:78px;border-radius:50%;margin:0 auto 20px;
+  background:linear-gradient(135deg,#12A66A,#0B8A55);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 10px 30px rgba(18,166,106,.28);animation:pop .45s cubic-bezier(.2,1.4,.5,1);
+}
+.done .ring svg{width:36px;height:36px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.done h2{font-size:21px;margin:0 0 8px;font-weight:800}
+.done p{color:var(--ink2);font-size:14.5px;margin:0 auto;max-width:400px;line-height:1.7}
+.done .stat{
+  display:inline-flex;gap:20px;margin-top:24px;background:#fff;border-radius:14px;
+  padding:13px 22px;box-shadow:var(--sh);
+}
+.done .stat div{text-align:center}
+.done .stat b{display:block;font-size:19px;color:var(--blue);line-height:1.3}
+.done .stat span{font-size:11px;color:var(--ink3)}
+.toast{
+  position:fixed;left:50%;bottom:96px;transform:translateX(-50%) translateY(14px);
+  background:rgba(20,33,61,.92);color:#fff;font-size:13.5px;padding:10px 18px;border-radius:11px;
+  opacity:0;pointer-events:none;transition:.24s;z-index:99;max-width:88vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.err{border-color:#E88!important;background:#FFF6F6!important}
+@media (max-width:359px){
+  .hero h1{font-size:20px}
+  .scale button b{font-size:15px}
+  .mx-pick button{width:26px;height:26px;font-size:11.5px}
+  .mx-head .mx-pick{width:138px}
+}
 </style>
 </head>
 <body>
-  <div class="box">
-    <div class="ic">📊</div>
-    <h1>2026 霜降科技节 · 活动后问卷</h1>
-    <p>老师 / 学生家长 / 小摊主三份匿名问卷，<br>填完的可以直接看 623 份样本的数据分析报告。</p>
-    <a class="go" href="https://api.kexvefuxi.cn/wj/">进入问卷与报告 ↗</a>
-    <div class="addr">https://api.kexvefuxi.cn/wj/</div>
-    <div class="note">本入口仅作跳转，问卷与报告部署在 api.kexvefuxi.cn</div>
+
+<div class="prog hide" id="prog"><i></i></div>
+
+<!-- ============ 首页：选身份 ============ -->
+<div id="home">
+  <div class="grp-title">2026 霜降科技节 · 活动后问卷（10 月 29 日）</div>
+  <div class="hero">
+    <div class="hero-inner">
+      <span class="badge">天等县城西小学 · 问卷中心</span>
+      <h1>问卷中心</h1>
+      <p>每次活动一份匿名问卷，不记名、不收集联系方式，填完即可看数据结果。</p>
+    </div>
   </div>
+  <div class="wrap" style="padding-bottom:60px;margin-top:-18px">
+    <div style="position:relative">
+      <button class="pick a" onclick="go('t')">
+        <span class="ico">🏫</span>
+        <span class="txt">
+          <span class="tt">我是老师</span>
+          <span class="dd">想法、效果、累不累，下次怎么搞</span>
+        </span>
+        <span class="go">›</span>
+      </button>
+      <button class="pick b" onclick="go('s')">
+        <span class="ico">👨‍👩‍👧</span>
+        <span class="txt">
+          <span class="tt">我是学生（家长协助）</span>
+          <span class="dd">今天哪个摊位让你印象最深，下次想怎么玩</span>
+        </span>
+        <span class="go">›</span>
+      </button>
+      <button class="pick c" onclick="go('b')">
+        <span class="ico">🎪</span>
+        <span class="txt">
+          <span class="tt">我是小摊主 / 学生工作人员</span>
+          <span class="dd">摆摊的收获、上手的过程、还想不想再来</span>
+        </span>
+        <span class="go">›</span>
+      </button>
+    </div>
+    <button class="pick rep" onclick="location.href='report.html'">
+      <span class="ico">📊</span>
+      <span class="txt">
+        <span class="tt">问卷分析报告（已出）</span>
+        <span class="dd">623 份问卷的数据结果与改进清单 · 点开即看</span>
+      </span>
+      <span class="go">›</span>
+    </button>
+
+    <p class="foot-note">
+      <b>全部匿名</b>，不收集姓名和手机号<br>
+      结果只用于本次复盘和下一次活动策划<br>
+      学生问卷请让孩子自己作答，家长只帮忙点选项和打字<br>更多问卷将陆续上线，往后的每一次活动都在这里
+    </p>
+  </div>
+</div>
+
+<!-- ============ 问卷容器 ============ -->
+<div id="quiz" class="hide">
+  <div class="qhead">
+    <div class="qhead-in">
+      <button class="back" onclick="backHome()">‹ 返回</button>
+      <h2 id="qTitle"></h2>
+      <p id="qDesc"></p>
+    </div>
+  </div>
+  <div class="wrap" id="qBody"></div>
+  <div class="bar">
+    <div class="bar-in">
+      <div class="bar-tip" id="barTip">已填 <b>0</b> 题</div>
+      <button class="btn" id="submitBtn" onclick="submitForm()">提交问卷</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 完成 ============ -->
+<div id="finish" class="hide">
+  <div class="wrap">
+    <div class="done">
+      <div class="ring"><svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+      <h2>提交成功，谢谢您！</h2>
+      <p id="finishTip">您的每一句都算数。我们会把大家的意见汇总，直接变成下一次活动的方案依据。</p>
+      <div class="stat">
+        <div><b id="finTotal">—</b><span>已收到</span></div>
+        <div><b id="finMine">1</b><span>本次提交</span></div>
+      </div>
+      <div style="margin-top:30px">
+        <button class="btn gold" onclick="backHome()" style="padding:12px 26px;font-size:14.5px">再填一份（换人填写）</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   2026 城西科技节 · 活动后问卷
+   三份问卷：老师 t / 学生家长 s / 小摊主 b
+   ========================================================= */
+
+/* 主域名（GitHub Pages 静态版）跨域调 api 域名；同源部署时走相对路径 */
+var API = (function(){
+  var h = location.hostname;
+  if (h === 'kexvefuxi.cn' || h === 'www.kexvefuxi.cn' || h === 'dadajs.cn')
+    return 'https://api.kexvefuxi.cn/wj/api';
+  return 'api';
+})();
+
+var SCHEMA = {
+  t: {
+    title: '老师问卷',
+    desc: '匿名 · 约 3 分钟 · 17 题，开放题可跳过',
+    sections: [
+      { name: '一、回到最初的想法', qs: [
+        { id:'t_role', type:'single', req:true, title:'您的身份是',
+          opts:['班主任','摊位指导老师（带学生摆摊）','行政 / 后勤保障','科任教师（这次没直接参与摊位）','其他'] },
+        { id:'t_depth', type:'single', title:'这次您实际投入的程度是',
+          opts:['全程扎在自己的摊位上','带班参观，同时兼顾本班摊位','主要是带班走场','主要在后勤 / 场地 / 拍摄','基本是旁观'] },
+        { id:'t_before', type:'scale', title:'活动前，「让学生自己当摊主」这个想法，您心里的信心有多少',
+          legend:['完全没底','很有信心'] },
+        { id:'t_expect', type:'text', title:'活动前，您最期待看到的是什么', hint:'选填。比如期待孩子敢开口、期待某个摊位出彩、或者其实没什么期待' }
+      ]},
+      { name: '二、实际效果感受', qs: [
+        { id:'t_satisfy', type:'scale', title:'整体上，这次科技节办得怎么样',
+          legend:['不太行','非常成功'] },
+        { id:'t_rate', type:'matrix', title:'请您给这几个方面分别打个分',
+          hint:'1 分＝很差，5 分＝很好',
+          rows:['学生参与的热度','摊位内容的水平','现场秩序','时间节奏（三批次）','学生自主的程度','对孩子的成长价值'] },
+        { id:'t_beyond', type:'text', title:'哪一点最超出您的预期', hint:'选填。可以是某个孩子的表现，也可以是整体氛围' },
+        { id:'t_gap', type:'text', title:'哪一点最没达到预期、最该改', hint:'选填。说具体一点最有用，我们好改' }
+      ]},
+      { name: '三、您这次的辛苦程度', qs: [
+        { id:'t_tired', type:'scale', title:'这次活动，您累不累',
+          legend:['很轻松','非常累'] },
+        { id:'t_tired_why', type:'multi', title:'累主要来自哪里', hint:'可多选',
+          opts:['摊位看管和讲解','学生纪律','场地布置、搬桌椅','活动时间太长','人手不够','家长沟通','收尾清理','其实不太累'] },
+        { id:'t_load', type:'single', title:'下次同样规模的活动，您愿意承担',
+          opts:['比这次少一些','和这次差不多','可以再多担一些'] }
+      ]},
+      { name: '四、下一次怎么办（最重要）', qs: [
+        { id:'t_newyear', type:'single', req:true, title:'如果下一次还办这样的活动，您更倾向哪种形式',
+          hint:'这一题直接决定我们下一次的方案，请务必选一个',
+          opts:['学生自主策划摆摊（延续这次的做法）','老师组织文艺表演 / 汇演（往年那种）','两者结合：白天摆摊 + 舞台汇演','不搞大型活动，正常上课','再说，先看看别的老师怎么说'] },
+        { id:'t_freq', type:'single', req:true, title:'这种科技节，您觉得多久办一次合适',
+          by:'此题由何敏敏老师提出',
+          opts:['一年一次','一个学期一次','三个月一次','一个月一次','每周一次','不再举办'] },
+        { id:'t_plan', type:'scale', title:'以后的活动，该不该多让学生自己做策划',
+          legend:['完全不该','非常应该'] },
+        { id:'t_worry', type:'multi', title:'让学生自己策划，您最担心什么', hint:'可多选',
+          opts:['安全问题','现场秩序乱','内容质量不够','老师反而更累','家长不理解','占用课时','学生三分钟热度','不太担心'] }
+      ]},
+      { name: '五、留一句话', qs: [
+        { id:'t_keep', type:'text', title:'这次最值得保留的一个做法是什么', hint:'选填。我们想把这个做法固定下来' },
+        { id:'t_advice', type:'text', req:true, title:'给下一次的一句话建议', hint:'必填。哪怕只有一句「别再搬那么多桌子」也算数' }
+      ]}
+    ]
+  },
+
+  s: {
+    title: '学生问卷',
+    desc: '匿名 · 约 2 分钟 · 12 题 · 请孩子自己作答，家长帮忙点选项、打字',
+    sections: [
+      { name: '一、今天你逛了什么', qs: [
+        { id:'s_grade', type:'single', req:true, title:'你在读几年级',
+          opts:['一年级','二年级','三年级','四年级','五年级','六年级'] },
+        { id:'s_count', type:'single', title:'今天你大概逛了几个摊位',
+          opts:['1 ~ 3 个','4 ~ 6 个','7 ~ 10 个','10 个以上','记不清了'] },
+        { id:'s_like', type:'grouped', req:true, title:'今天哪个摊位让你印象最深',
+          hint:'点开你逛过的那一组，从里面选一个',
+          groups:[
+            { n:'AI 与科技体验', items:['城西鱼菜共生系统','AI识别指天椒','K10感应风扇','物联网智慧农场',
+              '无人机体验','水火箭体验','京剧脸谱K10','家乡非遗二维码生成','抽奖K10','3D打印摊'] },
+            { n:'动手实验', items:['鸡蛋撞地球','会消失的画','平衡鸟','会旋转的扭扭蛇',
+              '浮沉子','辉光球体验','空气大炮','电碰迷宫'] },
+            { n:'数学与益智', items:['24点决斗','数独挑战','魔方挑战'] },
+            { n:'运动与竞技', items:['纸青蛙比远','竹竿舞','丢水瓶大挑战','乒乓球保持平衡',
+              '合作背对背运球','呼啦圈大挑战','背篓绣球','蒙眼转圈','跃动绳力','气弓箭打靶'] },
+            { n:'游戏与手工', items:['乐高积木体验','吹球过河','趣味套圈','夹玻璃珠','纸桥承重展示',
+              '自制编程小游戏','旋转竹蜻蜓'] },
+            { n:'心理与解压', items:['解压钓鱼游戏','烦恼土电话','愤怒的铁拳-呐喊',
+              '心理解压喷泉','烦恼纸飞机','心愿树'] },
+            { n:'观察与美食', items:['仓鼠观察','五色糯米饭科普','爆米花兑换','棉花糖兑换'] },
+            { n:'表演与展区', items:['K歌之王','科幻画 / 心理画 / 非遗画展'] }
+          ],
+          extra:['上面都没有，或者记不清了'] },
+        { id:'s_why', type:'text', title:'为什么这个摊位让你印象最深',
+          hint:'选填。是因为能动手、能拿奖，还是讲解的人有意思？' }
+      ]},
+      { name: '二、你的真实反应', qs: [
+        { id:'s_form', type:'single', title:'你最喜欢哪种摊位',
+          opts:['能自己动手做、动手玩','看别人表演','听人讲解','比赛、拿奖、盖章集章','自己当摊主卖东西'] },
+        { id:'s_be_booth', type:'single', title:'今天你有没有冒出「我也想摆个摊」的念头',
+          opts:['有，很强烈','有一点','没有'] },
+        { id:'s_apply', type:'single', title:'如果下次公开招募摊主，你会自己报名吗',
+          hint:'这和「想不想」不一样——真到要报名那一步，你会动手吗',
+          opts:['会，我想自己申报一个','会，但我想和同学一起搞','看情况，要看搞什么','不会，我更想当游客'] },
+        { id:'s_boring', type:'text', title:'有没有哪个摊位你觉得「没什么意思」',
+          hint:'选填。说真话对我们最有用，不会告诉摊主是谁说的' }
+      ]},
+      { name: '三、下一次怎么玩', qs: [
+        { id:'s_newyear', type:'single', req:true, title:'如果下一次还有这样的活动，你更希望是',
+          opts:['像今天这样，学生自己摆摊','老师安排节目表演（唱歌跳舞那种）','两种都要','都行，说不清'] },
+        { id:'s_plan', type:'text', title:'如果让你自己策划一个摊位，你想搞什么',
+          hint:'选填。点子越具体越好，说不定下一次就用上了' },
+        { id:'s_better', type:'text', title:'你觉得这次活动哪些地方需要改进？说说你的建议',
+          hint:'选填。比如太挤、想玩的没排上、有的摊位没人讲、找不到地方' }
+      ]},
+      { name: '四、最后一句话', qs: [
+        { id:'s_word', type:'text', title:'用一句话说说你今天的感受',
+          hint:'选填。原话照抄就好，不用修饰' }
+      ]}
+    ]
+  },
+
+  b: {
+    title: '小摊主 / 工作人员问卷',
+    desc: '匿名 · 约 3 分钟 · 12 题，你的话会被认真看',
+    sections: [
+      { name: '一、你的摊位', qs: [
+        { id:'b_name', type:'text', req:true, title:'你的摊位叫什么名字', hint:'比如「水火箭」「指天椒 AI 识别」；做工作人员的写岗位，如「广播站」' },
+        { id:'b_role', type:'single', title:'你在摊位里主要负责',
+          opts:['摊主（总负责）','摊主助手','讲解介绍','收银 / 兑换 / 盖章','秩序维持','摄影、广播等工作人员'] },
+        { id:'b_prep', type:'single', title:'事前准备了多久',
+          opts:['当天才临时准备','1 ~ 2 天','一周左右','更久，一直在打磨'] }
+      ]},
+      { name: '二、从开不了口到上手', qs: [
+        { id:'b_feel_before', type:'single', title:'开摊之前，你是什么感觉',
+          opts:['紧张，不知道该怎么开口','有点期待','特别兴奋','没什么感觉'] },
+        { id:'b_warmup', type:'single', title:'大概过了多久你就「上手」了',
+          hint:'就是你开始知道该说什么、该做什么的那个时刻',
+          opts:['一开摊就会','几分钟','半小时左右','一两个小时','到现在还没太会'] },
+        { id:'b_gain', type:'multi', title:'你觉得自己最大的收获是', hint:'可多选',
+          opts:['敢主动跟不认识的人说话了','能把我的东西讲清楚了','会处理排队和插队','会算账、找零','和队友分工配合','遇到问题自己想办法解决','被人夸的时候特别有成就感','好像没什么收获'] },
+        { id:'b_proud', type:'text', title:'有没有哪一刻让你特别有成就感', hint:'选填。比如有人排了很长的队、有人夸你讲得好' }
+      ]},
+      { name: '三、难处与需要', qs: [
+        { id:'b_hard', type:'multi', title:'有没有遇到让你为难或难受的事', hint:'可多选，说真话不扣分',
+          opts:['有人不排队、插队','有人嫌贵或者不相信我们','东西被弄坏、弄乱了','太累了有点撑不住','一直没人来我的摊位','同学之间闹了矛盾','没有遇到'] },
+        { id:'b_support', type:'multi', title:'下次摆摊，你最希望得到什么支持', hint:'可多选',
+          opts:['更好的位置','更多物料和道具','多几个人手','提前培训怎么讲解','家长来帮忙','广播帮忙宣传','中间能有休息时间'] },
+        { id:'b_again', type:'scale', title:'还想再当一次摊主吗',
+          legend:['完全不想','非常想'] }
+      ]},
+      { name: '四、下一次你还来吗', qs: [
+        { id:'b_newyear', type:'single', req:true, title:'如果下一次搞活动，你愿意',
+          opts:['自己策划一个全新的摊位','还做这次这个，做得更好','当工作人员，不当摊主','只想当游客逛逛'] },
+        { id:'b_teach', type:'text', title:'如果有同学第一次当摊主，你会跟他说什么', hint:'选填。你的经验对别人最有用' }
+      ]}
+    ]
+  }
+};
+
+var state = { role:null, answers:{}, total:0 };
+
+/* ---------- 路由 ---------- */
+/* ★ 地址必须「干净」：首页永远是 /wj/，某一卷是 /wj/?r=t
+   早先用 #t 记状态、返回时只清 hash 不清 query，导致「从老师卷退回首页后
+   地址仍是 ?r=t#」，一转发送出去别人点开就直达老师卷。这里统一用 ?r=。 */
+function setUrl(role){
+  var want = location.pathname + (role ? '?r=' + role : '');
+  try{ history.replaceState(null, '', want); }catch(e){}
+}
+
+function go(role){
+  if(!SCHEMA[role]) return;
+  state.role = role; state.answers = {};
+  setUrl(role);
+  document.getElementById('home').classList.add('hide');
+  document.getElementById('finish').classList.add('hide');
+  document.getElementById('quiz').classList.remove('hide');
+  document.getElementById('prog').classList.remove('hide');
+  render();
+  window.scrollTo(0,0);
+}
+function backHome(){
+  state.role = null; state.answers = {};
+  setUrl(null);                       // 彻底回到 /wj/，不留任何参数，转发才是三选一
+  document.getElementById('quiz').classList.add('hide');
+  document.getElementById('finish').classList.add('hide');
+  document.getElementById('prog').classList.add('hide');
+  document.getElementById('home').classList.remove('hide');
+  window.scrollTo(0,0);
+}
+
+/* ---------- 渲染 ---------- */
+var qIndex = 0;
+function render(){
+  var sc = SCHEMA[state.role];
+  qIndex = 0;
+  document.getElementById('qTitle').textContent = sc.title;
+  document.getElementById('qDesc').textContent = sc.desc;
+  var html = '', n = 0;
+  sc.sections.forEach(function(sec){
+    html += '<div class="sec"><p class="sec-t">'+esc(sec.name)+'</p>';
+    sec.qs.forEach(function(q){
+      n++; q._n = n;
+      html += renderQ(q, n);
+    });
+    html += '</div>';
+  });
+  var body = document.getElementById('qBody');
+  body.innerHTML = html;
+  bindAll();
+  updateBar();
+}
+
+function renderQ(q, n){
+  var star = q.req ? '<em>＊必填</em>' : '';
+  var h = '<div class="q" id="q_'+q.id+'" data-id="'+q.id+'">';
+  h += '<div class="q-n">Q'+n+'</div>';
+  h += '<p class="q-t">'+esc(q.title)+star+'</p>';
+  if(q.by) h += '<div class="q-by">'+esc(q.by)+'</div>';
+  if(q.hint) h += '<p class="q-h">'+esc(q.hint)+'</p>';
+
+  if(q.type === 'single' || q.type === 'multi'){
+    var twoCol = q.opts.length >= 4 && q.opts.every(function(o){ return o.length <= 8; });
+    h += '<div class="opts'+(twoCol?' cols2':'')+'" data-type="'+q.type+'">';
+    q.opts.forEach(function(o, i){
+      h += '<button type="button" class="opt" data-v="'+esc(o)+'">'
+        +  '<span class="dot'+(q.type==='multi'?' sq':'')+'"></span>'
+        +  '<span>'+esc(o)+'</span></button>';
+    });
+    h += '</div>';
+  }
+  else if(q.type === 'grouped'){
+    h += '<div class="groups" data-type="grouped">';
+    q.groups.forEach(function(g, gi){
+      h += '<div class="grp" data-g="'+gi+'">';
+      h += '<button type="button" class="grp-h">'
+        +  '<span class="grp-n">'+esc(g.n)+'</span>'
+        +  '<span class="grp-pick"></span>'
+        +  '<span class="grp-c">'+g.items.length+'</span>'
+        +  '<span class="grp-x">＋</span></button>';
+      h += '<div class="grp-b">';
+      g.items.forEach(function(it){
+        h += '<button type="button" class="opt" data-v="'+esc(it)+'">'
+          +  '<span class="dot"></span><span>'+esc(it)+'</span></button>';
+      });
+      h += '</div></div>';
+    });
+    if(q.extra && q.extra.length){
+      h += '<div class="grpextra">';
+      q.extra.forEach(function(it){
+        h += '<button type="button" class="opt" data-v="'+esc(it)+'">'
+          +  '<span class="dot"></span><span>'+esc(it)+'</span></button>';
+      });
+      h += '</div>';
+    }
+    h += '</div>';
+  }
+  else if(q.type === 'scale'){
+    h += '<div class="scale" data-type="scale">';
+    for(var i=1;i<=5;i++) h += '<button type="button" data-v="'+i+'"><b>'+i+'</b><span>'+(i===1?'最低':i===5?'最高':'')+'</span></button>';
+    h += '</div>';
+    h += '<div class="scale-legend"><span>'+esc(q.legend[0])+'</span><span>'+esc(q.legend[1])+'</span></div>';
+  }
+  else if(q.type === 'matrix'){
+    h += '<div class="mx" data-type="matrix">';
+    h += '<div class="mx-head"><span class="mx-lab">评分项</span><span class="mx-pick">';
+    for(var j=1;j<=5;j++) h += '<i>'+j+'</i>';
+    h += '</span></div>';
+    q.rows.forEach(function(r, ri){
+      h += '<div class="mx-row" data-row="'+ri+'"><span class="mx-lab">'+esc(r)+'</span><span class="mx-pick">';
+      for(var k=1;k<=5;k++) h += '<button type="button" data-v="'+k+'">'+k+'</button>';
+      h += '</span></div>';
+    });
+    h += '</div>';
+  }
+  else if(q.type === 'text'){
+    var lim = 200;
+    h += '<textarea data-type="text" maxlength="'+lim+'" placeholder="'+(q.req?'请填写…':'可以留空')+'"></textarea>';
+    h += '<div class="cnt"><span>0</span>/'+lim+'</div>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function esc(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ---------- 事件绑定（委托） ---------- */
+function bindAll(){
+  var body = document.getElementById('qBody');
+  body.onclick = function(e){
+    // 分组标题：手风琴，一次只开一组
+    var gh = e.target.closest('.grp-h');
+    if(gh){
+      var grp = gh.closest('.grp'), wrapEl = grp.parentNode;
+      var wasOpen = grp.classList.contains('open');
+      [].forEach.call(wrapEl.querySelectorAll('.grp'), function(c){
+        c.classList.remove('open');
+        var xi = c.querySelector('.grp-x'); if(xi) xi.textContent = '＋';
+      });
+      if(!wasOpen){
+        grp.classList.add('open');
+        var xo = grp.querySelector('.grp-x'); if(xo) xo.textContent = '−';
+      }
+      return;
+    }
+
+    var btn = e.target.closest('.opt') || e.target.closest('.scale button') || e.target.closest('.mx-pick button');
+    if(!btn) return;
+    var q = btn.closest('.q'); if(!q) return;
+    var id = q.dataset.id;
+    var box = btn.closest('.opts') || btn.closest('.scale') || btn.closest('.mx') || btn.closest('.groups');
+
+    if(box.dataset.type === 'multi'){
+      btn.classList.toggle('on');
+      var vals = [].map.call(box.querySelectorAll('.opt.on'), function(x){ return x.dataset.v; });
+      setAns(id, vals.length ? vals : undefined);
+    }
+    else if(box.dataset.type === 'single'){
+      [].forEach.call(box.querySelectorAll('.opt'), function(x){ x.classList.remove('on'); });
+      btn.classList.add('on');
+      setAns(id, btn.dataset.v);
+    }
+    else if(box.dataset.type === 'grouped'){
+      [].forEach.call(box.querySelectorAll('.opt'), function(x){
+        x.classList.remove('on');
+        var g0 = x.closest('.grp');
+        if(g0){ g0.classList.remove('picked'); var p = g0.querySelector('.grp-pick'); if(p) p.textContent = ''; }
+      });
+      btn.classList.add('on');
+      var g = btn.closest('.grp');
+      if(g){
+        g.classList.add('picked');
+        var pk = g.querySelector('.grp-pick');
+        if(pk) pk.textContent = btn.dataset.v;
+      }
+      setAns(id, btn.dataset.v);
+    }
+    else if(box.dataset.type === 'scale'){
+      [].forEach.call(box.querySelectorAll('button'), function(x){ x.classList.remove('on'); });
+      btn.classList.add('on');
+      setAns(id, +btn.dataset.v);
+    }
+    else if(box.dataset.type === 'matrix'){
+      var row = btn.closest('.mx-row');
+      [].forEach.call(row.querySelectorAll('button'), function(x){ x.classList.remove('on'); });
+      btn.classList.add('on');
+      var m = state.answers[id] || {};
+      m[row.dataset.row] = +btn.dataset.v;
+      setAns(id, m);
+    }
+    q.classList.remove('err');
+    updateBar();
+  };
+
+  body.oninput = function(e){
+    if(e.target.tagName !== 'TEXTAREA') return;
+    var q = e.target.closest('.q');
+    var c = q.querySelector('.cnt span');
+    if(c) c.textContent = e.target.value.length;
+    setAns(q.dataset.id, e.target.value.trim() || undefined);
+    q.classList.remove('err');
+    updateBar();
+  };
+}
+
+function setAns(id, v){
+  if(v === undefined || v === '' || (Array.isArray(v) && !v.length)) delete state.answers[id];
+  else state.answers[id] = v;
+}
+
+/* ---------- 进度 ---------- */
+function countAll(){
+  var n = 0;
+  SCHEMA[state.role].sections.forEach(function(s){ n += s.qs.length; });
+  return n;
+}
+function updateBar(){
+  var total = countAll();
+  var done = Object.keys(state.answers).length;
+  var pct = Math.round(done / total * 100);
+  document.querySelector('#prog i').style.width = pct + '%';
+  document.getElementById('barTip').innerHTML = '已填 <b>'+done+'</b> / '+total+' 题';
+}
+
+/* ---------- 校验 + 提交 ---------- */
+function submitForm(){
+  var sc = SCHEMA[state.role];
+  var miss = null, missEl = null;
+  sc.sections.forEach(function(sec){
+    sec.qs.forEach(function(q){
+      if(!q.req) return;
+      var v = state.answers[q.id];
+      var ok = false;
+      if(q.type === 'matrix') ok = v && Object.keys(v).length === q.rows.length;
+      else if(typeof v === 'number') ok = true;
+      else if(Array.isArray(v)) ok = v.length > 0;
+      else ok = v !== undefined && String(v).length > 0;
+      if(!ok && !miss){ miss = q.title; missEl = document.getElementById('q_'+q.id); }
+    });
+  });
+  if(miss){
+    toast('还有必填题没填：' + miss);
+    if(missEl){
+      missEl.classList.add('err');
+      missEl.scrollIntoView({behavior:'smooth', block:'center'});
+    }
+    return;
+  }
+
+  var btn = document.getElementById('submitBtn');
+  btn.disabled = true; btn.textContent = '提交中…';
+
+  var payload = {
+    role: state.role,
+    answers: state.answers,
+    ua: navigator.userAgent.slice(0, 180),
+    ref: document.referrer ? document.referrer.slice(0, 200) : '',
+    ts: Date.now()
+  };
+
+  fetch(API + '/submit', {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(payload)
+  }).then(function(r){
+    return r.json().then(function(j){ return { status:r.status, body:j }; });
+  }).then(function(res){
+    if(res.body && res.body.ok){
+      showFinish(res.body.total);
+      return;
+    }
+    // 同一个网络当天份数用完了：别把内容丢掉，换个网络还能交
+    if(res.status === 429){
+      btn.disabled = false; btn.textContent = '提交问卷';
+      toast('这个网络今天已经交满 ' + (res.body.limit || 5) + ' 份了。内容还留着，'
+          + '换手机流量、或换另一台设备再点提交就行');
+      return;
+    }
+    throw new Error((res.body && res.body.error) || '服务返回异常');
+  }).catch(function(err){
+    btn.disabled = false; btn.textContent = '提交问卷';
+    toast('提交失败，请检查网络后重试');
+    console.error(err);
+  });
+}
+
+function showFinish(total){
+  document.getElementById('qBody').innerHTML = '';
+  document.getElementById('quiz').classList.add('hide');
+  document.getElementById('prog').classList.add('hide');
+  document.getElementById('finish').classList.remove('hide');
+  document.getElementById('finTotal').textContent = total || '—';
+  var tips = {
+    t:'谢谢您。老师们的意见我们会原样整理出来，下一次怎么搞，先看大家怎么说。',
+    s:'谢谢你！你说的每一句话我们都会看，说不定就成了下一次的一个摊位。',
+    b:'谢谢你！从开不了口到能招呼一整个摊位，这件事本身就很了不起。'
+  };
+  document.getElementById('finishTip').textContent = tips[state.role] || '';
+  window.scrollTo(0,0);
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = '提交问卷';
+}
+
+var toastTimer = null;
+function toast(msg){
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2400);
+}
+
+/* ---------- 启动 ---------- */
+function readRoleFromUrl(){
+  var r = '';
+  try{ r = (new URLSearchParams(location.search)).get('r') || ''; }catch(e){}
+  if(!SCHEMA[r]) r = (location.hash || '').replace('#','');   // 兼容老的 #t 链接
+  return SCHEMA[r] ? r : '';
+}
+
+(function init(){
+  var r = readRoleFromUrl();
+  if(r) go(r);          // 带 ?r= 才直达对应问卷；否则老老实实停在首页
+  window.addEventListener('popstate', function(){
+    var k = readRoleFromUrl();
+    if(k && state.role !== k) go(k);
+    else if(!k && state.role) backHome();
+  });
+})();
+</script>
 </body>
 </html>
